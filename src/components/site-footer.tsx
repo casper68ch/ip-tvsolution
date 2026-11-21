@@ -10,9 +10,12 @@ export function SiteFooter() {
       <div className="container-page py-12">
         <div className="grid gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
-            <p className="font-display text-lg font-semibold text-fg">
-              IP-Tv<span className="text-accent">.</span>Solution
-            </p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logos/iptv-solution-text.svg"
+              alt="IP-Tv.Solution"
+              className="h-9 w-auto object-contain"
+            />
             <p className="mt-3 max-w-md text-sm leading-relaxed text-secondary">
               Il portale italiano per installare player IPTV legittimi su ogni dispositivo.
               Guide passo passo, link ufficiali e nessun contenuto fornito dal sito.

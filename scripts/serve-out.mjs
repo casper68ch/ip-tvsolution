@@ -63,7 +63,8 @@ createServer((request, response) => {
 
   response.writeHead(200, {
     "content-type": mimeTypes[extname(file).toLowerCase()] ?? "application/octet-stream",
-    "cache-control": file.endsWith(".html") ? "no-cache" : "public, max-age=31536000, immutable",
+    // Sviluppo locale: niente cache immutabile, così i loghi aggiornati appaiono subito.
+    "cache-control": "no-store",
   });
   createReadStream(file).pipe(response);
 }).listen(port, host, () => {

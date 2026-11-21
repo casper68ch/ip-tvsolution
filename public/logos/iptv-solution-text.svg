@@ -1,8 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 96" width="420" height="96" role="img" aria-label="IP-Tv.Solution">
-  <rect x="6" y="16" width="64" height="64" rx="14" fill="#0B0F14"/>
-  <rect x="20" y="30" width="36" height="36" rx="8" fill="#C83838"/>
-  <circle cx="38" cy="30" r="9" fill="#C83838"/>
-  <circle cx="56" cy="48" r="9" fill="#C83838"/>
-  <circle cx="38" cy="30" r="3.5" fill="#0B0F14" opacity="0.35"/>
-  <text x="86" y="61" font-family="Sora, Manrope, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="-0.5"><tspan fill="#F2F5F8">IP-Tv</tspan><tspan fill="#C83838">.</tspan><tspan fill="#F2F5F8">Solution</tspan></text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 96" width="420" height="96">
+  <defs>
+    <pattern id="candyStripeHoriz" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="4.6" height="14" x="0" fill="#c92a2a"/>
+      <rect width="4.6" height="14" x="4.6" fill="#ffffff"/>
+      <rect width="4.8" height="14" x="9.2" fill="#4ecdc4"/>
+    </pattern>
+    <clipPath id="iconClip">
+      <rect x="8" y="8" width="80" height="80" rx="18"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#iconClip)">
+    <rect x="8" y="8" width="80" height="80" fill="#ffffff"/>
+    <path d="M 8 50 L 88 64 L 88 88 L 8 88 Z" fill="#c92a2a"/>
+    <path d="M 66 13 C 66 8, 74 8, 74 13 L 81 13 L 81 23 C 86 23, 86 30, 81 30 L 81 38 L 61 38 L 61 28 C 65 28, 65 22, 61 22 L 61 13 Z" fill="#c92a2a"/>
+    <path d="M 36 55 L 36 65 C 41 65, 41 72, 36 72 L 36 88 M 64 60 L 64 72 C 59 72, 59 79, 64 79 L 64 88 M 8 72 L 24 75 C 24 70, 31 70, 31 75 L 88 85" fill="none" stroke="#8a1919" stroke-width="1.5" opacity="0.7"/>
+    <g transform="rotate(10, 42, 40)">
+      <rect x="2" y="24" width="72" height="30" rx="4" fill="url(#candyStripeHoriz)" stroke="#333333" stroke-width="1.2"/>
+      <rect x="6" y="28" width="64" height="22" rx="2" fill="#ffffff"/>
+      <text x="38" y="44" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="800" font-size="16" fill="#c92a2a" text-anchor="middle" letter-spacing="0.5">IP-TV</text>
+    </g>
+  </g>
+  <rect x="8" y="8" width="80" height="80" rx="18" fill="none" stroke="#e0e0e0" stroke-width="1.5"/>
+  <text x="106" y="59" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="800" font-size="36" letter-spacing="-0.5">
+    <tspan fill="#c92a2a">IP&#8209;Tv</tspan><tspan fill="#4ecdc4">.</tspan><tspan fill="#1e293b">Solution</tspan>
+  </text>
 </svg>
