@@ -61,10 +61,10 @@ export default function HomePage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logos/iptv-solution.svg"
-              alt="Logo puzzle rosso di IP-Tv.Solution"
-              width={64}
-              height={64}
-              className="h-16 w-16 shrink-0"
+              alt="Logo ufficiale IP-Tv.Solution - puzzle rosso TV Solution"
+              width={80}
+              height={80}
+              className="h-20 w-20 shrink-0"
             />
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-accent">Il progetto</p>
