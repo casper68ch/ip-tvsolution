@@ -27,6 +27,8 @@ export function toCatalogApp(app: AppRecord): CatalogApp {
     bestFor: app.bestFor,
     featured: app.featured,
     order: app.order,
+    project: app.project,
+    version: app.version,
     install: app.install.map((install) => ({
       platform: install.platform,
       method: install.method,

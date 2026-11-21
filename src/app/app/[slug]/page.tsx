@@ -123,6 +123,11 @@ export default async function AppPage({ params }: AppPageProps) {
 
               <div className="mt-4 flex flex-wrap items-center gap-1.5">
                 <ModelBadge license={app.licenseModel} size="md" />
+                {app.project ? (
+                  <span className="rounded-full border border-accent/45 bg-accent-soft px-3 py-1.5 text-xs font-semibold text-accent-hover">
+                    Nostro player{app.version ? ` · v${app.version}` : ""}
+                  </span>
+                ) : null}
                 {app.platforms.map((platform) => (
                   <PlatformBadge key={platform} platform={platform} size="md" />
                 ))}

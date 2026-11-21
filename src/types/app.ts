@@ -81,6 +81,10 @@ export interface AppRecord {
   featured?: boolean;
   order?: number;
   verifiedAt?: string;
+  /** True per i player del progetto IP-Tv.Solution. */
+  project?: boolean;
+  /** Versione del progetto mostrata come badge (es. "1.9"). */
+  version?: string;
 }
 
 /** Sottoinsieme serializzabile passato ai componenti client del catalogo. */
@@ -106,6 +110,8 @@ export interface CatalogApp {
   bestFor?: string;
   featured?: boolean;
   order?: number;
+  project?: boolean;
+  version?: string;
 }
 
 export type SortKey = "relevance" | "name" | "free-first" | "verified-first";

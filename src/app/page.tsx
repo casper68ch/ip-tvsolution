@@ -29,6 +29,8 @@ const steps = [
 ];
 
 export default function HomePage() {
+  const ownApps = apps.filter((app) => app.project);
+
   return (
     <>
       <script
@@ -48,6 +50,75 @@ export default function HomePage() {
       />
 
       <Hero appCount={apps.length} platformCount={platforms.length} />
+
+      <section
+        id="nostri-player"
+        className="border-b border-line bg-surface/40 py-12 sm:py-16"
+        aria-labelledby="nostri-player-titolo"
+      >
+        <div className="container-page">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logos/iptv-solution.svg"
+              alt="Logo puzzle rosso di IP-Tv.Solution"
+              width={64}
+              height={64}
+              className="h-16 w-16 shrink-0"
+            />
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-accent">Il progetto</p>
+              <h2 id="nostri-player-titolo" className="mt-1 text-2xl font-semibold text-fg sm:text-3xl">
+                I nostri player IP-Tv.Solution v1.9
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm leading-relaxed text-secondary">
+                Cinque edizioni del progetto per Windows, Web/Chrome, Smart TV, Android e iPhone.
+                        Scaricale dal link ufficiale, registrati con nome, password ed email e ricevi
+                il codice di attivazione via email. Solo player: nessuna playlist o credenziale inclusa.
+              </p>
+            </div>
+          </div>
+
+          <ul className="mt-6 grid list-none gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {ownApps.map((app) => (
+              <li key={app.slug} className="surface-card flex h-full flex-col p-4">
+                <div className="flex items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={app.logo.src}
+                    alt={app.logo.alt}
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 shrink-0 object-contain"
+                  />
+                  <div className="min-w-0">
+                    <Link
+                      href={`/app/${app.slug}/`}
+                      className="font-display text-sm font-semibold text-fg transition hover:text-accent-hover"
+                    >
+                      {app.name}
+                    </Link>
+                    <p className="text-xs text-muted">
+                      v{app.version ?? "1.9"} · {app.platforms.join(", ")}
+                    </p>
+                  </div>
+                </div>
+                {app.install[0] ? (
+                  <a
+                    href={app.install[0].url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="tap-target mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-white transition hover:bg-accent-hover"
+                  >
+                    <span className="truncate">{app.install[0].label}</span>
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       <CatalogSection apps={catalogApps} />
 

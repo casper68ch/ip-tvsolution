@@ -51,6 +51,11 @@ export function AppCard({ app }: AppCardProps) {
 
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
           <ModelBadge license={app.licenseModel} />
+          {app.project ? (
+            <span className="rounded-full border border-accent/45 bg-accent-soft px-2 py-1 text-[11px] font-semibold text-accent-hover">
+              Nostro player{app.version ? ` · v${app.version}` : ""}
+            </span>
+          ) : null}
           {visiblePlatforms.map((platform) => (
             <PlatformBadge key={platform} platform={platform} />
           ))}
