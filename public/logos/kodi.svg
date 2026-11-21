@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96" role="img" aria-label="Kodi">
+  <rect width="96" height="96" rx="22" fill="#1B222B"/>
+  <rect x="1" y="1" width="94" height="94" rx="21" fill="none" stroke="#232A35" stroke-width="2"/>
+  <circle cx="48" cy="20" r="4" fill="#C83838"/>
+  <text x="48" y="70" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700" fill="#F2F5F8">KOD</text>
+</svg>

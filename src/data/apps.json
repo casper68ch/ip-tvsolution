@@ -1,0 +1,1692 @@
+[
+  {
+    "id": "vlc",
+    "slug": "vlc",
+    "name": "VLC media player",
+    "tagline": "Il coltellino svizzero dei media, con un lettore di rete affidabile.",
+    "description": "VLC è il player open source più diffuso al mondo e da sempre include un lettore di flussi di rete capace di aprire indirizzi forniti dall'utente. L'interfaccia è essenziale ma completa: playlist, equalizzatore, sottotitoli, accelerazione hardware e supporto a decine di formati senza codec aggiuntivi. Su Windows, Linux, Android, Android TV e Apple mantiene la stessa logica di utilizzo, quindi chi impara le funzioni base su un dispositivo le ritrova ovunque. Per un uso IPTV legittimo è la scelta più prudente quando si vuole un programma maturo, senza account e senza pubblicità. L'installazione ufficiale avviene tramite installer, store mobile o pacchetto Flathub: nessun file scaricato da repository non ufficiali.",
+    "officialUrl": "https://www.videolan.org/vlc/",
+    "developer": "VideoLAN",
+    "licenseModel": "free",
+    "platforms": [
+      "windows",
+      "linux",
+      "android",
+      "android-tv",
+      "apple"
+    ],
+    "install": [
+      {
+        "platform": "windows",
+        "method": "exe",
+        "label": "Installer Windows",
+        "url": "https://www.videolan.org/vlc/download-windows.html",
+        "devices": [
+          "Windows 10",
+          "Windows 11"
+        ],
+        "steps": [
+          "Apri la pagina di download ufficiale dal sito VideoLAN e scegli la versione a 64 bit.",
+          "Scarica l'eseguibile e avvia l'installazione come amministratore.",
+          "Lascia attive le associazioni dei formati che ti interessano e completa la procedura.",
+          "Avvia VLC, apri il menu Media e incolla l'indirizzo del flusso che possiedi legalmente."
+        ],
+        "note": "Evita installer ospitati su portali di terze parti: contengono spesso componenti aggiuntivi indesiderati.",
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "android",
+        "method": "store",
+        "label": "Google Play",
+        "url": "https://play.google.com/store/apps/details?id=org.videolan.vlc",
+        "packageId": "org.videolan.vlc",
+        "devices": [
+          "Smartphone e tablet Android"
+        ],
+        "steps": [
+          "Apri Google Play e verifica che lo sviluppatore indicato sia VideoLAN.",
+          "Installa l'app e concedi solo i permessi necessari alla riproduzione.",
+          "Apri il menu laterale, scegli Nuovo flusso e inserisci l'indirizzo fornito dal tuo provider legittimo."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "android-tv",
+        "method": "store",
+        "label": "Play Store TV",
+        "url": "https://play.google.com/store/apps/details?id=org.videolan.vlc",
+        "packageId": "org.videolan.vlc",
+        "devices": [
+          "Android TV",
+          "Google TV",
+          "Fire TV con Play Store"
+        ],
+        "steps": [
+          "Dal televisore apri il Play Store integrato e cerca VLC.",
+          "Installa l'app e avviala dal launcher.",
+          "Usa il telecomando per aprire la sezione flussi e inserire l'indirizzo del tuo servizio."
+        ],
+        "note": "Alcuni firmware TV non espongono il Play Store: in quel caso usa l'APK ufficiale distribuito da VideoLAN.",
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "linux",
+        "method": "flatpak",
+        "label": "Flathub",
+        "url": "https://flathub.org/apps/org.videolan.VLC",
+        "devices": [
+          "Qualsiasi distribuzione con Flatpak"
+        ],
+        "steps": [
+          "Installa Flatpak e abilita il repository Flathub sulla tua distribuzione.",
+          "Esegui flatpak install flathub org.videolan.VLC dal terminale.",
+          "Avvia VLC dal menu applicazioni e configura il flusso dal menu Media."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "apple",
+        "method": "appstore",
+        "label": "App Store",
+        "url": "https://apps.apple.com/it/app/vlc-for-mobile/id650377962",
+        "storeId": "650377962",
+        "devices": [
+          "iPhone",
+          "iPad"
+        ],
+        "steps": [
+          "Apri l'App Store e controlla che lo sviluppatore sia VideoLAN.",
+          "Installa VLC for Mobile e apri la scheda Rete.",
+          "Aggiungi il flusso personale e avvia la riproduzione."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      }
+    ],
+    "pros": [
+      "Gratuito, open source e senza pubblicità",
+      "Legge decine di formati senza codec esterni",
+      "Disponibile su quasi tutte le piattaforme con la stessa logica",
+      "Nessun account obbligatorio"
+    ],
+    "cons": [
+      "Interfaccia datata rispetto ai player televisivi moderni",
+      "La gestione di liste e flussi è poco guidata per chi è alle prime armi",
+      "Il telecomando TV non è ottimizzato quanto nelle app native"
+    ],
+    "logo": {
+      "src": "/logos/vlc.svg",
+      "alt": "Logo di VLC media player"
+    },
+    "bestFor": "Chi vuole un player gratuito, maturo e disponibile su ogni dispositivo.",
+    "features": [
+      "Riproduzione di flussi di rete forniti dall'utente",
+      "Accelerazione hardware e decodifica software",
+      "Sottotitoli, tracce audio multiple ed equalizzatore",
+      "Supporto Chromecast e output su schermi esterni"
+    ],
+    "requirements": [
+      "Windows 10 o successivo, distribuzione Linux aggiornata, Android 5 o successivo",
+      "Connessione stabile per i flussi in alta definizione"
+    ],
+    "seo": {
+      "title": "VLC media player: installazione su Windows, Android, Linux e Apple",
+      "description": "Come installare VLC dai canali ufficiali su Windows, Android, Android TV, Linux e iPhone, con istruzioni passo passo per aprire un flusso di rete personale.",
+      "keywords": [
+        "VLC",
+        "installare VLC",
+        "VLC Android TV",
+        "VLC Windows",
+        "player IPTV gratuito"
+      ]
+    },
+    "featured": true,
+    "order": 1,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "kodi",
+    "slug": "kodi",
+    "name": "Kodi",
+    "tagline": "Media center modulare per chi vuole organizzare tutto in un'unica interfaccia.",
+    "description": "Kodi è un media center open source che trasforma un computer, una TV box o un televisore Android in un centro di intrattenimento. La sua forza è l'architettura a componenti: player interno, gestione di sorgenti, skin e componenti aggiuntivi consentono di costruire un ambiente su misura. Per l'uso IPTV legittimo esistono componenti ufficiali e repository della comunità che aggiungono il supporto ai flussi di rete, sempre configurati dall'utente con fonti di cui detiene i diritti. L'installazione è documentata sul sito ufficiale per Windows, Android, Android TV e Linux. È la scelta giusta se ti piace personalizzare, ma richiede più tempo rispetto a un player pronto all'uso.",
+    "officialUrl": "https://kodi.tv/",
+    "developer": "Team Kodi",
+    "licenseModel": "free",
+    "platforms": [
+      "windows",
+      "linux",
+      "android",
+      "android-tv"
+    ],
+    "install": [
+      {
+        "platform": "windows",
+        "method": "exe",
+        "label": "Installer Windows",
+        "url": "https://kodi.tv/download/windows/",
+        "devices": [
+          "Windows 10",
+          "Windows 11"
+        ],
+        "steps": [
+          "Apri la pagina download ufficiale e scegli l'installer per Windows a 64 bit.",
+          "Esegui il file e completa l'installazione nella cartella predefinita.",
+          "Avvia Kodi e completa la configurazione iniziale scegliendo la lingua italiana.",
+          "Aggiungi la sorgente del tuo servizio legittimo dalla sezione Video o TV."
+        ],
+        "note": "Kodi non include alcun contenuto: le sorgenti vengono aggiunte esclusivamente dall'utente.",
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "android",
+        "method": "store",
+        "label": "Google Play",
+        "url": "https://play.google.com/store/apps/details?id=org.xbmc.kodi",
+        "packageId": "org.xbmc.kodi",
+        "devices": [
+          "Smartphone e tablet Android"
+        ],
+        "steps": [
+          "Installa Kodi da Google Play verificando lo sviluppatore XBMC Foundation.",
+          "Al primo avvio attendi il caricamento dell'interfaccia.",
+          "Apri Impostazioni, Servizi e abilita il controllo remoto se ti serve.",
+          "Aggiungi la tua sorgente dalla sezione Video."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "android-tv",
+        "method": "store",
+        "label": "Play Store TV",
+        "url": "https://play.google.com/store/apps/details?id=org.xbmc.kodi",
+        "packageId": "org.xbmc.kodi",
+        "devices": [
+          "Android TV",
+          "Google TV",
+          "Nvidia Shield"
+        ],
+        "steps": [
+          "Dal televisore cerca Kodi nel Play Store integrato e installalo.",
+          "Avvia Kodi e concedi l'accesso allo spazio di archiviazione.",
+          "Configura la sorgente personale con il telecomando o l'app companion."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "linux",
+        "method": "flatpak",
+        "label": "Flathub",
+        "url": "https://flathub.org/apps/tv.kodi.Kodi",
+        "devices": [
+          "Distribuzioni con Flatpak"
+        ],
+        "steps": [
+          "Abilita Flathub se non è già presente sul sistema.",
+          "Installa il pacchetto tv.kodi.Kodi con il comando flatpak indicato dalla pagina.",
+          "Avvia Kodi e completa la configurazione guidata."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      }
+    ],
+    "pros": [
+      "Personalizzazione molto profonda tramite skin e componenti",
+      "Interfaccia pensata anche per il telecomando",
+      "Gratuito e open source, senza pubblicità",
+      "Funziona su Windows, Linux, Android e Android TV"
+    ],
+    "cons": [
+      "Configurazione iniziale più lunga rispetto a un player pronto",
+      "I componenti aggiuntivi non ufficiali possono essere instabili o poco sicuri",
+      "Consuma più risorse su hardware datato"
+    ],
+    "logo": {
+      "src": "/logos/kodi.svg",
+      "alt": "Logo di Kodi"
+    },
+    "bestFor": "Chi ama personalizzare il media center e vuole un'unica interfaccia per tutto.",
+    "features": [
+      "Media center completo con libreria locale e di rete",
+      "Supporto a skin, componenti aggiuntivi e telecomandi",
+      "Gestione di flussi di rete tramite componenti ufficiali",
+      "Sincronizzazione delle impostazioni tra dispositivi"
+    ],
+    "requirements": [
+      "Windows 10 o successivo, Android 5 o successivo, distribuzione Linux aggiornata",
+      "Almeno 2 GB di RAM per un uso fluido dell'interfaccia"
+    ],
+    "seo": {
+      "title": "Kodi: guida all'installazione su Windows, Android TV e Linux",
+      "description": "Installare Kodi dai canali ufficiali su Windows, Android, Android TV e Linux, con configurazione iniziale e aggiunta di sorgenti personali legittime.",
+      "keywords": [
+        "Kodi",
+        "installare Kodi",
+        "Kodi Android TV",
+        "Kodi Windows",
+        "media center"
+      ]
+    },
+    "featured": true,
+    "order": 2,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "mpv",
+    "slug": "mpv",
+    "name": "mpv",
+    "tagline": "Player minimale, velocissimo e controllabile da tastiera.",
+    "description": "mpv è un player open source derivato da MPlayer e MPlayer2, apprezzato per la qualità della decodifica video e per il controllo totale tramite tastiera e riga di comando. L'interfaccia grafica è volutamente essenziale: si apre una finestra, si carica un flusso e si gestisce tutto con scorciatoie e menu contestuale. È la scelta di chi vuole un programma leggero, senza pubblicità e senza servizi accessori, capace di riprodurre anche flussi di rete complessi grazie al motore FFmpeg. Su Windows si installa con il pacchetto ufficiale, su Linux tramite repository della distribuzione o Flatpak, su macOS tramite Homebrew. Non è pensato per il telecomando di un televisore, ma per un computer collegato allo schermo.",
+    "officialUrl": "https://mpv.io/",
+    "developer": "Comunità mpv",
+    "licenseModel": "free",
+    "platforms": [
+      "windows",
+      "linux",
+      "apple"
+    ],
+    "install": [
+      {
+        "platform": "windows",
+        "method": "exe",
+        "label": "Build Windows",
+        "url": "https://mpv.io/installation/",
+        "devices": [
+          "Windows 10",
+          "Windows 11"
+        ],
+        "steps": [
+          "Apri la pagina Installation del sito ufficiale e scegli una build Windows aggiornata.",
+          "Estrai l'archivio in una cartella dedicata, ad esempio C:\\Tools\\mpv.",
+          "Aggiungi la cartella al PATH se vuoi avviare mpv da terminale.",
+          "Trascina il flusso o incollalo nella finestra per avviare la riproduzione."
+        ],
+        "note": "Le build sono distribuite come archivio: non esiste un installer con procedura guidata.",
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "linux",
+        "method": "repo",
+        "label": "Repository distro",
+        "url": "https://mpv.io/installation/",
+        "devices": [
+          "Debian/Ubuntu",
+          "Fedora",
+          "Arch Linux"
+        ],
+        "steps": [
+          "Apri la pagina Installation e individua il comando per la tua distribuzione.",
+          "Installa il pacchetto mpv con il gestore di pacchetti indicato.",
+          "Avvia mpv da terminale passando l'indirizzo del flusso come argomento."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "apple",
+        "method": "repo",
+        "label": "Homebrew",
+        "url": "https://formulae.brew.sh/formula/mpv",
+        "devices": [
+          "macOS Intel e Apple Silicon"
+        ],
+        "steps": [
+          "Installa Homebrew se non è presente sul Mac.",
+          "Esegui brew install mpv dal terminale.",
+          "Apri il flusso con mpv oppure trascinalo sull'icona generata."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      }
+    ],
+    "pros": [
+      "Leggerissimo e con avvio immediato",
+      "Qualità di decodifica eccellente grazie a FFmpeg",
+      "Configurabile tramite file di testo e riga di comando",
+      "Nessuna pubblicità né raccolta dati"
+    ],
+    "cons": [
+      "Interfaccia grafica ridotta all'essenziale",
+      "Poco adatto al telecomando di una TV",
+      "Richiede familiarità con terminale e scorciatoie"
+    ],
+    "logo": {
+      "src": "/logos/mpv.svg",
+      "alt": "Logo di mpv"
+    },
+    "bestFor": "Utenti esperti che vogliono un player leggero su computer.",
+    "features": [
+      "Decodifica hardware e software ad alte prestazioni",
+      "Controllo completo da tastiera e script Lua",
+      "Riproduzione di flussi di rete forniti dall'utente",
+      "Supporto a sottotitoli e tracce audio multiple"
+    ],
+    "requirements": [
+      "Windows 10 o successivo, macOS 11 o successivo, distribuzione Linux recente",
+      "Scheda video con driver aggiornati per la decodifica hardware"
+    ],
+    "seo": {
+      "title": "mpv: installazione su Windows, Linux e macOS",
+      "description": "Guida all'installazione di mpv su Windows, Linux e macOS: build ufficiali, repository della distribuzione e scorciatoie essenziali per aprire un flusso di rete.",
+      "keywords": [
+        "mpv",
+        "installare mpv",
+        "mpv Windows",
+        "mpv Linux",
+        "player video leggero"
+      ]
+    },
+    "order": 3,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "iina",
+    "slug": "iina",
+    "name": "IINA",
+    "tagline": "Il player macOS nativo, elegante e con un motore mpv sotto il cofano.",
+    "description": "IINA è un player open source scritto specificamente per macOS, con interfaccia nativa in Swift e motore di riproduzione basato su mpv. Offre quello che manca ai port macOS di player generici: integrazione con il sistema, Touch Bar, Picture in Picture, modalità scura automatica e gestione delle finestre coerente con le linee guida Apple. Supporta i flussi di rete inseriti dall'utente e mantiene un'elevata compatibilità di formati. L'installazione avviene tramite il sito ufficiale o Homebrew, con pacchetto firmato e notarizzato. È la scelta naturale per chi usa un Mac e non vuole ricorrere a un player multipiattaforma dall'interfaccia poco curata.",
+    "officialUrl": "https://iina.io/",
+    "developer": "Collider LI e contributori",
+    "licenseModel": "free",
+    "platforms": [
+      "apple"
+    ],
+    "install": [
+      {
+        "platform": "apple",
+        "method": "dmg",
+        "label": "DMG ufficiale",
+        "url": "https://iina.io/download/",
+        "devices": [
+          "Mac Intel",
+          "Mac Apple Silicon"
+        ],
+        "steps": [
+          "Scarica il file DMG dalla pagina Download del sito ufficiale.",
+          "Apri l'immagine e trascina IINA nella cartella Applicazioni.",
+          "Al primo avvio conferma l'apertura dell'app firmata e notarizzata.",
+          "Apri il flusso dal menu File, voce Apri URL."
+        ],
+        "note": "Se macOS segnala un'app non verificata, controlla di aver scaricato il pacchetto dal dominio iina.io.",
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "apple",
+        "method": "repo",
+        "label": "Homebrew Cask",
+        "url": "https://formulae.brew.sh/cask/iina",
+        "devices": [
+          "Mac Intel",
+          "Mac Apple Silicon"
+        ],
+        "steps": [
+          "Apri il Terminale e verifica che Homebrew sia installato.",
+          "Esegui brew install --cask iina.",
+          "Avvia IINA da Launchpad e configura il flusso personale."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      }
+    ],
+    "pros": [
+      "Interfaccia nativa macOS curata e coerente",
+      "Motore mpv con ampia compatibilità di formati",
+      "Picture in Picture e integrazione con Touch Bar",
+      "Gratuito e open source"
+    ],
+    "cons": [
+      "Disponibile solo su macOS",
+      "Le funzioni da telecomando non sono previste",
+      "Alcune opzioni avanzate richiedono di modificare i file di configurazione"
+    ],
+    "logo": {
+      "src": "/logos/iina.svg",
+      "alt": "Logo di IINA"
+    },
+    "bestFor": "Utenti Mac che cercano un player nativo e ben integrato.",
+    "features": [
+      "Interfaccia nativa con modalità scura automatica",
+      "Picture in Picture e supporto Touch Bar",
+      "Riproduzione di flussi di rete personali",
+      "Sottotitoli, playlist e gestione capitoli"
+    ],
+    "requirements": [
+      "macOS 11 Big Sur o successivo",
+      "Mac con processore Intel o Apple Silicon"
+    ],
+    "seo": {
+      "title": "IINA per macOS: download e installazione",
+      "description": "Come installare IINA su Mac dal DMG ufficiale o con Homebrew, con verifica della firma dell'app e apertura di un flusso di rete personale.",
+      "keywords": [
+        "IINA",
+        "player macOS",
+        "installare IINA",
+        "IINA download",
+        "player video Mac"
+      ]
+    },
+    "order": 4,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "hypnotix",
+    "slug": "hypnotix",
+    "name": "Hypnotix",
+    "tagline": "Player IPTV leggero e integrato nell'ecosistema Linux Mint.",
+    "description": "Hypnotix è un player IPTV open source sviluppato dal team di Linux Mint, pensato per integrarsi con l'ambiente desktop e offrire un'esperienza semplice su Linux. L'interfaccia organizza le fonti in gruppi, mostra i loghi dei canali e consente di cercare rapidamente all'interno delle liste configurate dall'utente. Non include contenuti proprietari: le fonti vanno aggiunte personalmente, nel rispetto dei diritti di trasmissione. È disponibile come pacchetto Flatpak su Flathub e tramite i repository di Linux Mint e Ubuntu, oltre che dal codice sorgente su GitHub. La combinazione di interfaccia essenziale e leggerezza lo rende adatto anche a computer modesti o a vecchi portatili riutilizzati come postazione TV.",
+    "officialUrl": "https://github.com/linuxmint/hypnotix",
+    "developer": "Linux Mint",
+    "licenseModel": "free",
+    "platforms": [
+      "linux"
+    ],
+    "install": [
+      {
+        "platform": "linux",
+        "method": "flatpak",
+        "label": "Flathub",
+        "url": "https://flathub.org/apps/com.linuxmint.Hypnotix",
+        "devices": [
+          "Qualsiasi distribuzione con Flatpak"
+        ],
+        "steps": [
+          "Verifica che Flatpak e il repository Flathub siano attivi.",
+          "Installa il pacchetto com.linuxmint.Hypnotix dalla pagina Flathub.",
+          "Avvia Hypnotix e aggiungi una fonte personale dalla finestra delle preferenze.",
+          "Organizza le fonti in gruppi per ritrovarle più rapidamente."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "linux",
+        "method": "repo",
+        "label": "Repository Linux Mint",
+        "url": "https://github.com/linuxmint/hypnotix",
+        "devices": [
+          "Linux Mint",
+          "Ubuntu e derivate"
+        ],
+        "steps": [
+          "Apri il gestore pacchetti della distribuzione.",
+          "Cerca hypnotix e installa il pacchetto dai repository ufficiali.",
+          "Avvia l'app dal menu e configura le tue fonti legittime."
+        ],
+        "note": "Sulle distribuzioni non basate su Debian/Ubuntu conviene usare Flatpak.",
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      }
+    ],
+    "pros": [
+      "Leggero e adatto a hardware modesto",
+      "Interfaccia semplice e in italiano",
+      "Integrazione curata con Linux Mint e ambienti GTK",
+      "Open source e senza pubblicità"
+    ],
+    "cons": [
+      "Disponibile solo su Linux",
+      "Funzioni avanzate limitate rispetto ai player commerciali",
+      "La gestione delle liste è manuale"
+    ],
+    "logo": {
+      "src": "/logos/hypnotix.svg",
+      "alt": "Logo di Hypnotix"
+    },
+    "bestFor": "Utenti Linux che vogliono un player IPTV semplice e nativo.",
+    "features": [
+      "Gestione di fonti personali organizzate in gruppi",
+      "Ricerca rapida tra i canali configurati",
+      "Supporto ai loghi dei canali",
+      "Pacchetto Flatpak e repository Debian"
+    ],
+    "requirements": [
+      "Distribuzione Linux con GTK 3 e Flatpak oppure repository Debian/Ubuntu",
+      "Connessione di rete stabile"
+    ],
+    "seo": {
+      "title": "Hypnotix su Linux: installazione con Flatpak o repository",
+      "description": "Guida all'installazione di Hypnotix su Linux tramite Flathub o repository Linux Mint, con configurazione delle fonti personali e organizzazione in gruppi.",
+      "keywords": [
+        "Hypnotix",
+        "player IPTV Linux",
+        "Hypnotix Flatpak",
+        "Linux Mint IPTV"
+      ]
+    },
+    "order": 5,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "tivimate",
+    "slug": "tivimate",
+    "name": "TiviMate",
+    "tagline": "Interfaccia televisiva curata, pensata per il telecomando.",
+    "description": "TiviMate è un player IPTV per Android e Android TV noto per l'interfaccia a guida remota: guida programmi, gruppi di canali, preferiti e registrazione rendono l'esperienza simile a quella di un decoder tradizionale. La versione base è gratuita, mentre le funzioni avanzate richiedono un abbonamento al piano Premium acquistabile in-app. Il player non fornisce contenuti: l'utente inserisce la propria fonte legittima e configura l'aspetto dell'interfaccia. L'installazione ufficiale avviene tramite Google Play; sui dispositivi senza store integrato si utilizza il pacchetto APK distribuito dal produttore, mai da siti di terze parti. È una delle scelte più apprezzate su Nvidia Shield e TV box Android.",
+    "officialUrl": "https://tivimate.com/",
+    "developer": "AR Studio",
+    "licenseModel": "freemium",
+    "platforms": [
+      "android",
+      "android-tv"
+    ],
+    "install": [
+      {
+        "platform": "android",
+        "method": "store",
+        "label": "Google Play",
+        "url": "https://play.google.com/store/apps/details?id=ar.tvplayer.tv",
+        "packageId": "ar.tvplayer.tv",
+        "devices": [
+          "Smartphone e tablet Android"
+        ],
+        "steps": [
+          "Apri Google Play e cerca TiviMate verificando lo sviluppatore AR Studio.",
+          "Installa l'app e avviala per completare la configurazione guidata.",
+          "Aggiungi la fonte personale e scegli il layout dell'interfaccia.",
+          "Attiva il piano Premium solo se ti servono le funzioni avanzate."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "android-tv",
+        "method": "store",
+        "label": "Play Store TV",
+        "url": "https://play.google.com/store/apps/details?id=ar.tvplayer.tv",
+        "packageId": "ar.tvplayer.tv",
+        "devices": [
+          "Android TV",
+          "Google TV",
+          "Nvidia Shield"
+        ],
+        "steps": [
+          "Dal televisore apri il Play Store e installa TiviMate.",
+          "Avvia l'app e segui la procedura di configurazione con il telecomando.",
+          "Inserisci la fonte legittima e organizza i gruppi di canali.",
+          "Imposta la guida programmi se la tua fonte la fornisce."
+        ],
+        "note": "Su Fire TV l'app non è presente nello store Amazon: usa solo l'APK ufficiale indicato dal produttore.",
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      }
+    ],
+    "pros": [
+      "Interfaccia ottimizzata per il telecomando",
+      "Guida programmi e gestione dei preferiti complete",
+      "Prestazioni fluide anche su TV box economiche",
+      "Aggiornamenti frequenti"
+    ],
+    "cons": [
+      "Le funzioni più utili richiedono l'abbonamento Premium",
+      "Non disponibile su iOS",
+      "La configurazione iniziale richiede qualche passaggio"
+    ],
+    "logo": {
+      "src": "/logos/tivimate.svg",
+      "alt": "Logo di TiviMate"
+    },
+    "bestFor": "Chi guarda la TV su Android TV e vuole un'interfaccia da decoder.",
+    "features": [
+      "Guida elettronica dei programmi",
+      "Gruppi, preferiti e ordinamento canali",
+      "Registrazione e timeshift nella versione Premium",
+      "Layout personalizzabili per il telecomando"
+    ],
+    "requirements": [
+      "Android 5 o successivo, Android TV 7 o successivo",
+      "Fonte personale fornita dall'utente"
+    ],
+    "seo": {
+      "title": "TiviMate su Android TV: installazione e configurazione",
+      "description": "Installare TiviMate su Android e Android TV dal Play Store, configurare la fonte personale, i gruppi di canali e le funzioni Premium.",
+      "keywords": [
+        "TiviMate",
+        "TiviMate Android TV",
+        "installare TiviMate",
+        "player IPTV Android"
+      ]
+    },
+    "featured": true,
+    "order": 6,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "iptv-smarters-pro",
+    "slug": "iptv-smarters-pro",
+    "name": "IPTV Smarters Pro",
+    "tagline": "Player diffuso con configurazione guidata e supporto multiscreen.",
+    "description": "IPTV Smarters Pro è uno dei player più conosciuti su Android, Android TV e iOS. La configurazione avviene tramite una procedura guidata che chiede i dati della propria fonte legittima, con campi separati per server, utente e password oppure per un collegamento diretto. L'interfaccia organizza live, film e serie in sezioni distinte e include funzioni come preferiti, EPG e parental control. La versione gratuita è utilizzabile con limitazioni, mentre quella Pro elimina alcune restrizioni. Va installato esclusivamente dagli store ufficiali o dal sito del produttore: i pacchetti APK modificati diffusi online possono contenere codice indesiderato. Il player non include alcun contenuto e non fornisce abbonamenti.",
+    "officialUrl": "https://www.iptvsmarters.com/",
+    "developer": "IPTV Smarters",
+    "licenseModel": "freemium",
+    "platforms": [
+      "android",
+      "android-tv",
+      "apple",
+      "windows"
+    ],
+    "install": [
+      {
+        "platform": "android",
+        "method": "store",
+        "label": "Google Play",
+        "url": "https://play.google.com/store/apps/details?id=com.nst.iptvsmarterstvbox",
+        "packageId": "com.nst.iptvsmarterstvbox",
+        "devices": [
+          "Smartphone e tablet Android"
+        ],
+        "steps": [
+          "Cerca IPTV Smarters Pro su Google Play e controlla lo sviluppatore.",
+          "Installa l'app e accetta i termini d'uso.",
+          "Scegli il metodo di accesso adatto alla tua fonte legittima.",
+          "Compila i campi richiesti e salva il profilo."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "android-tv",
+        "method": "store",
+        "label": "Play Store TV",
+        "url": "https://play.google.com/store/apps/details?id=com.nst.iptvsmarterstvbox",
+        "packageId": "com.nst.iptvsmarterstvbox",
+        "devices": [
+          "Android TV",
+          "Google TV",
+          "Fire TV"
+        ],
+        "steps": [
+          "Apri il Play Store del televisore e installa l'app.",
+          "Avvia la configurazione e inserisci i dati della tua fonte.",
+          "Attendi il caricamento di live, film e serie.",
+          "Imposta parental control e preferiti dal menu impostazioni."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "windows",
+        "method": "exe",
+        "label": "Sito ufficiale",
+        "url": "https://www.iptvsmarters.com/",
+        "devices": [
+          "Windows 10",
+          "Windows 11"
+        ],
+        "steps": [
+          "Apri il sito ufficiale e individua la sezione download per Windows.",
+          "Scarica l'installer proposto dal produttore e verifica la firma del file.",
+          "Installa l'app e configura il profilo con i dati della tua fonte legittima."
+        ],
+        "note": "La disponibilità della versione desktop cambia nel tempo: se non è presente, usa la versione Android o web.",
+        "verified": false
+      },
+      {
+        "platform": "apple",
+        "method": "appstore",
+        "label": "App Store",
+        "url": "https://apps.apple.com/it/search?term=IPTV%20Smarters",
+        "devices": [
+          "iPhone",
+          "iPad",
+          "Apple TV"
+        ],
+        "steps": [
+          "Apri l'App Store e cerca IPTV Smarters verificando lo sviluppatore.",
+          "Installa l'app e completa la configurazione guidata.",
+          "Inserisci i dati della fonte legittima e salva il profilo."
+        ],
+        "note": "Il listing può cambiare nome o essere rimosso: verifica sempre lo sviluppatore prima di installare.",
+        "verified": false
+      }
+    ],
+    "pros": [
+      "Configurazione guidata adatta ai principianti",
+      "Interfaccia completa con live, film e serie",
+      "Disponibile su Android, Android TV, iOS e Windows",
+      "Parental control e gestione dei preferiti"
+    ],
+    "cons": [
+      "Versione gratuita con limitazioni",
+      "Interfaccia più pesante rispetto ai player minimali",
+      "Circolano molti APK non ufficiali: serve attenzione"
+    ],
+    "logo": {
+      "src": "/logos/iptv-smarters-pro.svg",
+      "alt": "Logo di IPTV Smarters Pro"
+    },
+    "bestFor": "Chi cerca una configurazione guidata e un'interfaccia completa.",
+    "features": [
+      "Configurazione guidata del profilo",
+      "Sezioni separate per live, film e serie",
+      "Guida programmi e preferiti",
+      "Parental control"
+    ],
+    "requirements": [
+      "Android 5 o successivo, iOS 12 o successivo, Windows 10 o successivo",
+      "Dati di accesso alla propria fonte legittima"
+    ],
+    "seo": {
+      "title": "IPTV Smarters Pro: installazione su Android, TV, iOS e Windows",
+      "description": "Come installare IPTV Smarters Pro dai canali ufficiali su Android, Android TV, iPhone e Windows, con configurazione guidata del profilo personale.",
+      "keywords": [
+        "IPTV Smarters Pro",
+        "installare IPTV Smarters",
+        "IPTV Smarters Android TV",
+        "player IPTV"
+      ]
+    },
+    "featured": true,
+    "order": 7,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "televizo",
+    "slug": "televizo",
+    "name": "Televizo",
+    "tagline": "Player Android essenziale, con ottima gestione di EPG e archivi.",
+    "description": "Televizo è un player IPTV per Android e Android TV apprezzato per la reattività e per un'interfaccia pulita che non ruba spazio al video. Consente di gestire più profili, organizzare i canali in gruppi, consultare la guida programmi e riprendere la visione dall'archivio quando la fonte lo mette a disposizione. La versione gratuita è sufficiente per un uso base, mentre la licenza Pro aggiunge funzioni come la rimozione della pubblicità e il supporto a più fonti contemporanee. L'app non contiene canali né abbonamenti: l'utente inserisce esclusivamente la propria fonte legittima. L'installazione avviene da Google Play o dal pacchetto APK pubblicato dallo sviluppatore.",
+    "officialUrl": "https://play.google.com/store/search?q=Televizo&c=apps",
+    "developer": "Televizo",
+    "licenseModel": "freemium",
+    "platforms": [
+      "android",
+      "android-tv"
+    ],
+    "install": [
+      {
+        "platform": "android",
+        "method": "store",
+        "label": "Google Play (ricerca)",
+        "url": "https://play.google.com/store/search?q=Televizo&c=apps",
+        "devices": [
+          "Smartphone e tablet Android"
+        ],
+        "steps": [
+          "Apri il link di ricerca su Google Play e individua Televizo.",
+          "Controlla che l'icona e lo sviluppatore corrispondano a quelli mostrati sul sito del produttore.",
+          "Installa l'app e aggiungi la tua fonte legittima dalla schermata iniziale.",
+          "Importa la guida programmi se disponibile."
+        ],
+        "note": "Il listing non è confermato in modo univoco: verifica sempre il nome dello sviluppatore prima di installare.",
+        "verified": false
+      },
+      {
+        "platform": "android-tv",
+        "method": "store",
+        "label": "Play Store TV",
+        "url": "https://play.google.com/store/search?q=Televizo&c=apps",
+        "devices": [
+          "Android TV",
+          "Google TV"
+        ],
+        "steps": [
+          "Dal televisore apri il Play Store e cerca Televizo.",
+          "Installa l'app e avviala con il telecomando.",
+          "Configura il profilo con la fonte personale e organizza i gruppi.",
+          "Verifica che la guida programmi si aggiorni senza errori."
+        ],
+        "verified": false
+      }
+    ],
+    "pros": [
+      "Interfaccia pulita e veloce",
+      "Buona gestione di EPG e archivio",
+      "Supporto a più profili",
+      "Funziona bene anche su dispositivi modesti"
+    ],
+    "cons": [
+      "Disponibile solo su Android",
+      "Alcune funzioni richiedono la licenza Pro",
+      "Il listing ufficiale va verificato con attenzione"
+    ],
+    "logo": {
+      "src": "/logos/televizo.svg",
+      "alt": "Logo di Televizo"
+    },
+    "bestFor": "Chi vuole un player Android leggero ma con EPG curata.",
+    "features": [
+      "Gestione di più profili",
+      "Guida elettronica dei programmi",
+      "Gruppi di canali e preferiti",
+      "Ripresa della visione dall'archivio"
+    ],
+    "requirements": [
+      "Android 5 o successivo o Android TV 7 o successivo",
+      "Fonte personale legittima"
+    ],
+    "seo": {
+      "title": "Televizo: installazione su Android e Android TV",
+      "description": "Guida a Televizo per Android e Android TV: installazione dallo store, configurazione del profilo, gestione di EPG, gruppi e archivio.",
+      "keywords": [
+        "Televizo",
+        "Televizo Android TV",
+        "player IPTV Android",
+        "installare Televizo"
+      ]
+    },
+    "order": 8,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "ott-navigator",
+    "slug": "ott-navigator",
+    "name": "OTT Navigator",
+    "tagline": "Player flessibile con layout configurabili per TV e box Android.",
+    "description": "OTT Navigator è un player IPTV per Android e Android TV che punta sulla personalizzazione del layout: si può scegliere tra diverse griglie, dimensioni dei caratteri e disposizioni dei pannelli per adattare l'interfaccia al proprio televisore. Supporta più profili, guida programmi, ordinamento dei canali e funzioni di timeshift quando la fonte le espone. È disponibile in versione gratuita con pubblicità e in versione Premium acquistabile in-app. Il player è pensato per chi inserisce una fonte personale legittima e vuole controllarne l'aspetto senza passare a un media center completo. L'installazione consigliata è da Google Play, con verifica dello sviluppatore indicato sul sito ufficiale.",
+    "officialUrl": "https://play.google.com/store/apps/details?id=studio.scillarium.ottnavigator",
+    "developer": "Studio Scillarium",
+    "licenseModel": "freemium",
+    "platforms": [
+      "android",
+      "android-tv"
+    ],
+    "install": [
+      {
+        "platform": "android",
+        "method": "store",
+        "label": "Google Play",
+        "url": "https://play.google.com/store/apps/details?id=studio.scillarium.ottnavigator",
+        "packageId": "studio.scillarium.ottnavigator",
+        "devices": [
+          "Smartphone e tablet Android"
+        ],
+        "steps": [
+          "Installa OTT Navigator da Google Play verificando lo sviluppatore.",
+          "Apri l'app e scegli il layout iniziale più adatto allo schermo.",
+          "Aggiungi la fonte personale e importa la guida programmi.",
+          "Personalizza gruppi e ordinamento dei canali.",
+          "Verifica infine che il telecomando scorra l'elenco senza ritardi."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "android-tv",
+        "method": "store",
+        "label": "Play Store TV",
+        "url": "https://play.google.com/store/apps/details?id=studio.scillarium.ottnavigator",
+        "packageId": "studio.scillarium.ottnavigator",
+        "devices": [
+          "Android TV",
+          "Google TV",
+          "TV box Android"
+        ],
+        "steps": [
+          "Dal televisore installa l'app dal Play Store integrato.",
+          "Al primo avvio scegli il layout TV e regola la dimensione del testo.",
+          "Configura la fonte e verifica la risposta del telecomando."
+        ],
+        "note": "Alcuni TV box cinesi non includono Play Store: in quel caso usa l'APK ufficiale del produttore.",
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      }
+    ],
+    "pros": [
+      "Layout molto personalizzabili",
+      "Buona resa su schermi grandi e telecomandi",
+      "Gestione di più profili e fonti",
+      "Versione gratuita utilizzabile"
+    ],
+    "cons": [
+      "Interfaccia ricca che richiede tempo per essere capita",
+      "Versione gratuita con pubblicità",
+      "Solo Android e Android TV"
+    ],
+    "logo": {
+      "src": "/logos/ott-navigator.svg",
+      "alt": "Logo di OTT Navigator"
+    },
+    "bestFor": "Chi vuole adattare l'interfaccia al proprio televisore e al proprio modo di guardare.",
+    "features": [
+      "Layout TV configurabili",
+      "Guida programmi e timeshift quando supportati",
+      "Più profili e fonti",
+      "Ordinamento e gruppi canali"
+    ],
+    "requirements": [
+      "Android 5 o successivo, Android TV 7 o successivo",
+      "Fonte personale legittima"
+    ],
+    "seo": {
+      "title": "OTT Navigator: guida all'installazione su Android TV",
+      "description": "Installare OTT Navigator su Android e Android TV, scegliere il layout, configurare la fonte personale e personalizzare gruppi e guida programmi.",
+      "keywords": [
+        "OTT Navigator",
+        "OTT Navigator Android TV",
+        "player IPTV",
+        "installare OTT Navigator"
+      ]
+    },
+    "order": 9,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "perfect-player",
+    "slug": "perfect-player",
+    "name": "Perfect Player",
+    "tagline": "Storico player Android, immediato e con EPG integrata.",
+    "description": "Perfect Player è uno dei player IPTV più longevi su Android: interfaccia a griglia, gestione di più profili, guida programmi e supporto a fonti esterne lo hanno reso un punto di riferimento per chi cerca un'app semplice. Non include contenuti: l'utente configura la propria fonte legittima e organizza i canali in gruppi. La versione gratuita mostra pubblicità, mentre la versione premium la rimuove e sblocca alcune funzioni. Il progetto è maturo ma aggiornato con meno frequenza rispetto ai concorrenti, quindi conviene verificare la compatibilità con i televisori più recenti. L'installazione avviene da Google Play o tramite APK ufficiale; evita pacchetti modificati, che sono la principale fonte di malware in questo segmento.",
+    "officialUrl": "https://play.google.com/store/apps/details?id=com.niklabs.pp",
+    "developer": "Nikolay Anisimov",
+    "licenseModel": "freemium",
+    "platforms": [
+      "android",
+      "android-tv"
+    ],
+    "install": [
+      {
+        "platform": "android",
+        "method": "store",
+        "label": "Google Play",
+        "url": "https://play.google.com/store/apps/details?id=com.niklabs.pp",
+        "packageId": "com.niklabs.pp",
+        "devices": [
+          "Smartphone e tablet Android"
+        ],
+        "steps": [
+          "Installa Perfect Player da Google Play.",
+          "Apri le impostazioni e aggiungi la fonte personale.",
+          "Importa la guida programmi e organizza i gruppi di canali.",
+          "Scegli il tema chiaro o scuro in base alla stanza.",
+          "Controlla infine che il player riconosca la guida programmi importata."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "android-tv",
+        "method": "store",
+        "label": "Play Store TV",
+        "url": "https://play.google.com/store/apps/details?id=com.niklabs.pp",
+        "packageId": "com.niklabs.pp",
+        "devices": [
+          "Android TV",
+          "Google TV",
+          "Fire TV con Play Store"
+        ],
+        "steps": [
+          "Dal televisore installa l'app dal Play Store.",
+          "Apri le impostazioni con il telecomando e inserisci la fonte.",
+          "Verifica la guida programmi e regola la dimensione dei caratteri."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      }
+    ],
+    "pros": [
+      "Semplicità d'uso e configurazione rapida",
+      "Interfaccia a griglia leggibile da lontano",
+      "Supporto EPG consolidato",
+      "Funziona su dispositivi datati"
+    ],
+    "cons": [
+      "Aggiornamenti poco frequenti",
+      "Versione gratuita con pubblicità",
+      "Grafica meno moderna rispetto ai player recenti"
+    ],
+    "logo": {
+      "src": "/logos/perfect-player.svg",
+      "alt": "Logo di Perfect Player"
+    },
+    "bestFor": "Chi vuole un player Android immediato e leggero.",
+    "features": [
+      "Interfaccia a griglia per il telecomando",
+      "Guida elettronica dei programmi",
+      "Più profili e gruppi di canali",
+      "Temi chiaro e scuro"
+    ],
+    "requirements": [
+      "Android 4.4 o successivo, Android TV 7 o successivo",
+      "Fonte personale legittima"
+    ],
+    "seo": {
+      "title": "Perfect Player: installazione su Android e Android TV",
+      "description": "Come installare Perfect Player su Android e Android TV, configurare la fonte personale, l'EPG e i gruppi di canali con il telecomando.",
+      "keywords": [
+        "Perfect Player",
+        "Perfect Player Android TV",
+        "installare Perfect Player",
+        "player IPTV Android"
+      ]
+    },
+    "order": 10,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "progtv",
+    "slug": "progtv",
+    "name": "ProgTV",
+    "tagline": "Player e registratore con una tradizione lunga sul desktop e su Android.",
+    "description": "ProgTV nasce nell'ecosistema ProgDVB, storico software di ricezione televisiva per Windows, e porta su Android e Android TV un'impostazione da decoder: elenco canali, guida programmi, registrazione e gestione di più fonti. La versione mobile è gratuita con limitazioni, mentre le funzioni avanzate e la versione desktop richiedono una licenza. L'app non offre contenuti propri: l'utente inserisce la fonte legittima e configura la propria lista. Su Windows la versione ProgTV/ProgDVB si scarica dal sito del produttore; su Android si usa Google Play. È una scelta interessante per chi registra programmi e vuole passare dallo stesso ecosistema tra PC e TV, accettando un'interfaccia più tecnica rispetto alla media.",
+    "officialUrl": "https://www.progdvb.com/",
+    "developer": "ProgDVB",
+    "licenseModel": "freemium",
+    "platforms": [
+      "android",
+      "android-tv",
+      "windows"
+    ],
+    "install": [
+      {
+        "platform": "android",
+        "method": "store",
+        "label": "Google Play",
+        "url": "https://play.google.com/store/apps/details?id=com.progdvb.progtv",
+        "packageId": "com.progdvb.progtv",
+        "devices": [
+          "Smartphone e tablet Android"
+        ],
+        "steps": [
+          "Installa ProgTV da Google Play.",
+          "Apri l'app e aggiungi la fonte personale dalla sezione impostazioni.",
+          "Importa la guida programmi e imposta le cartelle di registrazione.",
+          "Verifica i permessi di archiviazione per salvare le registrazioni."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "android-tv",
+        "method": "store",
+        "label": "Play Store TV",
+        "url": "https://play.google.com/store/apps/details?id=com.progdvb.progtv",
+        "packageId": "com.progdvb.progtv",
+        "devices": [
+          "Android TV",
+          "Google TV",
+          "TV box"
+        ],
+        "steps": [
+          "Dal televisore installa ProgTV dal Play Store.",
+          "Avvia la configurazione e inserisci la fonte legittima.",
+          "Controlla che il telecomando gestisca elenco canali e guida.",
+          "Imposta una chiavetta USB per le registrazioni se serve."
+        ],
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "windows",
+        "method": "exe",
+        "label": "Sito ProgDVB",
+        "url": "https://www.progdvb.com/",
+        "devices": [
+          "Windows 10",
+          "Windows 11"
+        ],
+        "steps": [
+          "Apri il sito ufficiale e scegli la versione ProgTV o ProgDVB per Windows.",
+          "Scarica l'installer e completa la procedura.",
+          "Configura la fonte personale nelle impostazioni del canale.",
+          "Verifica i codec installati se il video non parte."
+        ],
+        "note": "La versione desktop è distribuita dal produttore: controlla sempre la firma del file scaricato.",
+        "verified": false
+      }
+    ],
+    "pros": [
+      "Funzioni di registrazione complete",
+      "Continuità tra desktop Windows e Android",
+      "Guida programmi dettagliata",
+      "Adatto a utenti tecnici"
+    ],
+    "cons": [
+      "Interfaccia poco intuitiva per i principianti",
+      "Alcune funzioni richiedono una licenza",
+      "La versione desktop va verificata sul sito del produttore"
+    ],
+    "logo": {
+      "src": "/logos/progtv.svg",
+      "alt": "Logo di ProgTV"
+    },
+    "bestFor": "Chi registra programmi e vuole lo stesso approccio su PC e TV.",
+    "features": [
+      "Registrazione dei programmi",
+      "Guida elettronica dei programmi",
+      "Gestione di più fonti",
+      "Versione desktop e mobile"
+    ],
+    "requirements": [
+      "Android 5 o successivo o Windows 10 o successivo",
+      "Spazio di archiviazione per le registrazioni"
+    ],
+    "seo": {
+      "title": "ProgTV: installazione su Android TV e Windows",
+      "description": "Guida a ProgTV e ProgDVB per Android, Android TV e Windows: installazione, configurazione della fonte, EPG e registrazione dei programmi.",
+      "keywords": [
+        "ProgTV",
+        "ProgDVB",
+        "ProgTV Android TV",
+        "registrare IPTV",
+        "player IPTV Windows"
+      ]
+    },
+    "order": 11,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "myiptv-player",
+    "slug": "myiptv-player",
+    "name": "MyIPTV Player",
+    "tagline": "Player per Windows con integrazione nel Microsoft Store.",
+    "description": "MyIPTV Player è un'app per Windows distribuita tramite Microsoft Store, pensata per riprodurre flussi di rete inseriti manualmente dall'utente. L'interfaccia segue le convenzioni di Windows 10 e 11: navigazione a schede, supporto al touch e ai tasti multimediali, gestione di una lista di canali con loghi e ricerca. Non include contenuti né abbonamenti e non richiede account: la configurazione consiste nell'aggiungere la propria fonte legittima. Essendo un'app dello Store, si aggiorna tramite Windows Update e non richiede permessi di amministratore. È una soluzione pratica per un HTPC o un portatile collegato al televisore, soprattutto per chi preferisce non installare software desktop tradizionale. L'interfaccia può essere controllata anche con mouse e tastiera, mentre il supporto ai tasti multimediali semplifica la riproduzione da un telecomando HTPC.",
+    "officialUrl": "https://apps.microsoft.com/search?query=MyIPTV%20Player",
+    "developer": "Upvise",
+    "licenseModel": "free",
+    "platforms": [
+      "windows"
+    ],
+    "install": [
+      {
+        "platform": "windows",
+        "method": "store",
+        "label": "Microsoft Store",
+        "url": "https://apps.microsoft.com/search?query=MyIPTV%20Player",
+        "devices": [
+          "Windows 10",
+          "Windows 11"
+        ],
+        "steps": [
+          "Apri il link di ricerca sul Microsoft Store e individua MyIPTV Player.",
+          "Controlla il nome dello sviluppatore prima di procedere.",
+          "Installa l'app e avviala dal menu Start.",
+          "Aggiungi la fonte personale dalla schermata di configurazione."
+        ],
+        "note": "Il listing può cambiare: verifica sempre lo sviluppatore indicato nella scheda dello Store.",
+        "verified": false
+      }
+    ],
+    "pros": [
+      "Installazione pulita tramite Microsoft Store",
+      "Interfaccia coerente con Windows 10 e 11",
+      "Nessun account richiesto",
+      "Aggiornamenti gestiti dal sistema",
+      "Nessun costo aggiuntivo dopo l'installazione"
+    ],
+    "cons": [
+      "Disponibile solo su Windows",
+      "Funzioni limitate rispetto ai player Android",
+      "Il listing ufficiale va verificato",
+      "Non gestisce una guida programmi avanzata"
+    ],
+    "logo": {
+      "src": "/logos/myiptv-player.svg",
+      "alt": "Logo di MyIPTV Player"
+    },
+    "bestFor": "Chi usa un HTPC Windows e preferisce installare app dallo Store.",
+    "features": [
+      "Interfaccia a schede ottimizzata per touch e mouse",
+      "Lista canali con loghi e ricerca",
+      "Supporto ai tasti multimediali",
+      "Aggiornamenti tramite Microsoft Store",
+      "Ricerca rapida nella lista canali",
+      "Finestra sempre in primo piano opzionale"
+    ],
+    "requirements": [
+      "Windows 10 o Windows 11 aggiornato",
+      "Fonte personale legittima"
+    ],
+    "seo": {
+      "title": "MyIPTV Player su Windows: installazione dallo Store",
+      "description": "Come installare MyIPTV Player su Windows 10 e 11 tramite Microsoft Store, verificare lo sviluppatore e configurare la fonte personale.",
+      "keywords": [
+        "MyIPTV Player",
+        "player IPTV Windows",
+        "MyIPTV Microsoft Store",
+        "IPTV HTPC"
+      ]
+    },
+    "order": 12,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "gse-smart-iptv",
+    "slug": "gse-smart-iptv",
+    "name": "GSE Smart IPTV",
+    "tagline": "Player multiformato con gestione di più profili su mobile e Apple TV.",
+    "description": "GSE Smart IPTV è un player per Android, Android TV, iOS e Apple TV che combina la riproduzione di flussi di rete con una libreria locale di file multimediali. L'interfaccia organizza le fonti in profili separati e consente di passare rapidamente da un elenco all'altro, con supporto a guida programmi e ricerca. La versione gratuita include pubblicità e alcune limitazioni, mentre l'acquisto in-app le rimuove. Il player non fornisce contenuti e non vende abbonamenti: tutto ciò che appare nell'app proviene dalle fonti configurate dall'utente. L'installazione avviene dagli store ufficiali o dal sito del produttore; i pacchetti APK di terze parti vanno evitati perché spesso modificati.",
+    "officialUrl": "https://www.gsesmartiptv.com/",
+    "developer": "GSE Tech",
+    "licenseModel": "freemium",
+    "platforms": [
+      "android",
+      "android-tv",
+      "apple"
+    ],
+    "install": [
+      {
+        "platform": "android",
+        "method": "store",
+        "label": "Google Play (ricerca)",
+        "url": "https://play.google.com/store/search?q=GSE%20Smart%20IPTV&c=apps",
+        "devices": [
+          "Smartphone e tablet Android"
+        ],
+        "steps": [
+          "Cerca GSE Smart IPTV su Google Play e verifica lo sviluppatore.",
+          "Installa l'app e apri la sezione dei profili.",
+          "Aggiungi la fonte personale e salva il profilo.",
+          "Importa la guida programmi se disponibile."
+        ],
+        "note": "Il nome del listing può variare: confronta icona e sviluppatore con il sito ufficiale.",
+        "verified": false
+      },
+      {
+        "platform": "android-tv",
+        "method": "store",
+        "label": "Play Store TV",
+        "url": "https://play.google.com/store/search?q=GSE%20Smart%20IPTV&c=apps",
+        "devices": [
+          "Android TV",
+          "Google TV"
+        ],
+        "steps": [
+          "Dal televisore apri il Play Store e cerca l'app.",
+          "Installa e avvia la configurazione con il telecomando.",
+          "Aggiungi la fonte legittima e organizza i profili."
+        ],
+        "verified": false
+      },
+      {
+        "platform": "apple",
+        "method": "appstore",
+        "label": "App Store",
+        "url": "https://apps.apple.com/it/search?term=GSE%20Smart%20IPTV",
+        "devices": [
+          "iPhone",
+          "iPad",
+          "Apple TV"
+        ],
+        "steps": [
+          "Apri l'App Store e cerca GSE Smart IPTV.",
+          "Verifica lo sviluppatore e installa l'app.",
+          "Configura il profilo con i dati della tua fonte legittima."
+        ],
+        "verified": false
+      }
+    ],
+    "pros": [
+      "Disponibile su Android e Apple, inclusa Apple TV",
+      "Gestione di più profili",
+      "Lettore locale oltre ai flussi di rete",
+      "Interfaccia tradotta in italiano"
+    ],
+    "cons": [
+      "Versione gratuita con pubblicità",
+      "Qualche incongruenza tra le versioni Android e iOS",
+      "Listing da verificare con attenzione"
+    ],
+    "logo": {
+      "src": "/logos/gse-smart-iptv.svg",
+      "alt": "Logo di GSE Smart IPTV"
+    },
+    "bestFor": "Famiglie con dispositivi Android e Apple che vogliono un solo player.",
+    "features": [
+      "Più profili separati",
+      "Guida programmi e ricerca",
+      "Riproduzione di file locali",
+      "Supporto Apple TV"
+    ],
+    "requirements": [
+      "Android 5 o successivo, iOS 12 o successivo, tvOS 12 o successivo",
+      "Fonte personale legittima"
+    ],
+    "seo": {
+      "title": "GSE Smart IPTV: installazione su Android, Apple TV e iPhone",
+      "description": "Guida a GSE Smart IPTV per Android, Android TV, iPhone, iPad e Apple TV: installazione, profili multipli e configurazione della fonte personale.",
+      "keywords": [
+        "GSE Smart IPTV",
+        "GSE Smart IPTV Apple TV",
+        "player IPTV iOS",
+        "installare GSE"
+      ]
+    },
+    "order": 13,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "ss-iptv",
+    "slug": "ss-iptv",
+    "name": "SS IPTV",
+    "tagline": "Player pensato per i televisori LG e Samsung, senza box aggiuntivi.",
+    "description": "SS IPTV è un player che nasce per i televisori smart LG webOS e Samsung Tizen, dove si installa direttamente dallo store del produttore senza bisogno di box esterni. L'applicazione gestisce una lista di canali configurabile dall'utente, con supporto a guida programmi, loghi e ricerca. La configurazione avviene tramite un codice dispositivo associato a un account sul sito ufficiale, dove si impostano le fonti personali legittime. È una soluzione apprezzata perché evita cavi e telecomandi aggiuntivi, ma dipende dalle politiche degli store televisivi, che possono rimuovere o limitare le app nel tempo. Prima di acquistare un televisore conviene quindi verificare la disponibilità effettiva dell'app sul modello scelto.",
+    "officialUrl": "https://ss-iptv.com/",
+    "developer": "SS IPTV",
+    "licenseModel": "free",
+    "platforms": [
+      "lg-webos",
+      "samsung-tizen",
+      "android"
+    ],
+    "install": [
+      {
+        "platform": "lg-webos",
+        "method": "store",
+        "label": "LG Content Store",
+        "url": "https://ss-iptv.com/",
+        "devices": [
+          "TV LG webOS 3.0 e successivi"
+        ],
+        "steps": [
+          "Apri LG Content Store sul televisore e cerca SS IPTV.",
+          "Installa l'app e avviala per ottenere il codice dispositivo.",
+          "Registra il codice sul sito ufficiale e configura la fonte personale.",
+          "Riavvia l'app per caricare la lista."
+        ],
+        "note": "La disponibilità nello store LG varia per paese e modello: verifica prima di procedere.",
+        "verified": false
+      },
+      {
+        "platform": "samsung-tizen",
+        "method": "store",
+        "label": "Samsung Apps",
+        "url": "https://ss-iptv.com/",
+        "devices": [
+          "TV Samsung Tizen 2015 e successivi"
+        ],
+        "steps": [
+          "Apri Samsung Apps dal televisore e cerca SS IPTV.",
+          "Installa l'app e annota il codice dispositivo mostrato.",
+          "Associa il codice sul sito ufficiale e imposta la fonte personale.",
+          "Riavvia l'app e verifica la lista canali."
+        ],
+        "note": "Sui modelli più recenti l'app potrebbe non essere presente: controlla nel Samsung Apps del tuo TV.",
+        "verified": false
+      },
+      {
+        "platform": "android",
+        "method": "store",
+        "label": "Google Play (ricerca)",
+        "url": "https://play.google.com/store/search?q=SS%20IPTV&c=apps",
+        "devices": [
+          "Smartphone e tablet Android"
+        ],
+        "steps": [
+          "Cerca SS IPTV su Google Play verificando lo sviluppatore.",
+          "Installa l'app e configura il profilo con la fonte personale.",
+          "Collega l'account per sincronizzare la lista con il televisore."
+        ],
+        "verified": false
+      }
+    ],
+    "pros": [
+      "Nessun box esterno necessario",
+      "Integrazione con il telecomando del televisore",
+      "Configurazione tramite codice dispositivo",
+      "Gratuita"
+    ],
+    "cons": [
+      "Disponibilità variabile negli store TV",
+      "Interfaccia essenziale",
+      "Dipende dalle politiche di LG e Samsung"
+    ],
+    "logo": {
+      "src": "/logos/ss-iptv.svg",
+      "alt": "Logo di SS IPTV"
+    },
+    "bestFor": "Chi ha un televisore LG o Samsung e non vuole aggiungere dispositivi.",
+    "features": [
+      "App nativa per LG webOS e Samsung Tizen",
+      "Lista canali con loghi e ricerca",
+      "Associazione tramite codice dispositivo",
+      "Sincronizzazione con l'account"
+    ],
+    "requirements": [
+      "TV LG webOS 3.0 o successivo oppure Samsung Tizen 2015 o successivo",
+      "Connessione internet stabile sul televisore"
+    ],
+    "seo": {
+      "title": "SS IPTV su LG e Samsung: installazione e configurazione",
+      "description": "Come installare SS IPTV su televisori LG webOS e Samsung Tizen, associare il codice dispositivo e configurare la fonte personale legittima.",
+      "keywords": [
+        "SS IPTV",
+        "SS IPTV LG",
+        "SS IPTV Samsung",
+        "player IPTV smart TV"
+      ]
+    },
+    "featured": true,
+    "order": 14,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "ottplayer",
+    "slug": "ottplayer",
+    "name": "OttPlayer",
+    "tagline": "Un solo account per ritrovare i tuoi flussi su TV, mobile e browser.",
+    "description": "OttPlayer è un player multipiattaforma che punta sulla sincronizzazione: si configura una volta la fonte personale e la si ritrova su Android, iOS, web, LG webOS e Samsung Tizen. L'interfaccia è semplice e organizza i canali in gruppi, con guida programmi e ricerca. La versione gratuita è utilizzabile per un numero limitato di dispositivi, mentre i piani superiori aggiungono slot e funzioni. Il servizio non fornisce contenuti né abbonamenti: l'utente collega esclusivamente fonti di cui possiede i diritti. L'installazione avviene dagli store ufficiali o direttamente dal browser, senza software aggiuntivo. È una buona scelta per famiglie con dispositivi misti che vogliono un'unica configurazione.",
+    "officialUrl": "https://ottplayer.tv/",
+    "developer": "OttPlayer",
+    "licenseModel": "freemium",
+    "platforms": [
+      "web",
+      "android",
+      "apple",
+      "lg-webos",
+      "samsung-tizen"
+    ],
+    "install": [
+      {
+        "platform": "web",
+        "method": "web",
+        "label": "Web app",
+        "url": "https://ottplayer.tv/",
+        "devices": [
+          "Chrome",
+          "Edge",
+          "Safari",
+          "Firefox recenti"
+        ],
+        "steps": [
+          "Apri il sito ufficiale e accedi o crea un account.",
+          "Aggiungi la fonte personale dalla sezione dedicata.",
+          "Avvia il player dal browser e salva la pagina tra i preferiti."
+        ],
+        "note": "Per installarla come app sul desktop usa la funzione Installa app del browser, se disponibile.",
+        "verified": true,
+        "verifiedAt": "2026-11-21"
+      },
+      {
+        "platform": "android",
+        "method": "store",
+        "label": "Google Play (ricerca)",
+        "url": "https://play.google.com/store/search?q=OttPlayer&c=apps",
+        "devices": [
+          "Smartphone e tablet Android",
+          "Android TV"
+        ],
+        "steps": [
+          "Cerca OttPlayer su Google Play e verifica lo sviluppatore.",
+          "Installa l'app e accedi con lo stesso account usato sul web.",
+          "Attendi la sincronizzazione della lista e avvia la riproduzione."
+        ],
+        "verified": false
+      },
+      {
+        "platform": "apple",
+        "method": "appstore",
+        "label": "App Store",
+        "url": "https://apps.apple.com/it/search?term=OttPlayer",
+        "devices": [
+          "iPhone",
+          "iPad",
+          "Apple TV"
+        ],
+        "steps": [
+          "Cerca OttPlayer sull'App Store e controlla lo sviluppatore.",
+          "Installa l'app e accedi al tuo account.",
+          "Verifica che la lista sia sincronizzata e avvia un canale."
+        ],
+        "verified": false
+      },
+      {
+        "platform": "lg-webos",
+        "method": "store",
+        "label": "LG Content Store",
+        "url": "https://ottplayer.tv/",
+        "devices": [
+          "TV LG webOS"
+        ],
+        "steps": [
+          "Apri LG Content Store e cerca OttPlayer.",
+          "Installa l'app e accedi con le tue credenziali.",
+          "Seleziona la lista sincronizzata e avvia la visione."
+        ],
+        "note": "La presenza nello store LG dipende dal paese: verifica sul tuo televisore.",
+        "verified": false
+      },
+      {
+        "platform": "samsung-tizen",
+        "method": "store",
+        "label": "Samsung Apps",
+        "url": "https://ottplayer.tv/",
+        "devices": [
+          "TV Samsung Tizen"
+        ],
+        "steps": [
+          "Apri Samsung Apps e cerca OttPlayer.",
+          "Installa l'app e accedi con il tuo account.",
+          "Apri la lista sincronizzata e verifica la riproduzione."
+        ],
+        "note": "La disponibilità varia per modello e anno: controlla nello store del televisore.",
+        "verified": false
+      }
+    ],
+    "pros": [
+      "Sincronizzazione tra TV, mobile e browser",
+      "Interfaccia semplice e coerente",
+      "Nessun box aggiuntivo sui televisori supportati",
+      "Configurazione una volta sola"
+    ],
+    "cons": [
+      "Piano gratuito con numero limitato di dispositivi",
+      "Disponibilità negli store TV non garantita",
+      "Alcune funzioni richiedono un piano a pagamento"
+    ],
+    "logo": {
+      "src": "/logos/ottplayer.svg",
+      "alt": "Logo di OttPlayer"
+    },
+    "bestFor": "Famiglie con più dispositivi che vogliono un'unica configurazione.",
+    "features": [
+      "Sincronizzazione della lista tra dispositivi",
+      "App per web, Android, iOS, LG e Samsung",
+      "Guida programmi e gruppi di canali",
+      "Gestione dell'account dal browser"
+    ],
+    "requirements": [
+      "Connessione internet stabile",
+      "Account OttPlayer e fonte personale legittima"
+    ],
+    "seo": {
+      "title": "OttPlayer: installazione su TV, Android, iPhone e web",
+      "description": "Guida a OttPlayer su web, Android, iOS, LG webOS e Samsung Tizen: account unico, sincronizzazione delle liste e configurazione della fonte personale.",
+      "keywords": [
+        "OttPlayer",
+        "OttPlayer LG",
+        "OttPlayer Samsung",
+        "player IPTV multipiattaforma"
+      ]
+    },
+    "order": 15,
+    "verifiedAt": "2026-11-21"
+  },
+  {
+    "id": "smart-iptv",
+    "slug": "smart-iptv",
+    "name": "Smart IPTV",
+    "tagline": "Storica app per Samsung e LG, con attivazione tramite MAC address.",
+    "description": "Smart IPTV è una delle applicazioni più conosciute per i televisori Samsung Tizen e LG webOS. Si installa dallo store del televisore e si attiva associando l'indirizzo MAC del TV a un account sul sito ufficiale, dove si configura la fonte personale. Dopo un periodo di prova gratuito l'app richiede un pagamento una tantum per singolo dispositivo. L'interfaccia è essenziale: elenco canali, gruppi, loghi e guida programmi. Non include contenuti e non vende abbonamenti: ogni utente collega esclusivamente fonti legittime. Essendo legata agli store televisivi, la disponibilità può cambiare con gli aggiornamenti firmware; conviene verificare la presenza dell'app sul proprio modello prima di qualsiasi acquisto.",
+    "officialUrl": "https://siptv.app/",
+    "developer": "Smart IPTV",
+    "licenseModel": "paid",
+    "platforms": [
+      "samsung-tizen",
+      "lg-webos"
+    ],
+    "install": [
+      {
+        "platform": "samsung-tizen",
+        "method": "store",
+        "label": "Samsung Apps",
+        "url": "https://siptv.app/",
+        "devices": [
+          "TV Samsung Tizen 2015 e successivi"
+        ],
+        "steps": [
+          "Apri Samsung Apps sul televisore e cerca Smart IPTV.",
+          "Installa l'app e annota l'indirizzo MAC mostrato nella schermata iniziale.",
+          "Registra il MAC sul sito ufficiale e carica la fonte personale.",
+          "Riavvia l'app per completare l'attivazione."
+        ],
+        "note": "L'app è a pagamento dopo il periodo di prova: il costo è per singolo televisore.",
+        "verified": false
+      },
+      {
+        "platform": "lg-webos",
+        "method": "store",
+        "label": "LG Content Store",
+        "url": "https://siptv.app/",
+        "devices": [
+          "TV LG webOS"
+        ],
+        "steps": [
+          "Apri LG Content Store e cerca Smart IPTV.",
+          "Installa l'app e prendi nota dell'indirizzo MAC del televisore.",
+          "Associa il MAC sul sito ufficiale e configura la fonte personale.",
+          "Riavvia l'app e verifica la lista canali."
+        ],
+        "note": "Prima dell'acquisto controlla che l'app sia disponibile nello store del tuo modello.",
+        "verified": false
+      }
+    ],
+    "pros": [
+      "Integrazione diretta con i televisori Samsung e LG",
+      "Attivazione semplice tramite MAC address",
+      "Interfaccia leggera",
+      "Nessun dispositivo aggiuntivo"
+    ],
+    "cons": [
+      "A pagamento una tantum per dispositivo",
+      "Disponibilità legata agli store TV",
+      "Funzioni limitate rispetto ai player moderni"
+    ],
+    "logo": {
+      "src": "/logos/smart-iptv.svg",
+      "alt": "Logo di Smart IPTV"
+    },
+    "bestFor": "Chi vuole un'app leggera direttamente sul televisore Samsung o LG.",
+    "features": [
+      "Attivazione tramite indirizzo MAC",
+      "Lista canali con gruppi e loghi",
+      "Guida programmi",
+      "Nessun box esterno"
+    ],
+    "requirements": [
+      "TV Samsung Tizen o LG webOS supportato",
+      "Acquisto della licenza per dispositivo dopo la prova"
+    ],
+    "seo": {
+      "title": "Smart IPTV su Samsung e LG: installazione e attivazione",
+      "description": "Come installare Smart IPTV su Samsung Tizen e LG webOS, attivare il televisore tramite MAC address e configurare la fonte personale.",
+      "keywords": [
+        "Smart IPTV",
+        "Smart IPTV Samsung",
+        "Smart IPTV LG",
+        "attivazione Smart IPTV"
+      ]
+    },
+    "order": 16,
+    "verifiedAt": "2026-11-21"
+  }
+]
