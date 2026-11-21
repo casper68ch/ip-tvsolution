@@ -60,11 +60,11 @@ export default function HomePage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/logos/iptv-solution.svg"
-              alt="Logo ufficiale IP-Tv.Solution - puzzle rosso TV Solution"
-              width={80}
-              height={80}
-              className="h-20 w-20 shrink-0"
+              src="/logos/iptv-solution-text.svg"
+              alt="Logo IP-Tv.Solution: puzzle rosso con la scritta IP-Tv.Solution"
+              width={240}
+              height={55}
+              className="h-auto w-60 shrink-0"
             />
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-accent">Il progetto</p>

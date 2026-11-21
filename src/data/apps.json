@@ -1755,7 +1755,7 @@
       "Nessuna playlist inclusa: serve una fonte legittima"
     ],
     "logo": {
-      "src": "/logos/iptv-solution.svg",
+      "src": "/logos/iptv-solution-text.svg",
       "alt": "Logo puzzle rosso di IP-Tv.Solution"
     },
     "bestFor": "Chi usa Windows e vuole il player del progetto con gestore e aggiornamenti integrati.",
@@ -1831,7 +1831,7 @@
       "Nessuna playlist inclusa"
     ],
     "logo": {
-      "src": "/logos/iptv-solution.svg",
+      "src": "/logos/iptv-solution-text.svg",
       "alt": "Logo puzzle rosso di IP-Tv.Solution"
     },
     "bestFor": "Chi vuole provare subito il player dal browser, senza installazione.",
@@ -1924,7 +1924,7 @@
       "Nessuna playlist inclusa"
     ],
     "logo": {
-      "src": "/logos/iptv-solution.svg",
+      "src": "/logos/iptv-solution-text.svg",
       "alt": "Logo puzzle rosso di IP-Tv.Solution"
     },
     "bestFor": "Chi vuole il player del progetto direttamente sulla Smart TV di casa.",
@@ -2019,7 +2019,7 @@
       "Nessuna playlist inclusa"
     ],
     "logo": {
-      "src": "/logos/iptv-solution.svg",
+      "src": "/logos/iptv-solution-text.svg",
       "alt": "Logo puzzle rosso di IP-Tv.Solution"
     },
     "bestFor": "Chi vuole l'app nativa del progetto su Android, Android TV o emulatore.",
@@ -2092,7 +2092,7 @@
       "Nessuna playlist inclusa"
     ],
     "logo": {
-      "src": "/logos/iptv-solution.svg",
+      "src": "/logos/iptv-solution-text.svg",
       "alt": "Logo puzzle rosso di IP-Tv.Solution"
     },
     "bestFor": "Chi usa iPhone o iPad e vuole il player del progetto senza account Apple Developer.",

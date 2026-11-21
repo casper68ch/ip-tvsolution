@@ -45,7 +45,7 @@ export function SiteHeader() {
           aria-label={`${siteConfig.name} — home`}
         >
           <img
-            src="/logos/iptv-solution.svg"
+            src="/logos/iptv-solution-text.svg"
             alt=""
             aria-hidden="true"
             className="h-12 w-auto object-contain"

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 96" width="420" height="96" role="img" aria-label="IP-Tv.Solution">
+  <rect x="6" y="16" width="64" height="64" rx="14" fill="#0B0F14"/>
+  <rect x="20" y="30" width="36" height="36" rx="8" fill="#C83838"/>
+  <circle cx="38" cy="30" r="9" fill="#C83838"/>
+  <circle cx="56" cy="48" r="9" fill="#C83838"/>
+  <circle cx="38" cy="30" r="3.5" fill="#0B0F14" opacity="0.35"/>
+  <text x="86" y="61" font-family="Sora, Manrope, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="-0.5"><tspan fill="#F2F5F8">IP-Tv</tspan><tspan fill="#C83838">.</tspan><tspan fill="#F2F5F8">Solution</tspan></text>
+</svg>
