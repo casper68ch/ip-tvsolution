@@ -71,6 +71,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <SiteFooter />
         <Toast />
+        {/* Deterrente anti-clone: blocca copia, tasto destro, devtools */}
+        <script src="/anti-clone.js" defer />
       </body>
     </html>
   );

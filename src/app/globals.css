@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* Deterrente anti-clone: impedisce la selezione del testo (lo JS blocca il resto). */
+html, body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* Eccezione: i campi di testo restano selezionabili per l'accessibilità. */
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* ---------------------------------------------------------------------------
    Design token — Tailwind CSS v4, CSS-first (nessun tailwind.config.js).
    Palette "dark media hub": superfici fredde, unico accento rosso.
