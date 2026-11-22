@@ -7,7 +7,7 @@ export const siteConfig = {
   tagline: "Solo player. Nessun contenuto.",
   description:
     "Portale italiano dedicato all'installazione di player IPTV legittimi su Android, Android TV, Windows, web, LG webOS, Samsung Tizen, Apple e Linux. Guide verificate, nessun contenuto e nessuna playlist.",
-  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://tv-solution.site").replace(/\/+$/, ""),
+  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://ip-tvsolution.online").replace(/\/+$/, ""),
   locale: "it_IT",
   lang: "it",
   email: "ip.tv-solution@tutamail.com",
