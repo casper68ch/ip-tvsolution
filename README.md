@@ -27,7 +27,8 @@ npm run start        # server statico minimale su out/ (PORT, HOST)
 ```
 
 La build statica finisce in `out/`: pubblicala su nginx/Apache con `trailingSlash: true`,
-quindi ogni URL termina con `/`. Imposta `NEXT_PUBLIC_SITE_URL` in produzione per sitemap,
+quindi ogni URL termina con `/`. Il dominio ufficiale è `https://tv-solution.site`;
+imposta `NEXT_PUBLIC_SITE_URL=https://tv-solution.site` in produzione per sitemap,
 canonical e JSON-LD. `npm run lint` usa `next lint`: richiede ESLint, non incluso tra le
 dipendenze per mantenere il pacchetto leggero. Il build dei font (`next/font/google`) richiede
 accesso a Google Fonts la prima volta.
