@@ -8,6 +8,7 @@
     "prebuild": "node scripts/validate-apps.mjs",
     "build": "next build",
     "start": "node scripts/serve-out.mjs",
+    "deploy": "npm run build && cd .. && npx --yes wrangler pages deploy \"ip-tv-solution/out\" --project-name ip-tvsolution --branch main",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "validate": "node scripts/validate-apps.mjs"
