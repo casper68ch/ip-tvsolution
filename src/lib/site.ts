@@ -10,7 +10,7 @@ export const siteConfig = {
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://iptv-solution.it").replace(/\/+$/, ""),
   locale: "it_IT",
   lang: "it",
-  email: "info@iptv-solution.it",
+  email: "ip.tv-solution@tutamail.com",
   twitter: "@iptvsolution",
   keywords: [
     "player IPTV",

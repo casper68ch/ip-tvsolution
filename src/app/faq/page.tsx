@@ -65,6 +65,11 @@ const faqs: FaqItem[] = [
     answer:
       "No. Il portale è statico e non include strumenti di tracciamento pubblicitario. Le preferenze dei filtri restano nella memoria della pagina e non vengono inviate a server esterni.",
   },
+  {
+    question: "Come posso contattare IP-Tv.Solution per informazioni o assistenza?",
+    answer:
+      "Scrivi a ip.tv-solution@tutamail.com: è l'indirizzo ufficiale per informazioni, segnalazioni e richieste di attivazione. Trovi lo stesso indirizzo anche in fondo a ogni pagina. Rispondiamo con indicazioni sull'installazione dei player e sul flusso di registrazione; ricorda che il sito non fornisce contenuti, playlist o credenziali.",
+  },
 ];
 
 export default function FaqPage() {
