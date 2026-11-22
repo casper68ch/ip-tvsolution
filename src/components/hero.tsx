@@ -14,10 +14,20 @@ export function Hero({ appCount, platformCount }: HeroProps) {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_-10%,rgba(200,56,56,0.18),transparent_45%),radial-gradient(circle_at_85%_10%,rgba(88,166,255,0.10),transparent_40%)]"
       />
       <div className="container-page relative py-14 sm:py-20">
-        <p className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent-soft px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent-hover">
-          <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
-          {siteConfig.tagline}
-        </p>
+        <div className="animate-fade-up flex flex-wrap items-center gap-3">
+          <p className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent-soft px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-accent-hover">
+            <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
+            {siteConfig.tagline}
+          </p>
+          {/* Contatore visite: badge SVG esterno, conta i caricamenti della pagina */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://visitor-badge.laobi.icu/badge?page_id=ip-tvsolution.online"
+            alt="Contatore visite del sito"
+            className="h-5 w-auto rounded"
+            loading="lazy"
+          />
+        </div>
 
         <h1 className="animate-fade-up mt-5 max-w-4xl text-balance font-display text-3xl leading-tight font-semibold text-fg sm:text-4xl lg:text-5xl">
           Player IPTV per Android, TV, Windows e Linux: guida all&apos;installazione
