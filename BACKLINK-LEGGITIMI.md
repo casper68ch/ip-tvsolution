@@ -18,7 +18,7 @@ Obiettivo: aumentare l'autorità del dominio `https://ip-tvsolution.online` con 
 
 | # | Directory | Pagina di invio | Note |
 |---|---|---|---|
-| 1 | AlternativeTo | https://alternativeto.net/contribute/ | La più pertinente: il catalogo contiene già i 21 player. Serve login (Google/GitHub). Inserire IP-Tv.Solution come "Alternative" / risorsa, non come download. |
+| 1 | AlternativeTo | mailto:hello@alternativeto.net | La più pertinente: il catalogo contiene già i 21 player. ⚠️ VERIFICATO 23/11/2026: le URL `/contribute/`, `/submit/`, `/add/`, `/submit-software/` danno 404/403 — non esiste un form pubblico. Il canale ufficiale dichiarato nel footer è l'email hello@alternativeto.net. Inviare la richiesta di aggiunta usando il testo pronto qui sotto (oggetto + body EN). Non serve login. |
 | 2 | Softpedia | https://www.softpedia.com/developers/ | Richiede account sviluppatore. Descrizione in inglese. |
 | 3 | FileHippo | https://www.filehippo.com/ | Cerca "Submit software" nel footer. Approvazione manuale. |
 | 4 | MajorGeeks | https://www.majorgeeks.com/ | Modulo "Submit a program". Gradita descrizione dettagliata. |
@@ -47,6 +47,24 @@ Obiettivo: aumentare l'autorità del dominio `https://ip-tvsolution.online` con 
 ---
 
 ## 3. Testi pronti (copia/incolla)
+
+### Email di richiesta per AlternativeTo (hello@alternativeto.net)
+```
+Subject: Addition request: IP-Tv.Solution - IPTV player hub
+
+Hi AlternativeTo team,
+
+I would like to submit IP-Tv.Solution, a curated hub of legitimate IPTV player apps for Android, Android TV, Windows, Web/Chrome, LG webOS, Samsung Tizen, Apple and Linux.
+
+Website: https://ip-tvsolution.online
+Contact: ip.tv-solution@tutamail.com
+Source: https://github.com/casper68ch/ip-tvsolution
+
+The portal lists 21 players (16 third-party + 5 own IP-Tv.Solution v1.9 builds) with official download links and step-by-step installation guides. It provides no channels, playlists, subscriptions or credentials - players only.
+
+Thank you for considering it.
+Casper
+```
 
 ### Bio breve (Italiano)
 ```
