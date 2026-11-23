@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const siteConfig = {
-  name: "IP-Tv.Solution",
-  shortName: "IP-Tv.Solution",
-  legalName: "IP-Tv.Solution",
+  name: "IP-TVSOLUTION",
+  shortName: "IP-TVSOLUTION",
+  legalName: "IP-TVSOLUTION",
   tagline: "Solo player. Nessun contenuto.",
   description:
     "Portale italiano dedicato all'installazione di player IPTV legittimi su Android, Android TV, Windows, web, LG webOS, Samsung Tizen, Apple e Linux. Guide verificate, nessun contenuto e nessuna playlist.",
@@ -31,7 +31,7 @@ export const siteConfig = {
     { label: "Note legali", href: "/note-legali/" },
   ],
   disclaimer:
-    "IP-Tv.Solution non fornisce, ospita né distribuisce contenuti, playlist, abbonamenti o credenziali IPTV. Il sito pubblica esclusivamente informazioni sull'installazione di player legittimi: ogni utente configura il proprio player con fonti di cui possiede i diritti.",
+    "IP-TVSOLUTION non fornisce, ospita né distribuisce contenuti, playlist, abbonamenti o credenziali IPTV. Il sito pubblica esclusivamente informazioni sull'installazione di player legittimi: ogni utente configura il proprio player con fonti di cui possiede i diritti.",
 } as const;
 
 export function absoluteUrl(path: string): string {

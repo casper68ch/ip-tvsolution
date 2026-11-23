@@ -13,7 +13,7 @@ const faqs: FaqItem[] = [
   {
     question: "Questo sito fornisce canali, playlist o abbonamenti IPTV?",
     answer:
-      "No. IP-Tv.Solution non ospita, non vende e non distribuisce contenuti, liste di canali, abbonamenti o credenziali. Il portale pubblica esclusivamente informazioni sull'installazione di player regolarmente distribuiti dai produttori. Ogni utente configura il proprio player con fonti di cui possiede i diritti.",
+      "No. IP-TVSOLUTION non ospita, non vende e non distribuisce contenuti, liste di canali, abbonamenti o credenziali. Il portale pubblica esclusivamente informazioni sull'installazione di player regolarmente distribuiti dai produttori. Ogni utente configura il proprio player con fonti di cui possiede i diritti.",
   },
   {
     question: "I player del catalogo includono già dei contenuti?",
@@ -66,7 +66,7 @@ const faqs: FaqItem[] = [
       "No. Il portale è statico e non include strumenti di tracciamento pubblicitario. Le preferenze dei filtri restano nella memoria della pagina e non vengono inviate a server esterni.",
   },
   {
-    question: "Come posso contattare IP-Tv.Solution per informazioni o assistenza?",
+    question: "Come posso contattare IP-TVSOLUTION per informazioni o assistenza?",
     answer:
       "Scrivi a ip.tv-solution@tutamail.com: è l'indirizzo ufficiale per informazioni, segnalazioni e richieste di attivazione. Trovi lo stesso indirizzo anche in fondo a ogni pagina. Rispondiamo con indicazioni sull'installazione dei player e sul flusso di registrazione; ricorda che il sito non fornisce contenuti, playlist o credenziali.",
   },

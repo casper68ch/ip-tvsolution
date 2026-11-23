@@ -1692,11 +1692,11 @@
   {
     "id": "iptv-solution-windows",
     "slug": "iptv-solution-windows",
-    "name": "IP-Tv.Solution per Windows",
+    "name": "IP-TVSOLUTION per Windows",
     "tagline": "Il player desktop del progetto: setup, gestore universale e aggiornamenti automatici.",
-    "description": "IP-Tv.Solution per Windows è il player desktop del progetto, pensato per chi vuole un'installazione completa e gestibile da un unico pannello. La confezione comprende setup con icona puzzle rossa, gestore universale con sei opzioni, server Java locale e utility per l'aggiornamento automatico di playlist, EPG e loghi dei canali. La registrazione utente usa nome, password ed email: la richiesta viene inviata al proprietario e il codice di attivazione arriva via email, senza mostrare il codice richiesta. Non sono inclusi playlist, canali o credenziali: configuri la tua linea legittima. Il pacchetto non è firmato digitalmente, quindi Windows può mostrare un avviso SmartScreen al primo avvio; un certificato EV o OV, a pagamento, eliminerebbe l'avviso.",
+    "description": "IP-TVSOLUTION per Windows è il player desktop del progetto, pensato per chi vuole un'installazione completa e gestibile da un unico pannello. La confezione comprende setup con icona puzzle rossa, gestore universale con sei opzioni, server Java locale e utility per l'aggiornamento automatico di playlist, EPG e loghi dei canali. La registrazione utente usa nome, password ed email: la richiesta viene inviata al proprietario e il codice di attivazione arriva via email, senza mostrare il codice richiesta. Non sono inclusi playlist, canali o credenziali: configuri la tua linea legittima. Il pacchetto non è firmato digitalmente, quindi Windows può mostrare un avviso SmartScreen al primo avvio; un certificato EV o OV, a pagamento, eliminerebbe l'avviso.",
     "officialUrl": "https://ip-tvsolution.online",
-    "developer": "IP-Tv.Solution",
+    "developer": "IP-TVSOLUTION",
     "licenseModel": "free",
     "project": true,
     "version": "1.9",
@@ -1756,7 +1756,7 @@
     ],
     "logo": {
       "src": "/logos/iptv-solution-icon.svg",
-      "alt": "Logo puzzle rosso di IP-Tv.Solution"
+      "alt": "Logo puzzle rosso di IP-TVSOLUTION"
     },
     "bestFor": "Chi usa Windows e vuole il player del progetto con gestore e aggiornamenti integrati.",
     "features": [
@@ -1771,10 +1771,10 @@
       "Connessione internet per attivazione e aggiornamenti"
     ],
     "seo": {
-      "title": "IP-Tv.Solution per Windows — player desktop v1.9",
-      "description": "Scarica il player IP-Tv.Solution per Windows: setup o versione portatile, gestore universale, attivazione via email e aggiornamenti automatici. Solo player, nessun contenuto.",
+      "title": "IP-TVSOLUTION per Windows — player desktop v1.9",
+      "description": "Scarica il player IP-TVSOLUTION per Windows: setup o versione portatile, gestore universale, attivazione via email e aggiornamenti automatici. Solo player, nessun contenuto.",
       "keywords": [
-        "IP-Tv.Solution Windows",
+        "IP-TVSOLUTION Windows",
         "player IPTV Windows",
         "gestore universale"
       ]
@@ -1784,11 +1784,11 @@
   {
     "id": "iptv-solution-web",
     "slug": "iptv-solution-web",
-    "name": "IP-Tv.Solution Web / Chrome",
+    "name": "IP-TVSOLUTION Web / Chrome",
     "tagline": "Il player stand-alone del progetto, apribile nel browser senza installare un server.",
-    "description": "IP-Tv.Solution Web / Chrome è l'edizione stand-alone del progetto: apri index.html nel browser e hai subito l'interfaccia del player, senza server locale né dipendenze. Include la schermata di registrazione utente con nome, password ed email, il rilevamento automatico della piattaforma e lo storico delle richieste con esportazione CSV. L'attivazione funziona come nelle altre edizioni: il proprietario approva la richiesta dal pannello gestionale e invia il codice via email. Il tema usa il puzzle rosso del marchio e resta leggibile su desktop e tablet. Non vengono forniti playlist, abbonamenti o credenziali: ogni utente configura la propria fonte autorizzata. La configurazione iniziale è guidata e non richiede competenze tecniche: scegli la sorgente, incolla l'URL della tua playlist personale e verifica subito che canali ed EPG vengano caricati correttamente. L'interfaccia adatta automaticamente layout e touch target a smartphone, tablet e desktop, mentre il caricamento differito delle immagini riduce il consumo di banda e memoria.",
+    "description": "IP-TVSOLUTION Web / Chrome è l'edizione stand-alone del progetto: apri index.html nel browser e hai subito l'interfaccia del player, senza server locale né dipendenze. Include la schermata di registrazione utente con nome, password ed email, il rilevamento automatico della piattaforma e lo storico delle richieste con esportazione CSV. L'attivazione funziona come nelle altre edizioni: il proprietario approva la richiesta dal pannello gestionale e invia il codice via email. Il tema usa il puzzle rosso del marchio e resta leggibile su desktop e tablet. Non vengono forniti playlist, abbonamenti o credenziali: ogni utente configura la propria fonte autorizzata. La configurazione iniziale è guidata e non richiede competenze tecniche: scegli la sorgente, incolla l'URL della tua playlist personale e verifica subito che canali ed EPG vengano caricati correttamente. L'interfaccia adatta automaticamente layout e touch target a smartphone, tablet e desktop, mentre il caricamento differito delle immagini riduce il consumo di banda e memoria.",
     "officialUrl": "https://ip-tvsolution.online",
-    "developer": "IP-Tv.Solution",
+    "developer": "IP-TVSOLUTION",
     "licenseModel": "free",
     "project": true,
     "version": "1.9",
@@ -1832,7 +1832,7 @@
     ],
     "logo": {
       "src": "/logos/iptv-solution-icon.svg",
-      "alt": "Logo puzzle rosso di IP-Tv.Solution"
+      "alt": "Logo puzzle rosso di IP-TVSOLUTION"
     },
     "bestFor": "Chi vuole provare subito il player dal browser, senza installazione.",
     "features": [
@@ -1846,10 +1846,10 @@
       "Connessione internet per attivazione"
     ],
     "seo": {
-      "title": "IP-Tv.Solution Web / Chrome — player stand-alone v1.9",
-      "description": "Player IPTV web IP-Tv.Solution: apri index.html senza server, registrati con email e ricevi il codice di attivazione. Nessuna playlist o credenziale inclusa.",
+      "title": "IP-TVSOLUTION Web / Chrome — player stand-alone v1.9",
+      "description": "Player IPTV web IP-TVSOLUTION: apri index.html senza server, registrati con email e ricevi il codice di attivazione. Nessuna playlist o credenziale inclusa.",
       "keywords": [
-        "IP-Tv.Solution web",
+        "IP-TVSOLUTION web",
         "player IPTV Chrome",
         "player stand-alone"
       ]
@@ -1859,11 +1859,11 @@
   {
     "id": "iptv-solution-smart-tv",
     "slug": "iptv-solution-smart-tv",
-    "name": "IP-Tv.Solution Smart TV",
+    "name": "IP-TVSOLUTION Smart TV",
     "tagline": "Le edizioni LG webOS e Samsung Tizen del progetto, con telecomando e schermata semplice.",
-    "description": "IP-Tv.Solution Smart TV raccoglie le due edizioni televisione del progetto: pacchetto .ipk per LG webOS e pacchetto .wgt per Samsung Tizen. L'interfaccia è pensata per telecomando, con focus evidente e schermata semplice, mentre la registrazione utente con nome, password ed email è la stessa delle altre piattaforme. Lo script INSTALLA-SULLA-TV-BAT rileva automaticamente la TV nella rete locale, rispettivamente sulle porte 9922 per LG e 8001 per Samsung. La Developer Mode va attivata una sola volta: su LG ha una validità limitata, su Samsung richiede il codice 12345. Non sono incluse playlist né credenziali: il propietario configura la propria linea legittima.",
+    "description": "IP-TVSOLUTION Smart TV raccoglie le due edizioni televisione del progetto: pacchetto .ipk per LG webOS e pacchetto .wgt per Samsung Tizen. L'interfaccia è pensata per telecomando, con focus evidente e schermata semplice, mentre la registrazione utente con nome, password ed email è la stessa delle altre piattaforme. Lo script INSTALLA-SULLA-TV-BAT rileva automaticamente la TV nella rete locale, rispettivamente sulle porte 9922 per LG e 8001 per Samsung. La Developer Mode va attivata una sola volta: su LG ha una validità limitata, su Samsung richiede il codice 12345. Non sono incluse playlist né credenziali: il propietario configura la propria linea legittima.",
     "officialUrl": "https://ip-tvsolution.online",
-    "developer": "IP-Tv.Solution",
+    "developer": "IP-TVSOLUTION",
     "licenseModel": "free",
     "project": true,
     "version": "1.9",
@@ -1925,7 +1925,7 @@
     ],
     "logo": {
       "src": "/logos/iptv-solution-icon.svg",
-      "alt": "Logo puzzle rosso di IP-Tv.Solution"
+      "alt": "Logo puzzle rosso di IP-TVSOLUTION"
     },
     "bestFor": "Chi vuole il player del progetto direttamente sulla Smart TV di casa.",
     "features": [
@@ -1940,10 +1940,10 @@
       "Developer Mode attiva"
     ],
     "seo": {
-      "title": "IP-Tv.Solution Smart TV — LG webOS e Samsung Tizen v1.9",
-      "description": "Installa IP-Tv.Solution su Smart TV LG webOS e Samsung Tizen: pacchetti .ipk e .wgt, rilevamento automatico in rete, registrazione e attivazione via email. Solo player.",
+      "title": "IP-TVSOLUTION Smart TV — LG webOS e Samsung Tizen v1.9",
+      "description": "Installa IP-TVSOLUTION su Smart TV LG webOS e Samsung Tizen: pacchetti .ipk e .wgt, rilevamento automatico in rete, registrazione e attivazione via email. Solo player.",
       "keywords": [
-        "IP-Tv.Solution Smart TV",
+        "IP-TVSOLUTION Smart TV",
         "player LG webOS",
         "player Samsung Tizen"
       ]
@@ -1953,11 +1953,11 @@
   {
     "id": "iptv-solution-android",
     "slug": "iptv-solution-android",
-    "name": "IP-Tv.Solution Android",
+    "name": "IP-TVSOLUTION Android",
     "tagline": "L'app Android v1.9 con logo puzzle, italiano, account e aggiornamento automatico.",
-    "description": "IP-Tv.Solution Android è l'app nativa del progetto per smartphone, tablet, box TV ed emulatori. La build v1.9 usa il nome corretto IP-Tv.Solution, il logo puzzle rosso e include l'italiano selezionabile dalle impostazioni lingua. Al primo avvio appare la registrazione utente con nome, password ed email: la richiesta parte verso il proprietario e il codice di attivazione arriva via email. L'aggiornamento automatico controlla un manifest cloud e scarica l'APK diretto quando è disponibile una versione nuova. Sono incluse ABI arm64, armeabi, x86 e x86_64, così l'app funziona anche su LDPlayer e altri emulatori a basso consumo. Non sono incluse playlist né credenziali: configuri la tua fonte autorizzata.",
+    "description": "IP-TVSOLUTION Android è l'app nativa del progetto per smartphone, tablet, box TV ed emulatori. La build v1.9 usa il nome corretto IP-TVSOLUTION, il logo puzzle rosso e include l'italiano selezionabile dalle impostazioni lingua. Al primo avvio appare la registrazione utente con nome, password ed email: la richiesta parte verso il proprietario e il codice di attivazione arriva via email. L'aggiornamento automatico controlla un manifest cloud e scarica l'APK diretto quando è disponibile una versione nuova. Sono incluse ABI arm64, armeabi, x86 e x86_64, così l'app funziona anche su LDPlayer e altri emulatori a basso consumo. Non sono incluse playlist né credenziali: configuri la tua fonte autorizzata.",
     "officialUrl": "https://ip-tvsolution.online",
-    "developer": "IP-Tv.Solution",
+    "developer": "IP-TVSOLUTION",
     "licenseModel": "free",
     "project": true,
     "version": "1.9",
@@ -1981,7 +1981,7 @@
         "steps": [
           "Scarica l'APK diretto dal pulsante qui accanto e apri il file sul dispositivo Android.",
           "Consenti l'installazione da origini sconosciute solo per questa app.",
-          "Apri IP-Tv.Solution, scegli Italiano nelle impostazioni lingua e completa la registrazione.",
+          "Apri IP-TVSOLUTION, scegli Italiano nelle impostazioni lingua e completa la registrazione.",
           "Inserisci il codice di attivazione ricevuto via email e configura la tua playlist personale."
         ],
         "note": "L'APK non contiene playlist. Per LDPlayer usa lo script RAM Light sul PC per limitare il consumo di memoria.",
@@ -2020,7 +2020,7 @@
     ],
     "logo": {
       "src": "/logos/iptv-solution-icon.svg",
-      "alt": "Logo puzzle rosso di IP-Tv.Solution"
+      "alt": "Logo puzzle rosso di IP-TVSOLUTION"
     },
     "bestFor": "Chi vuole l'app nativa del progetto su Android, Android TV o emulatore.",
     "features": [
@@ -2034,10 +2034,10 @@
       "Connessione internet per attivazione e aggiornamenti"
     ],
     "seo": {
-      "title": "IP-Tv.Solution Android — APK v1.9 con account e auto-update",
-      "description": "Scarica l'APK Android IP-Tv.Solution v1.9: logo puzzle rosso, italiano, registrazione utente, codice di attivazione via email e aggiornamento automatico. Solo player, nessuna playlist.",
+      "title": "IP-TVSOLUTION Android — APK v1.9 con account e auto-update",
+      "description": "Scarica l'APK Android IP-TVSOLUTION v1.9: logo puzzle rosso, italiano, registrazione utente, codice di attivazione via email e aggiornamento automatico. Solo player, nessuna playlist.",
       "keywords": [
-        "IP-Tv.Solution Android",
+        "IP-TVSOLUTION Android",
         "APK IPTV Android",
         "player Android emulatore"
       ]
@@ -2047,11 +2047,11 @@
   {
     "id": "iptv-solution-iphone",
     "slug": "iptv-solution-iphone",
-    "name": "IP-Tv.Solution iPhone PWA",
+    "name": "IP-TVSOLUTION iPhone PWA",
     "tagline": "La PWA installabile da Safari del progetto, con icona puzzle e funzionamento offline.",
-    "description": "IP-Tv.Solution iPhone PWA è l'edizione per iOS del progetto: non è un .ipa dello store, ma una progressive web app installabile direttamente da Safari e poi avviabile come un'app dalla Home Screen. Include icone 180, 192 e 512 pixel, manifest e service worker per l'uso offline dell'interfaccia. Il tema usa il puzzle rosso del marchio e resta leggibile su iPhone e iPad. La registrazione utente con nome, password ed email invia la richiesta al proprietario, che approva dal pannello e invia il codice di attivazione via email. Una vera app .ipa nativa richiederebbe macOS, Xcode e un account Apple Developer a pagamento; questa PWA è la soluzione gratuita e immediata. Non sono incluse playlist né credenziali. Puoi condividere l'icona con gli amici e aggiornare l'interfaccia senza passare dallo store, perché la PWA legge direttamente il manifest pubblicato.",
+    "description": "IP-TVSOLUTION iPhone PWA è l'edizione per iOS del progetto: non è un .ipa dello store, ma una progressive web app installabile direttamente da Safari e poi avviabile come un'app dalla Home Screen. Include icone 180, 192 e 512 pixel, manifest e service worker per l'uso offline dell'interfaccia. Il tema usa il puzzle rosso del marchio e resta leggibile su iPhone e iPad. La registrazione utente con nome, password ed email invia la richiesta al proprietario, che approva dal pannello e invia il codice di attivazione via email. Una vera app .ipa nativa richiederebbe macOS, Xcode e un account Apple Developer a pagamento; questa PWA è la soluzione gratuita e immediata. Non sono incluse playlist né credenziali. Puoi condividere l'icona con gli amici e aggiornare l'interfaccia senza passare dallo store, perché la PWA legge direttamente il manifest pubblicato.",
     "officialUrl": "https://ip-tvsolution.online",
-    "developer": "IP-Tv.Solution",
+    "developer": "IP-TVSOLUTION",
     "licenseModel": "free",
     "project": true,
     "version": "1.9",
@@ -2093,7 +2093,7 @@
     ],
     "logo": {
       "src": "/logos/iptv-solution-icon.svg",
-      "alt": "Logo puzzle rosso di IP-Tv.Solution"
+      "alt": "Logo puzzle rosso di IP-TVSOLUTION"
     },
     "bestFor": "Chi usa iPhone o iPad e vuole il player del progetto senza account Apple Developer.",
     "features": [
@@ -2107,10 +2107,10 @@
       "Connessione internet per attivazione"
     ],
     "seo": {
-      "title": "IP-Tv.Solution iPhone PWA — player installabile da Safari v1.9",
-      "description": "Installa IP-Tv.Solution su iPhone e iPad come PWA da Safari: icona puzzle, offline, registrazione utente e codice di attivazione via email. Nessuna playlist inclusa.",
+      "title": "IP-TVSOLUTION iPhone PWA — player installabile da Safari v1.9",
+      "description": "Installa IP-TVSOLUTION su iPhone e iPad come PWA da Safari: icona puzzle, offline, registrazione utente e codice di attivazione via email. Nessuna playlist inclusa.",
       "keywords": [
-        "IP-Tv.Solution iPhone",
+        "IP-TVSOLUTION iPhone",
         "PWA IPTV iOS",
         "player iPhone Safari"
       ]

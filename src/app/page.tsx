@@ -65,7 +65,7 @@ export default function HomePage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logos/iptv-solution-text.svg"
-              alt="Logo IP-Tv.Solution: puzzle rosso con la scritta IP-Tv.Solution"
+              alt="Logo IP-TVSOLUTION: puzzle rosso con la scritta IP-TVSOLUTION"
               width={240}
               height={55}
               className="h-auto w-60 shrink-0"
@@ -73,7 +73,7 @@ export default function HomePage() {
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-accent">Il progetto</p>
               <h2 id="nostri-player-titolo" className="mt-1 text-2xl font-semibold text-fg sm:text-3xl">
-                I nostri player IP-Tv.Solution v1.9
+                I nostri player IP-TVSOLUTION v1.9
               </h2>
               <p className="mt-2 max-w-3xl text-sm leading-relaxed text-secondary">
                 Cinque edizioni del progetto per Windows, Web/Chrome, Smart TV, Android e iPhone.

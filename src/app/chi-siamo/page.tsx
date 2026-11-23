@@ -5,9 +5,9 @@ import { siteConfig } from "@/lib/site";
 export const metadata = buildMetadata({
   title: "Chi siamo e contatti",
   description:
-    "Chi è IP-Tv.Solution: portale italiano indipendente per l'installazione di player IPTV legittimi. Scopri il progetto, le piattaforme supportate e come contattarci.",
+    "Chi è IP-TVSOLUTION: portale italiano indipendente per l'installazione di player IPTV legittimi. Scopri il progetto, le piattaforme supportate e come contattarci.",
   path: "/chi-siamo/",
-  keywords: ["chi siamo IP-Tv.Solution", "contatti IP-Tv.Solution", "progetto player IPTV"],
+  keywords: ["chi siamo IP-TVSOLUTION", "contatti IP-TVSOLUTION", "progetto player IPTV"],
 });
 
 const platformLinks = [
@@ -57,7 +57,7 @@ export default function ChiSiamoPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logos/iptv-solution-text.svg"
-              alt="Logo IP-Tv.Solution"
+              alt="Logo IP-TVSOLUTION"
               className="h-16 w-auto object-contain"
             />
             <div>
@@ -79,10 +79,10 @@ export default function ChiSiamoPage() {
         <article className="min-w-0 space-y-8">
           <section aria-labelledby="chi-siamo-titolo">
             <h2 id="chi-siamo-titolo" className="text-xl font-semibold text-fg sm:text-2xl">
-              Chi è IP-Tv.Solution
+              Chi è IP-TVSOLUTION
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-secondary sm:text-base">
-              IP-Tv.Solution è un progetto indipendente italiano nato per aiutare gli utenti a
+              IP-TVSOLUTION è un progetto indipendente italiano nato per aiutare gli utenti a
               installare player IPTV legittimi su qualsiasi dispositivo. Il portale raccoglie guide
               verificate, link ufficiali ai canali di distribuzione dei produttori e informazioni
               chiare sui limiti di ogni piattaforma.

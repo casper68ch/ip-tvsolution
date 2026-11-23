@@ -17,7 +17,7 @@ const OG_IMAGE = {
   url: "/og-image.png",
   width: 1200,
   height: 630,
-  alt: "IP-Tv.Solution — Solo player IPTV, nessun contenuto",
+  alt: "IP-TVSOLUTION — Solo player IPTV, nessun contenuto",
 };
 
 /** Metadata Open Graph/Twitter coerenti per tutte le pagine statiche. */

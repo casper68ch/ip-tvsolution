@@ -1,13 +1,13 @@
-# IP-Tv.Solution
+# IP-TVSOLUTION
 
 **Solo player. Nessun contenuto.**
 
-IP-Tv.Solution è un portale che raccoglie guide all'installazione di **player IPTV legittimi** per Android, Android TV, Windows, Web/Chrome, LG webOS, Samsung Tizen, Apple e Linux, oltre alle cinque edizioni del progetto (v1.9).
+IP-TVSOLUTION è un portale che raccoglie guide all'installazione di **player IPTV legittimi** per Android, Android TV, Windows, Web/Chrome, LG webOS, Samsung Tizen, Apple e Linux, oltre alle cinque edizioni del progetto (v1.9).
 
 🌐 **Sito ufficiale:** https://ip-tvsolution.online
 📧 **Contatti:** ip.tv-solution@tutamail.com
 
-> ⚠️ **Avvertenza legale.** IP-Tv.Solution distribuisce esclusivamente player multimediali. Nessun canale, playlist, abbonamento o credenziale IPTV è fornito. Gli utenti configurano i player con fonti di cui possiedono i diritti. I marchi citati appartengono ai rispettivi proprietari e sono usati a scopo informativo.
+> ⚠️ **Avvertenza legale.** IP-TVSOLUTION distribuisce esclusivamente player multimediali. Nessun canale, playlist, abbonamento o credenziale IPTV è fornito. Gli utenti configurano i player con fonti di cui possiedono i diritti. I marchi citati appartengono ai rispettivi proprietari e sono usati a scopo informativo.
 
 ## Piattaforme supportate
 
@@ -22,7 +22,7 @@ IP-Tv.Solution è un portale che raccoglie guide all'installazione di **player I
 | Apple | [Guida](https://ip-tvsolution.online/piattaforma/apple/) |
 | Linux | [Guida](https://ip-tvsolution.online/piattaforma/linux/) |
 
-## Download IP-Tv.Solution v1.9
+## Download IP-TVSOLUTION v1.9
 
 | File | Link |
 |---|---|
@@ -60,6 +60,6 @@ Next.js 15 (App Router, TypeScript, Tailwind v4), output statico `out/`, 21 play
 
 ## Licenza e branding
 
-Basato su ultra-tv (MIT). Colore brand `#C83838`. Nome e loghi: IP-Tv.Solution.
+Basato su ultra-tv (MIT). Colore brand `#C83838`. Nome e loghi: IP-TVSOLUTION.
 
 Contatti: **ip.tv-solution@tutamail.com**

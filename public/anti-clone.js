@@ -1,4 +1,4 @@
-/* IP-Tv.Solution - deterrente anti-clone.
+/* IP-TVSOLUTION - deterrente anti-clone.
    Nota: nessun sito statico è "non clonabile" al 100%; questo rende
    difficile la copia casuale (tasto destro, selezione, drag, devtools). */
 (function () {
@@ -45,6 +45,6 @@
   }, 1000);
 
   // 6. Console disclaimer
-  console.log("%cIP-Tv.Solution", "color:#C83838;font-size:20px;font-weight:bold");
+  console.log("%cIP-TVSOLUTION", "color:#C83838;font-size:20px;font-weight:bold");
   console.log("Solo player multimediali. Nessun contenuto, playlist o credenziale IPTV è fornito.");
 })();

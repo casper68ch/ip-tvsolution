@@ -1,4 +1,4 @@
-# Piano backlink legittimi — IP-Tv.Solution
+# Piano backlink legittimi — IP-TVSOLUTION
 
 Obiettivo: aumentare l'autorità del dominio `https://ip-tvsolution.online` con link provenienti da fonti reali e pertinenti. **Nessuna link farm, nessuno spam, nessuno schema di scambio link.**
 
@@ -36,7 +36,7 @@ Obiettivo: aumentare l'autorità del dominio `https://ip-tvsolution.online` con 
 | # | Piattaforma | Azione | Note |
 |---|---|---|---|
 | 1 | X / Twitter | Crea profilo @IPTvSolution con la bio qui sotto | Aggiungi il link al sito nel campo URL. |
-| 2 | LinkedIn | Crea pagina aziendale "IP-Tv.Solution" | Categoria "Software Development"; inserisci sito e settore. |
+| 2 | LinkedIn | Crea pagina aziendale "IP-TVSOLUTION" | Categoria "Software Development"; inserisci sito e settore. |
 | 3 | Facebook | Crea pagina pubblica | Inserisci sito, email e descrizione breve. |
 | 4 | Mastodon | https://mastodon.social → nuovo account | Bio + link; tagghiamo #opensource #iptv. |
 | 5 | Reddit | r/opensource, r/selfhosted, r/androidapps | **Solo post informativi**, non promozionali. Regole subreddit: verificarle prima. |
@@ -50,17 +50,17 @@ Obiettivo: aumentare l'autorità del dominio `https://ip-tvsolution.online` con 
 
 ### Email di richiesta per AlternativeTo (hello@alternativeto.net)
 ```
-Subject: Addition request: IP-Tv.Solution - IPTV player hub
+Subject: Addition request: IP-TVSOLUTION - IPTV player hub
 
 Hi AlternativeTo team,
 
-I would like to submit IP-Tv.Solution, a curated hub of legitimate IPTV player apps for Android, Android TV, Windows, Web/Chrome, LG webOS, Samsung Tizen, Apple and Linux.
+I would like to submit IP-TVSOLUTION, a curated hub of legitimate IPTV player apps for Android, Android TV, Windows, Web/Chrome, LG webOS, Samsung Tizen, Apple and Linux.
 
 Website: https://ip-tvsolution.online
 Contact: ip.tv-solution@tutamail.com
 Source: https://github.com/casper68ch/ip-tvsolution
 
-The portal lists 21 players (16 third-party + 5 own IP-Tv.Solution v1.9 builds) with official download links and step-by-step installation guides. It provides no channels, playlists, subscriptions or credentials - players only.
+The portal lists 21 players (16 third-party + 5 own IP-TVSOLUTION v1.9 builds) with official download links and step-by-step installation guides. It provides no channels, playlists, subscriptions or credentials - players only.
 
 Thank you for considering it.
 Casper
@@ -68,33 +68,33 @@ Casper
 
 ### Bio breve (Italiano)
 ```
-IP-Tv.Solution — Player IPTV legittimi per Android, Windows, Smart TV e Linux.
+IP-TVSOLUTION — Player IPTV legittimi per Android, Windows, Smart TV e Linux.
 Solo player. Nessun contenuto, playlist o credenziale.
 https://ip-tvsolution.online
 ```
 
 ### Short description (English)
 ```
-IP-Tv.Solution is a curated hub of legitimate IPTV player apps for Android, Android TV, Windows, Web, LG webOS, Samsung Tizen, Apple and Linux. No playlists, no credentials — just players, with official installation guides. https://ip-tvsolution.online
+IP-TVSOLUTION is a curated hub of legitimate IPTV player apps for Android, Android TV, Windows, Web, LG webOS, Samsung Tizen, Apple and Linux. No playlists, no credentials — just players, with official installation guides. https://ip-tvsolution.online
 ```
 
 ### Descrizione lunga per directory (English)
 ```
-IP-Tv.Solution is an independent, Italian-language directory of legitimate multimedia player applications. It helps users find the right IPTV player for their device — Android, Android TV, Windows, Web/Chrome, LG webOS, Samsung Tizen, Apple and Linux — with step-by-step installation guides, official download links, pros and cons, and clear legal disclaimers.
+IP-TVSOLUTION is an independent, Italian-language directory of legitimate multimedia player applications. It helps users find the right IPTV player for their device — Android, Android TV, Windows, Web/Chrome, LG webOS, Samsung Tizen, Apple and Linux — with step-by-step installation guides, official download links, pros and cons, and clear legal disclaimers.
 
 The project also publishes five editions of its own player (Windows, Web/Chrome, Smart TV, Android and iPhone PWA, version 1.9) with activation and automatic updates.
 
-IP-Tv.Solution does NOT provide channels, playlists, subscriptions or credentials of any kind. It only lists players that can be configured with sources the user is entitled to use.
+IP-TVSOLUTION does NOT provide channels, playlists, subscriptions or credentials of any kind. It only lists players that can be configured with sources the user is entitled to use.
 
 Website: https://ip-tvsolution.online
 Contact: ip.tv-solution@tutamail.com
 ```
 
 ### Anchor text consigliati (variare, non usare sempre lo stesso)
-- `IP-Tv.Solution`
+- `IP-TVSOLUTION`
 - `player IPTV legittimi`
 - `guida installazione player IPTV`
-- `IP-Tv.Solution — solo player`
+- `IP-TVSOLUTION — solo player`
 - `https://ip-tvsolution.online` (link nudo)
 
 ---

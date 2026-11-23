@@ -13,7 +13,7 @@ export function SiteFooter() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logos/iptv-solution-text.svg"
-              alt="IP-Tv.Solution"
+              alt="IP-TVSOLUTION"
               className="h-9 w-auto object-contain"
             />
             <p className="mt-3 max-w-md text-sm leading-relaxed text-secondary">

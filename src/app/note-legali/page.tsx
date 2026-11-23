@@ -5,7 +5,7 @@ import { breadcrumbJsonLd, buildMetadata } from "@/lib/seo";
 export const metadata = buildMetadata({
   title: "Note legali e avvertenze",
   description:
-    "Natura del servizio, assenza di contenuti, uso dei marchi, link esterni, responsabilità dell'utente e trattamento dei dati su IP-Tv.Solution.",
+    "Natura del servizio, assenza di contenuti, uso dei marchi, link esterni, responsabilità dell'utente e trattamento dei dati su IP-TVSOLUTION.",
   path: "/note-legali/",
 });
 
@@ -13,7 +13,7 @@ const sections = [
   {
     title: "1. Natura del servizio",
     body: [
-      "IP-Tv.Solution è un portale informativo indipendente dedicato all'installazione di player IPTV legittimi. Il sito non è un servizio di diffusione televisiva e non offre alcun tipo di abbonamento, lista di canali o accesso a contenuti.",
+      "IP-TVSOLUTION è un portale informativo indipendente dedicato all'installazione di player IPTV legittimi. Il sito non è un servizio di diffusione televisiva e non offre alcun tipo di abbonamento, lista di canali o accesso a contenuti.",
       "Le informazioni pubblicate hanno finalità divulgative e tecniche: descrivono canali di installazione ufficiali, requisiti dei dispositivi e limiti noti delle piattaforme.",
     ],
   },

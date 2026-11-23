@@ -46,7 +46,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "IP-Tv.Solution — Solo player IPTV, nessun contenuto",
+        alt: "IP-TVSOLUTION — Solo player IPTV, nessun contenuto",
       },
     ],
   },

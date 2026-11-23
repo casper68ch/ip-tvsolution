@@ -81,7 +81,7 @@ export interface AppRecord {
   featured?: boolean;
   order?: number;
   verifiedAt?: string;
-  /** True per i player del progetto IP-Tv.Solution. */
+  /** True per i player del progetto IP-TVSOLUTION. */
   project?: boolean;
   /** Versione del progetto mostrata come badge (es. "1.9"). */
   version?: string;
