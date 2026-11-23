@@ -9,6 +9,7 @@ const navItems = [
   { label: "Piattaforme", href: "/#piattaforme" },
   { label: "Guida", href: "/guida/" },
   { label: "FAQ", href: "/faq/" },
+  { label: "Chi siamo", href: "/chi-siamo/" },
 ];
 
 export function SiteHeader() {

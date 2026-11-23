@@ -27,6 +27,7 @@ export const siteConfig = {
     { label: "Piattaforme", href: "/#piattaforme" },
     { label: "Guida", href: "/guida/" },
     { label: "FAQ", href: "/faq/" },
+    { label: "Chi siamo", href: "/chi-siamo/" },
     { label: "Note legali", href: "/note-legali/" },
   ],
   disclaimer:

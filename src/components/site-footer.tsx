@@ -33,6 +33,7 @@ export function SiteFooter() {
                 { label: "Catalogo player", href: "/#catalogo" },
                 { label: "Guida all'installazione", href: "/guida/" },
                 { label: "Domande frequenti", href: "/faq/" },
+                { label: "Chi siamo", href: "/chi-siamo/" },
                 { label: "Note legali", href: "/note-legali/" },
               ].map((item) => (
                 <li key={item.href}>

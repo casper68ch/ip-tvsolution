@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: absoluteUrl("/"), lastModified, changeFrequency: "weekly", priority: 1 },
     { url: absoluteUrl("/guida/"), lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: absoluteUrl("/faq/"), lastModified, changeFrequency: "monthly", priority: 0.6 },
+    { url: absoluteUrl("/chi-siamo/"), lastModified, changeFrequency: "monthly", priority: 0.6 },
     { url: absoluteUrl("/note-legali/"), lastModified, changeFrequency: "yearly", priority: 0.3 },
   ];
 
