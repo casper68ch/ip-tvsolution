@@ -114,5 +114,6 @@ Contact: ip.tv-solution@tutamail.com
 | Fonte | Data invio | Esito | URL del link |
 |---|---|---|---|
 | GitHub | 23 nov 2026 | ✅ Pubblicato | https://github.com/casper68ch/ip-tvsolution |
+| AlternativeTo | 23 nov 2026 | ⏳ Inviato via email, in attesa di risposta | hello@alternativeto.net |
 | | | | |
 | | | | |
