@@ -29,11 +29,11 @@ export function Hero({ appCount, platformCount }: HeroProps) {
           />
         </div>
 
-        <h1 className="animate-fade-up mt-5 max-w-4xl text-balance font-display text-3xl leading-tight font-semibold text-fg sm:text-4xl lg:text-5xl">
+        <h1 className="mt-5 max-w-4xl text-balance font-display text-3xl leading-tight font-semibold text-fg sm:text-4xl lg:text-5xl">
           Player IPTV per Android, TV, Windows e Linux: guida all&apos;installazione
         </h1>
 
-        <p className="animate-fade-up mt-5 max-w-2xl text-base leading-relaxed text-secondary sm:text-lg">
+        <p className="mt-5 max-w-2xl text-base leading-relaxed text-secondary sm:text-lg">
           Confronta {appCount} player legittimi, scegli la tua piattaforma e segui i passaggi
           ufficiali di installazione. Nessuna playlist, nessun abbonamento, nessuna credenziale:
           solo software da installare e configurare con le tue fonti autorizzate.
