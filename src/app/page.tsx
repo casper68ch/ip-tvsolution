@@ -3,7 +3,7 @@ import { CatalogSection } from "@/components/catalog-section";
 import { Hero } from "@/components/hero";
 import { platforms } from "@/data/platforms";
 import { apps, catalogApps } from "@/lib/apps";
-import { buildMetadata, itemListJsonLd, websiteJsonLd } from "@/lib/seo";
+import { buildMetadata, itemListJsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 
 export const metadata = buildMetadata({
   title: "Player IPTV per Android, TV, Windows e Linux: guida all'installazione",
@@ -36,6 +36,10 @@ export default function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd()) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd()) }}
       />
       <script
         type="application/ld+json"

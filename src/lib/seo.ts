@@ -12,6 +12,14 @@ interface PageMetaInput {
   noIndex?: boolean;
 }
 
+/** Immagine condivisa Open Graph/Twitter (1200x630) generata per il dominio ufficiale. */
+const OG_IMAGE = {
+  url: "/og-image.png",
+  width: 1200,
+  height: 630,
+  alt: "IP-Tv.Solution — Solo player IPTV, nessun contenuto",
+};
+
 /** Metadata Open Graph/Twitter coerenti per tutte le pagine statiche. */
 export function buildMetadata({
   title,
@@ -38,12 +46,14 @@ export function buildMetadata({
       siteName: siteConfig.name,
       title,
       description,
+      images: [OG_IMAGE],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title,
       description,
       site: siteConfig.twitter,
+      images: [OG_IMAGE.url],
     },
   };
 }
@@ -54,6 +64,7 @@ export function softwareApplicationJsonLd(app: AppRecord) {
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
+    "@id": absoluteUrl(`/app/${app.slug}/#software`),
     name: app.name,
     description: app.description,
     applicationCategory: "MultimediaApplication",
@@ -79,6 +90,10 @@ export function softwareApplicationJsonLd(app: AppRecord) {
       : {}),
     inLanguage: "it-IT",
     isAccessibleForFree: free,
+    ...(app.features?.length ? { featureList: app.features } : {}),
+    ...(app.requirements?.length ? { softwareRequirements: app.requirements.join("; ") } : {}),
+    ...(app.version ? { softwareVersion: app.version } : {}),
+    image: absoluteUrl(app.logo.src),
   };
 }
 
@@ -124,15 +139,26 @@ export function websiteJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": absoluteUrl("/#website"),
     name: siteConfig.name,
     url: siteConfig.url,
     inLanguage: "it-IT",
     description: siteConfig.description,
-    publisher: {
-      "@type": "Organization",
-      name: siteConfig.legalName,
-      url: siteConfig.url,
-    },
+    publisher: { "@id": absoluteUrl("/#organization") },
+  };
+}
+
+/** Organization con contatto e logo: rafforza l'entità del sito nei risultati di ricerca. */
+export function organizationJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": absoluteUrl("/#organization"),
+    name: siteConfig.legalName,
+    alternateName: siteConfig.name,
+    url: siteConfig.url,
+    email: siteConfig.email,
+    logo: absoluteUrl("/logos/iptv-solution-text.svg"),
   };
 }
 

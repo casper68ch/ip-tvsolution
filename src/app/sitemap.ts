@@ -6,7 +6,7 @@ import { absoluteUrl } from "@/lib/site";
 export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date("2026-11-21");
+  const lastModified = new Date("2026-11-23");
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: absoluteUrl("/"), lastModified, changeFrequency: "weekly", priority: 1 },
@@ -24,9 +24,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const appRoutes: MetadataRoute.Sitemap = apps.map((app) => ({
     url: absoluteUrl(`/app/${app.slug}/`),
-    lastModified: new Date(app.verifiedAt ?? "2026-11-21"),
+    lastModified: new Date(app.verifiedAt ?? "2026-11-23"),
     changeFrequency: "monthly",
-    priority: app.featured ? 0.7 : 0.5,
+    priority: app.project ? 0.9 : app.featured ? 0.7 : 0.5,
+    images: [absoluteUrl(app.logo.src)],
   }));
 
   return [...staticRoutes, ...platformRoutes, ...appRoutes];

@@ -5,7 +5,7 @@ import { AppCard } from "@/components/app-card";
 import { InstallSteps } from "@/components/install-steps";
 import { getPlatformBySlug, platforms } from "@/data/platforms";
 import { getAppsByPlatform, toCatalogApp } from "@/lib/apps";
-import { breadcrumbJsonLd, buildMetadata } from "@/lib/seo";
+import { breadcrumbJsonLd, buildMetadata, itemListJsonLd } from "@/lib/seo";
 
 interface PlatformPageProps {
   params: Promise<{ platform: string }>;
@@ -57,6 +57,19 @@ export default async function PlatformPage({ params }: PlatformPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(breadcrumbs)) }}
       />
+      {compatible.length > 0 ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              itemListJsonLd(
+                compatible.map((app) => ({ name: app.name, path: `/app/${app.slug}/` })),
+                `Player IPTV compatibili con ${platform.name}`
+              )
+            ),
+          }}
+        />
+      ) : null}
 
       <div className="border-b border-line bg-surface/30">
         <div className="container-page py-10 sm:py-14">

@@ -8,7 +8,7 @@ import { PlatformBadge } from "@/components/platform-badge";
 import { ProsConsList } from "@/components/pros-cons-list";
 import { getPlatformName, platformMap } from "@/data/platforms";
 import { apps, getAppBySlug, getRelatedApps, licenseLabel, toCatalogApp } from "@/lib/apps";
-import { breadcrumbJsonLd, buildMetadata, softwareApplicationJsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, buildMetadata, faqJsonLd, softwareApplicationJsonLd } from "@/lib/seo";
 
 interface AppPageProps {
   params: Promise<{ slug: string }>;
@@ -70,6 +70,26 @@ export default async function AppPage({ params }: AppPageProps) {
     { name: app.name, path: `/app/${app.slug}/` },
   ];
 
+  // FAQ specifiche generate solo dai dati verificati della scheda.
+  const playerFaqs = [
+    {
+      question: `Dove si scarica ${app.name}?`,
+      answer: `Scarica ${app.name} esclusivamente dal canale ufficiale indicato in questa scheda (${app.officialUrl}). Il portale non ospita file di installazione.`,
+    },
+    {
+      question: `Su quali piattaforme funziona ${app.name}?`,
+      answer: `${app.name} è disponibile per ${app.platforms.map((platform) => getPlatformName(platform)).join(", ")}. I metodi di installazione supportati sono descritti nella sezione dedicata.`,
+    },
+    {
+      question: `${app.name} include canali o playlist IPTV?`,
+      answer: `No. ${app.name} è un player multimediale: non include canali, playlist, abbonamenti o credenziali. Va configurato con fonti di cui possiedi i diritti.`,
+    },
+    {
+      question: `Come si installa ${app.name}?`,
+      answer: `Segui i ${app.install.length} ${app.install.length === 1 ? "passaggio documentato" : "passaggi documentati"} nella sezione "Come installarlo": ogni metodo rimanda al sito ufficiale del progetto.`,
+    },
+  ];
+
   return (
     <>
       <script
@@ -79,6 +99,10 @@ export default async function AppPage({ params }: AppPageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(breadcrumbs)) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(playerFaqs)) }}
       />
 
       <div className="border-b border-line bg-surface/30">
@@ -268,6 +292,22 @@ export default async function AppPage({ params }: AppPageProps) {
               Punti di forza e limiti
             </h2>
             <ProsConsList pros={app.pros} cons={app.cons} className="mt-4" />
+          </section>
+
+          <section className="mt-10" aria-labelledby="faq-player-titolo">
+            <h2 id="faq-player-titolo" className="text-xl font-semibold text-fg sm:text-2xl">
+              Domande frequenti su {app.name}
+            </h2>
+            <div className="mt-4 space-y-2">
+              {playerFaqs.map((faq) => (
+                <details key={faq.question} className="surface-card p-4">
+                  <summary className="cursor-pointer text-sm font-medium text-fg">
+                    {faq.question}
+                  </summary>
+                  <p className="mt-2 text-sm leading-relaxed text-secondary">{faq.answer}</p>
+                </details>
+              ))}
+            </div>
           </section>
 
           {related.length > 0 ? (

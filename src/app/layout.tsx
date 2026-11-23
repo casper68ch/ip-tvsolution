@@ -41,12 +41,21 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     title: `${siteConfig.name} — Solo player. Nessun contenuto.`,
     description: siteConfig.description,
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "IP-Tv.Solution — Solo player IPTV, nessun contenuto",
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: siteConfig.name,
     description: siteConfig.description,
     site: siteConfig.twitter,
+    images: ["/og-image.png"],
   },
   category: "technology",
 };
