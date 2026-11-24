@@ -1,0 +1,3458 @@
+// IP-TVSOLUTION Web Player
+// Main application logic
+
+const STORAGE_KEY = 'iptv_solution_data';
+const SAVE_KEY = 'iptv_solution_save_config';
+const DEFAULT_PLAYLIST_URL = ''; // Impostata dall'utente a prima configurazione
+const DEFAULT_EPG_URL = ''; // Opzionale: URL guida TV della propria linea
+const WEB_VERSION = '1.9-web-20261120';
+
+// State
+let state = {
+  sources: [],
+  channels: [],
+  currentChannel: null,
+  favorites: new Set(),
+  filter: 'all',
+  searchQuery: '',
+  settings: { autoplay: true, volume: 80 },
+  hls: null,
+  recording: null,
+  recordings: [],
+  streamLog: [],
+  saveDestination: 'internal', // 'internal' | 'usb' | 'cloud'
+  saveConfig: { cloudUrl: '', cloudUser: '', cloudPass: '' },
+  scheduledRecordings: [],
+  watchHistory: [],
+  bouquets: [],
+  // Navigation state for hierarchical browsing
+  navLevel: 'home', // 'home', 'type', 'category'
+  navType: null,   // 'live', 'vod', 'series'
+  navCategory: null, // group name
+  activePlaylist: 'all' // 'all' or source id
+};
+
+// DOM refs
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  loadState();
+  loadSaveConfig();
+  loadStreamLog();
+  setupEventListeners();
+  updateSaveDestinationUI();
+  ensureEpgLoaded();
+  checkVersion();
+  renderChannelList();
+  renderSavedSources();
+  initPlayer();
+  setInterval(checkScheduledRecordings, 15000);
+  logApp('APP', 'INFO', 'Avvio applicazione', {
+    canali: state.channels.length,
+    sorgenti: state.sources.length,
+    server: location.protocol === 'http:'
+  });
+});
+
+// State persistence
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      state.sources = data.sources || [];
+      state.favorites = new Set(data.favorites || []);
+      state.settings = data.settings || state.settings;
+      state.epgData = data.epgData || {};
+      state.watchHistory = data.watchHistory || [];
+      state.bouquets = data.bouquets || [];
+      // Ricalcola sempre il tipo con la logica aggiornata: gli episodi serie con URL .ts
+      // (es. una serie di una sola stagione) devono andare in Serie TV, non nei VOD.
+      state.sources.forEach(src => {
+        if (src.channels) {
+          src.channels.forEach(ch => {
+            ch.type = detectChannelType(ch.name, ch.group, ch.url, {});
+            // Chrome non supporta .ts: converte i canali Live in HLS .m3u8
+            if (/\/live\//i.test(ch.url || '') && /\.ts(\?|$)/i.test(ch.url)) {
+              ch.url = ch.url.replace(/\.ts(\?|$)/i, '.m3u8$1');
+            }
+          });
+        }
+      });
+      state.sources.forEach(src => {
+        if (src.channels) {
+          state.channels.push(...src.channels.map(ch => ({ ...ch, sourceId: src.id })));
+        }
+      });
+      logApp('PLAYLIST', 'INFO', 'Stato locale ripristinato', {
+        sorgenti: state.sources.length, canali: state.channels.length
+      });
+    }
+  } catch (e) { logApp('PLAYLIST', 'ERROR', 'Errore caricamento stato', { errore: e.message }); console.error('Load state error:', e); }
+}
+
+function saveState() {
+  const payload = () => ({
+    sources: state.sources,
+    favorites: [...state.favorites],
+    settings: state.settings,
+    epgData: {}, // EPG ricaricato all'avvio: troppo grande per localStorage
+    watchHistory: state.watchHistory || [],
+    bouquets: state.bouquets || []
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload()));
+    return true;
+  } catch (e) { console.warn('Memoria quasi piena, riprovo senza testo grezzo M3U'); }
+
+  // 1) Rimuovi il testo grezzo delle playlist (non serve, si può riscaricare)
+  const rawBackup = state.sources.map(s => s.rawText);
+  state.sources.forEach(s => { if (s.rawText) delete s.rawText; });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload()));
+    return true;
+  } catch (e) {
+    state.sources.forEach((s, i) => { if (rawBackup[i]) s.rawText = rawBackup[i]; });
+  }
+
+  // 2) Rimuovi i dati secondari (cronologia, EPG, bouquet)
+  const hist = state.watchHistory, epg = state.epgData, bouq = state.bouquets;
+  state.watchHistory = []; state.epgData = {}; state.bouquets = [];
+  state.sources.forEach(s => { if (s.rawText) delete s.rawText; });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload()));
+    showToast('Memoria browser quasi piena: dati secondari non salvati.', 'warning');
+    return true;
+  } catch (e) {
+    state.watchHistory = hist; state.epgData = epg; state.bouquets = bouq;
+    showToast('Memoria browser piena: elimina una sorgente per liberare spazio.', 'error');
+    return false;
+  }
+}
+
+// ===== EPG XMLTV: caricamento automatico e filtrato =====
+function parseXmltvDate(s) {
+  const m = String(s || '').match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/);
+  if (!m) return null;
+  return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+}
+
+async function ensureEpgLoaded() {
+  if (state._epgLoading) return;
+  state._epgLoading = true;
+  try {
+    const url = state.settings.epgUrl || DEFAULT_EPG_URL;
+    let text = null;
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      text = await resp.text();
+    } catch (e) {
+      const proxy = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+      if (!proxy.ok) throw new Error('HTTP ' + proxy.status + ' (proxy)');
+      text = await proxy.text();
+    }
+    const doc = new DOMParser().parseFromString(text, 'text/xml');
+    if (doc.querySelector('parsererror')) throw new Error('XML non valido');
+    // Mappa nome canale -> id EPG (serve per i canali senza tvg-id nella playlist)
+    const epgNames = {};
+    doc.querySelectorAll('channel').forEach(ch => {
+      const id = ch.getAttribute('id');
+      const dn = ch.querySelector('display-name');
+      if (id && dn && dn.textContent.trim()) epgNames[dn.textContent.trim().toLowerCase()] = id;
+    });
+    state._epgNames = epgNames;
+    const programmes = doc.querySelectorAll('programme');
+    const now = Date.now();
+    const from = now - 2 * 3600 * 1000;
+    const to = now + 72 * 3600 * 1000;
+    const epgData = {};
+    programmes.forEach(prog => {
+      const start = parseXmltvDate(prog.getAttribute('start'));
+      const stop = parseXmltvDate(prog.getAttribute('stop'));
+      if (!start || !stop || stop.getTime() < from || start.getTime() > to) return;
+      const id = prog.getAttribute('channel');
+      if (!id) return;
+      if (!epgData[id]) epgData[id] = [];
+      if (epgData[id].length >= 300) return;
+      epgData[id].push({
+        start: prog.getAttribute('start'),
+        stop: prog.getAttribute('stop'),
+        title: prog.querySelector('title') ? prog.querySelector('title').textContent : '',
+        desc: prog.querySelector('desc') ? prog.querySelector('desc').textContent : ''
+      });
+    });
+    state.epgData = epgData;
+    const total = Object.values(epgData).reduce((s, a) => s + a.length, 0);
+    logApp('EPG', 'INFO', 'Guida TV caricata', { canali: Object.keys(epgData).length, programmi: total });
+    const status = $('#epgStatus');
+    if (status) status.textContent = 'EPG caricato: ' + Object.keys(epgData).length + ' canali, ' + total + ' programmi';
+    if (state.currentChannel) loadEpg(state.currentChannel);
+  } catch (e) {
+    logApp('EPG', 'ERROR', 'Caricamento guida non riuscito', { errore: e.message, url: safeLogUrl(state.settings.epgUrl) });
+    console.warn('EPG auto-load non riuscito', e);
+    const status = $('#epgStatus');
+    if (status) status.textContent = 'EPG non disponibile: ' + e.message;
+  } finally { state._epgLoading = false; }
+}
+
+// Event listeners
+function setupEventListeners() {
+  $('#btnAddSource').addEventListener('click', () => showModal('addSourceModal'));
+  $('#btnCloseAddSource').addEventListener('click', () => hideModal('addSourceModal'));
+  $('#btnSettings').addEventListener('click', () => { showModal('settingsModal'); renderSavedSources(); });
+  $('#btnCloseSettings').addEventListener('click', () => hideModal('settingsModal'));
+  $('#btnClosePin').addEventListener('click', hidePinModal);
+  $('#pinInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitPin(); });
+  $('#btnCloseEpg').addEventListener('click', () => $('#epgPanel').style.display = 'none');
+  $('#btnRecord').addEventListener('click', toggleRecording);
+  $('#btnSaveRecording').addEventListener('click', saveCurrentRecording);
+  if ($('#btnPickUsbFolder')) $('#btnPickUsbFolder').addEventListener('click', pickUsbFolder);
+  if ($('#btnSaveCloudConfig')) $('#btnSaveCloudConfig').addEventListener('click', () => {
+    state.saveConfig.cloudUrl = $('#cloudUrl').value.trim();
+    state.saveConfig.cloudUser = $('#cloudUser').value.trim();
+    state.saveConfig.cloudPass = $('#cloudPass').value;
+    saveSaveConfig();
+    showToast('Configurazione cloud salvata.', 'success');
+  });
+  $('#btnScheduleSave').addEventListener('click', saveScheduleFromForm);
+
+  $$('.source-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.source-type-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      $$('.source-form').forEach(f => f.classList.remove('active'));
+      const formId = 'form' + btn.dataset.type.charAt(0).toUpperCase() + btn.dataset.type.slice(1);
+      const form = document.getElementById(formId);
+      if (form) form.classList.add('active');
+    });
+  });
+
+  $('#formM3u').addEventListener('submit', handleM3uSubmit);
+  $('#formXtream').addEventListener('submit', handleXtreamSubmit);
+  $('#formStalker').addEventListener('submit', handleStalkerSubmit);
+  $('#formFile').addEventListener('submit', handleFileSubmit);
+
+  $('#searchChannels').addEventListener('input', (e) => {
+    state.searchQuery = e.target.value.toLowerCase();
+    if (state.searchQuery && state.navLevel !== 'home') {
+      // When searching, go to home level to show all matching channels
+      state.navLevel = 'home';
+      state.navType = null;
+      state.navCategory = null;
+      const bc = $('#navBreadcrumb');
+      if (bc) bc.style.display = 'none';
+      // Filter tabs moved to top nav bar
+    }
+    renderChannelList();
+  });
+
+  $$('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const f = tab.dataset.filter;
+      if (f === 'all') {
+        navigateTo('home');
+      } else if (f === 'fav') {
+        navigateTo('type', 'fav');
+      } else {
+        navigateTo('type', f);
+      }
+    });
+  });
+
+  $('#btnFullscreen').addEventListener('click', toggleFullscreen);
+  $('#btnPip').addEventListener('click', togglePip);
+
+  $('#settingAutoplay').addEventListener('change', (e) => { state.settings.autoplay = e.target.checked; saveState(); });
+  $('#settingVolume').addEventListener('input', (e) => { state.settings.volume = parseInt(e.target.value); $('#videoPlayer').volume = state.settings.volume / 100; saveState(); });
+  $('#btnExportData').addEventListener('click', exportData);
+  $('#btnClearData').addEventListener('click', clearData);
+
+  // Parental control PIN
+  const pinEnabledEl = $('#settingPinEnabled');
+  if (pinEnabledEl) pinEnabledEl.checked = getPinState().enabled;
+  $('#settingPinEnabled').addEventListener('change', (e) => {
+    const group = document.getElementById('pinSetupGroup');
+    if (group) group.style.display = e.target.checked ? 'block' : 'none';
+    if (!e.target.checked) disableParentalPin();
+  });
+  $('#btnSavePin').addEventListener('click', savePinFromSettings);
+  $('#btnDisablePin').addEventListener('click', disableParentalPin);
+  const btnReloadAll = $('#btnReloadAll');
+  if (btnReloadAll) btnReloadAll.addEventListener('click', reloadAllSources);
+  const btnExportPlaylists = $('#btnExportPlaylists');
+  if (btnExportPlaylists) btnExportPlaylists.addEventListener('click', exportPlaylists);
+  $('#btnLoadEpg').addEventListener('click', loadEpgFromUrl);
+  $('#btnCloseSeries').addEventListener('click', () => hideModal('seriesModal'));
+  const epgInput = $('#settingEpgUrl');
+  if (!state.settings.epgUrl) state.settings.epgUrl = DEFAULT_EPG_URL;
+  if (epgInput) {
+    epgInput.value = state.settings.epgUrl;
+    epgInput.addEventListener('change', (e) => { state.settings.epgUrl = e.target.value.trim(); saveState(); });
+  }
+  const epgStatus = $('#epgStatus');
+  if (epgStatus) epgStatus.textContent = 'Caricamento guida TV in corso...';
+
+  $$('.modal').forEach(m => {
+    m.addEventListener('click', (e) => { if (e.target === m) hideModal(m.id); });
+  });
+}
+
+// Modal helpers
+function showModal(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add('active');
+    el.style.display = 'flex';
+  } else {
+    console.error('Modal not found:', id);
+  }
+}
+function hideModal(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.remove('active');
+    el.style.display = 'none';
+  }
+}
+
+// Loading
+function showLoading(text = 'Caricamento...') {
+  $('#loadingText').textContent = text;
+  $('#loadingOverlay').classList.add('active');
+}
+function hideLoading() { $('#loadingOverlay').classList.remove('active'); }
+
+// Log diagnostico completo (ultimi 300 eventi): stream, errori, azioni utente
+const STREAM_LOG_KEY = 'iptv_solution_stream_log';
+function safeLogUrl(u) {
+  return String(u || '')
+    .replace(/:\/\/[^/@\s]+@/i, '://***@')
+    .replace(/([?&](?:password|pass|user|username)=)[^&\s]+/gi, '$1***');
+}
+function logApp(categoria, livello, messaggio, data) {
+  const entry = {
+    ora: new Date().toISOString().substring(11, 23),
+    categoria: categoria,
+    livello: livello,
+    evento: messaggio,
+    canale: (state.currentChannel && state.currentChannel.name) || '-',
+    playlist: getPlaylistLabel(),
+    dettaglio: data || {}
+  };
+  state.streamLog.push(entry);
+  if (state.streamLog.length > 300) state.streamLog.shift();
+  try { localStorage.setItem(STREAM_LOG_KEY, JSON.stringify(state.streamLog.slice(-200))); } catch (e) {}
+}
+function logStream(event, data) { logApp('STREAM', 'INFO', event, data); }
+
+// ===== Versione e aggiornamento =====
+function setVersionBadge(testo) {
+  const el = document.getElementById('versionBadge');
+  if (el) el.textContent = testo;
+}
+async function checkVersion() {
+  setVersionBadge('v' + WEB_VERSION);
+  const info = document.getElementById('serverInfo');
+  if (info) info.textContent = 'Web: ' + WEB_VERSION;
+  if (window.TV_MODE || location.protocol !== 'http:') return;
+  try {
+    const r = await fetch('/api/version', { cache: 'no-store' });
+    if (!r.ok) return;
+    const v = await r.json();
+    setVersionBadge('v' + v.version);
+    if (info) info.textContent = 'App v' + v.version + ' (build ' + v.build + ') · Web ' + WEB_VERSION + ' · ' + v.channels + ' canali';
+    logApp('APP', 'INFO', 'Versione applicazione', { versione: v.version, build: v.build, canali: v.channels });
+    if (v.updateAvailable) {
+      const banner = document.getElementById('updateBanner');
+      const txt = document.getElementById('updateBannerText');
+      if (banner && txt) {
+        txt.textContent = '🔄 Aggiornamento disponibile: versione ' + v.latest + ' (installata ' + v.version + ')';
+        banner.style.display = 'flex';
+      }
+    }
+  } catch (e) { /* server non disponibile: modalità stand-alone */ }
+}
+async function applyUpdate() {
+  try {
+    const r = await fetch('/api/update/apply', { cache: 'no-store' });
+    const j = await r.json();
+    if (j.ok) {
+      showToast('Aggiornamento avviato. L\'app si riavvierà tra pochi secondi.', 'warning');
+      logApp('UPDATE', 'INFO', 'Aggiornamento avviato');
+      const b = document.getElementById('updateBanner'); if (b) b.style.display = 'none';
+    } else showToast('Impossibile avviare l\'aggiornamento.', 'error');
+  } catch (e) { showToast('Errore aggiornamento: ' + e.message, 'error'); }
+}
+function dismissUpdateBanner() {
+  const b = document.getElementById('updateBanner'); if (b) b.style.display = 'none';
+}
+function loadStreamLog() {
+  try { state.streamLog = JSON.parse(localStorage.getItem(STREAM_LOG_KEY) || '[]'); } catch (e) { state.streamLog = []; }
+}
+
+// Etichetta della playlist attiva (per capire sempre quale sorgente sta dando errori)
+function getPlaylistLabel() {
+  if (!state.activePlaylist || state.activePlaylist === 'all') return 'Tutte le playlist';
+  const src = state.sources.find(s => s.id === state.activePlaylist);
+  return src ? src.name : 'Sorgente sconosciuta';
+}
+function getSourceLabel() {
+  const ch = state.currentChannel || {};
+  const src = state.sources.find(s => s.id === ch.sourceId);
+  return src ? src.name : getPlaylistLabel();
+}
+function contextLabel() {
+  const name = (state.currentChannel && state.currentChannel.name) || 'Canale sconosciuto';
+  const src = getSourceLabel();
+  return name + ' · 📋 ' + src;
+}
+
+// Toast
+function showToast(msg, type = '') {
+  const toast = $('#toast');
+  let text = msg;
+  if (type === 'error') logApp('ERRORE', 'ERROR', msg);
+  // Aggiunge sempre il contesto agli errori di riproduzione
+  if (type === 'error' && state.currentChannel && !msg.includes('📋')) {
+    text = msg + ' · ' + contextLabel();
+  }
+  toast.textContent = text;
+  toast.className = `toast show ${type}`;
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+// ===== Parental Control PIN =====
+const PIN_STORAGE_KEY = 'iptv_solution_pin';
+
+function hashPin(pin) {
+  let h = 5381;
+  const s = String(pin || '');
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  }
+  return 'h' + (h >>> 0).toString(36) + '.' + s.length;
+}
+
+function getPinState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PIN_STORAGE_KEY) || '{}');
+    return {
+      enabled: !!saved.enabled,
+      pinHash: saved.pinHash || '',
+      failedAttempts: saved.failedAttempts || 0,
+      lockUntil: saved.lockUntil || 0
+    };
+  } catch (e) {
+    return { enabled: false, pinHash: '', failedAttempts: 0, lockUntil: 0 };
+  }
+}
+
+function savePinState(d) {
+  const state = d || getPinState();
+  try {
+    localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify({
+      enabled: state.enabled,
+      pinHash: state.pinHash,
+      failedAttempts: state.failedAttempts,
+      lockUntil: state.lockUntil
+    }));
+  } catch (e) { console.error('Save pin error:', e); }
+}
+
+function pinLockEnabled() { return !!getPinState().enabled; }
+
+function isPinLockedNow() { const d = getPinState(); return Date.now() < d.lockUntil; }
+
+function lockPinNow() {
+  const d = getPinState();
+  d.failedAttempts = (d.failedAttempts || 0) + 1;
+  if (d.failedAttempts >= 3) {
+    d.lockUntil = Date.now() + 30000;
+    d.failedAttempts = 0;
+  }
+  savePinState(d);
+  return Date.now() < d.lockUntil;
+}
+
+function showPinModal(onSuccess) {
+  const modal = $('#pinModal');
+  const errEl = $('#pinModalError');
+  const lockEl = $('#pinModalLock');
+  const input = $('#pinInput');
+  if (input) input.value = '';
+  if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+  if (lockEl) { lockEl.style.display = 'none'; lockEl.textContent = ''; }
+  if (modal) modal.classList.add('active');
+  setTimeout(() => { if (input) input.focus(); }, 50);
+  window._pinOnSuccess = onSuccess;
+}
+
+function hidePinModal() {
+  const modal = $('#pinModal');
+  if (modal) modal.classList.remove('active');
+  window._pinOnSuccess = null;
+}
+
+function submitPin() {
+  const modal = $('#pinModal');
+  const errEl = $('#pinModalError');
+  const lockEl = $('#pinModalLock');
+  const d = getPinState();
+  if (Date.now() < d.lockUntil) {
+    const waitSec = Math.ceil((d.lockUntil - Date.now()) / 1000);
+    if (lockEl) { lockEl.style.display = 'block'; lockEl.textContent = 'Blocco attivo. Riprova tra ' + waitSec + ' secondi.'; }
+    return;
+  }
+  const input = $('#pinInput');
+  const pin = (input ? input.value : '').trim();
+  if (hashPin(pin) === d.pinHash) {
+    d.failedAttempts = 0;
+    d.lockUntil = 0;
+    savePinState(d);
+    const cb = window._pinOnSuccess;
+    window._pinOnSuccess = null;
+    hidePinModal();
+    if (typeof cb === 'function') cb();
+    return;
+  }
+  const locked = lockPinNow();
+  logApp('PIN', 'WARN', 'PIN errato', { bloccato: locked, tentativi: d.failedAttempts || 0 });
+  if (errEl) { errEl.style.display = 'block'; errEl.textContent = locked ? 'PIN errato. Blocco per 30 secondi.' : 'PIN errato.'; }
+  if (input) { input.value = ''; input.focus(); }
+  if (locked) showToast('Troppi tentativi di PIN. Riprova tra 30 secondi.', 'error');
+}
+
+function setParentalPin(pin) {
+  const d = getPinState();
+  d.enabled = true;
+  d.pinHash = hashPin(pin);
+  d.failedAttempts = 0;
+  d.lockUntil = 0;
+  savePinState(d);
+  const cb = window._pinOnSuccess;
+  window._pinOnSuccess = null;
+  if (typeof cb === 'function') cb();
+}
+
+function disableParentalPin() {
+  const d = getPinState();
+  d.enabled = false;
+  d.pinHash = '';
+  d.failedAttempts = 0;
+  d.lockUntil = 0;
+  savePinState(d);
+  const hint = document.getElementById('pinStatusHint');
+  if (hint) hint.textContent = 'Nessun PIN configurato: la riproduzione di tutti i canali richiederà il PIN.';
+}
+
+function savePinFromSettings() {
+  const pin = ($('#settingPinInput').value || '').trim();
+  const confirm = ($('#settingPinConfirm').value || '').trim();
+  if (pin.length < 4) { showToast('Il PIN deve avere almeno 4 cifre.', 'error'); return; }
+  if (pin !== confirm) { showToast('Le due password non coincidono.', 'error'); return; }
+  setParentalPin(pin);
+  const group = document.getElementById('pinSetupGroup');
+  if (group) group.style.display = 'block';
+  const hint = document.getElementById('pinStatusHint');
+  if (hint) hint.textContent = 'PIN attivo: la riproduzione di tutti i canali richiederà il PIN.';
+  showToast('PIN controllo parentale salvato.', 'success');
+  $('#settingPinInput').value = '';
+  $('#settingPinConfirm').value = '';
+}
+
+// ===== Recording (web) =====
+function formatBytesSafe(b) {
+  if (!b || b < 0) return '0 B';
+  if (b < 1024) return b + ' B';
+  if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+  if (b < 1024 * 1024 * 1024) return (b / (1024 * 1024)).toFixed(1) + ' MB';
+  return (b / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+}
+
+function startRecording() {
+  const video = $('#videoPlayer');
+  if (!video.src && !video.currentSrc) { showToast('Avvia la riproduzione prima di registrare.', 'error'); return; }
+  if (state.recording && state.recording.active) { stopRecording(); return; }
+  let stream = null;
+  try { stream = video.captureStream ? video.captureStream(30) : null; } catch (e) { stream = null; }
+  if (!stream) { showToast('Registrazione non supportata da questo browser.', 'error'); return; }
+  const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(m => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m)) || '';
+  let rec;
+  try { rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined); } catch (e) { showToast('Impossibile avviare la registrazione.', 'error'); return; }
+  const chunks = [];
+  state.recording = { active: true, startTs: Date.now(), chunks: chunks, rec: rec };
+  rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+  rec.onstop = () => { finalizeRecording({ kind: 'manual', title: (state.currentChannel && state.currentChannel.name) || 'Registrazione' }); };
+  try { rec.start(1000); } catch (e) { showToast('Errore avvio registrazione: ' + e.message, 'error'); state.recording = null; return; }
+  const btn = $('#btnRecord');
+  if (btn) { btn.classList.add('recording'); btn.textContent = '■'; btn.title = 'Stop registrazione'; }
+  showToast('Registrazione avviata.', 'success');
+}
+
+function stopRecording() {
+  if (!state.recording || !state.recording.active) return;
+  state.recording.active = false;
+  const rec = state.recording.rec;
+  const btn = $('#btnRecord');
+  if (btn) { btn.classList.remove('recording'); btn.textContent = '⏺'; btn.title = 'Registra'; }
+  if (rec && typeof rec.stop === 'function') { try { rec.stop(); } catch (e) {} }
+}
+
+function toggleRecording() {
+  if (state.recording && state.recording.active) { stopRecording(); }
+  else { startRecording(); }
+}
+
+async function saveCurrentRecording() {
+  if (!state.recordings || state.recordings.length === 0) { showToast('Nessuna registrazione disponibile da salvare.', 'error'); return; }
+  const r = state.recordings[0];
+  await downloadRecording(r.id);
+}
+
+function addRecording(r) {
+  state.recordings.unshift(r);
+  saveRecordingState();
+  renderRecordings();
+  showToast('Registrazione salvata (' + formatBytesSafe(r.size) + ').', 'success');
+}
+
+function deleteRecording(id) {
+  state.recordings = state.recordings.filter(r => r.id !== id);
+  saveRecordingState();
+  renderRecordings();
+}
+
+function renderRecordings() {
+  const list = $('#recordingsList');
+  if (!list) return;
+  if (state.recordings.length === 0) { list.innerHTML = '<p class="hint">Nessuna registrazione. Premi ⏺ nel player per avviare.</p>'; return; }
+  list.innerHTML = state.recordings.map(r => `
+    <div class="saved-source" style="flex-direction:row;align-items:center;gap:10px;">
+      <div style="flex:1;min-width:0;">
+        <div class="saved-source-name">${escapeHtml(r.title)}</div>
+        <div class="saved-source-type">${new Date(r.startTs).toLocaleString()} · ${formatBytesSafe(r.size)}</div>
+      </div>
+      <button class="btn btn-secondary" style="font-size:12px;padding:4px 8px;" onclick="playRecording('${r.id}')">▶ Play</button>
+      <button class="btn btn-secondary" style="font-size:12px;padding:4px 8px;" onclick="downloadRecording('${r.id}')">💾</button>
+      <button class="btn btn-danger" style="font-size:12px;padding:4px 8px;" onclick="deleteRecording('${r.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+// ===== Visualizzazione / download del log stream =====
+function renderStreamLog() {
+  const el = document.getElementById('streamLogContent');
+  if (!el) return;
+  const lines = (state.streamLog || []).map(e => {
+    const d = Object.keys(e.dettaglio || {}).map(k => k + '=' + e.dettaglio[k]).join(' ');
+    return e.ora + ' | ' + String(e.categoria || 'LOG').padEnd(9) + ' | ' + String(e.livello || 'INFO').padEnd(5)
+      + ' | ' + String(e.evento).padEnd(20) + ' | ' + e.canale + ' | ' + e.playlist + (d ? ' | ' + d : '');
+  });
+  el.textContent = lines.length ? lines.join('\n') : 'Nessun evento registrato. Riproduci un canale per generare il log.';
+}
+function openStreamLog() { renderStreamLog(); showModal('streamLogModal'); }
+async function showServerLog() {
+  const el = document.getElementById('streamLogContent');
+  if (!el) return;
+  if (location.protocol !== 'http:') {
+    showToast('Log server disponibile solo con il server Windows avviato.', 'warning');
+    return;
+  }
+  try {
+    const r = await fetch('/api/log', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    el.textContent = await r.text();
+    logApp('LOG', 'INFO', 'Log server caricato');
+  } catch (e) { showToast('Log server non disponibile: ' + e.message, 'error'); }
+}
+function downloadStreamLog() {
+  const testo = (state.streamLog || []).map(e => JSON.stringify(e)).join('\n');
+  const blob = new Blob([testo], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'iptv-stream-log-' + new Date().toISOString().replace(/[:.]/g, '-') + '.txt';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function clearStreamLog() {
+  state.streamLog = [];
+  try { localStorage.removeItem(STREAM_LOG_KEY); } catch (e) {}
+  renderStreamLog();
+  showToast('Log cancellato.', 'success');
+}
+
+// ===== Destinazione salvataggio registrazioni (interno / USB / cloud-NAS) =====
+function loadSaveConfig() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+    state.saveDestination = saved.destination || 'internal';
+    state.saveConfig = Object.assign({ cloudUrl: '', cloudUser: '', cloudPass: '', usbFolderName: '' }, saved.config || {});
+    window._usbDirName = state.saveConfig.usbFolderName || '';
+  } catch (e) {}
+}
+function saveSaveConfig() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ destination: state.saveDestination, config: state.saveConfig })); } catch (e) {}
+}
+function setSaveDestination(dest) {
+  state.saveDestination = dest;
+  logApp('REC', 'INFO', 'Destinazione registrazione', { destinazione: dest });
+  saveSaveConfig();
+  updateSaveDestinationUI();
+  const labels = { internal: 'Disco interno', usb: 'Chiavetta USB', cloud: 'Cloud / NAS' };
+  showToast('Destinazione: ' + (labels[dest] || dest), 'success');
+}
+function updateSaveDestinationUI() {
+  $$('.save-dest').forEach(b => {
+    const active = b.dataset.dest === state.saveDestination;
+    b.style.background = active ? 'var(--accent)' : 'var(--bg3)';
+    b.style.color = active ? 'white' : 'var(--text)';
+    b.style.borderColor = active ? 'var(--accent)' : 'var(--border)';
+  });
+  const usb = document.getElementById('destUsbInfo');
+  if (usb) usb.style.display = state.saveDestination === 'usb' ? 'block' : 'none';
+  const cloud = document.getElementById('destCloudConfig');
+  if (cloud) cloud.style.display = state.saveDestination === 'cloud' ? 'block' : 'none';
+  const cu = document.getElementById('cloudUrl'); if (cu) cu.value = state.saveConfig.cloudUrl || '';
+  const cUser = document.getElementById('cloudUser'); if (cUser) cUser.value = state.saveConfig.cloudUser || '';
+  const cp = document.getElementById('cloudPass'); if (cp) cp.value = state.saveConfig.cloudPass || '';
+  const fn = document.getElementById('usbFolderName');
+  if (fn) fn.textContent = state.saveConfig.usbFolderName ? ('Cartella: ' + state.saveConfig.usbFolderName) : '';
+}
+function getUsbDirHandle() {
+  return new Promise((resolve) => {
+    try {
+      const req = indexedDB.open('iptv_solution_files', 1);
+      req.onupgradeneeded = () => { req.result.createObjectStore('handles'); };
+      req.onsuccess = () => {
+        try {
+          const g = req.result.transaction('handles', 'readonly').objectStore('handles').get('usbDir');
+          g.onsuccess = () => resolve(g.result || null);
+          g.onerror = () => resolve(null);
+        } catch (e) { resolve(null); }
+      };
+      req.onerror = () => resolve(null);
+    } catch (e) { resolve(null); }
+  });
+}
+function setUsbDirHandle(handle) {
+  return new Promise((resolve) => {
+    try {
+      const req = indexedDB.open('iptv_solution_files', 1);
+      req.onupgradeneeded = () => { req.result.createObjectStore('handles'); };
+      req.onsuccess = () => {
+        const tx = req.result.transaction('handles', 'readwrite');
+        tx.objectStore('handles').put(handle, 'usbDir');
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      };
+      req.onerror = () => resolve(false);
+    } catch (e) { resolve(false); }
+  });
+}
+async function pickUsbFolder() {
+  if (!window.showDirectoryPicker) { showToast('Questo browser non supporta la scelta della cartella. Usa Chrome o Edge.', 'error'); return; }
+  try {
+    const handle = await window.showDirectoryPicker();
+    await setUsbDirHandle(handle);
+    state.saveConfig.usbFolderName = handle.name;
+    saveSaveConfig();
+    updateSaveDestinationUI();
+    showToast('Cartella USB selezionata: ' + handle.name, 'success');
+  } catch (e) { /* annullato dall'utente */ }
+}
+async function ensureUsbPermission(handle) {
+  try {
+    let p = await handle.queryPermission({ mode: 'readwrite' });
+    if (p === 'granted') return true;
+    if (handle.requestPermission) {
+      p = await handle.requestPermission({ mode: 'readwrite' });
+      return p === 'granted';
+    }
+  } catch (e) {}
+  return false;
+}
+function downloadBlob(blob, fileName) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+async function uploadToCloud(blob, fileName) {
+  const cfg = state.saveConfig;
+  if (!cfg.cloudUrl) return false;
+  const url = cfg.cloudUrl.replace(/\/$/, '') + '/' + encodeURIComponent(fileName);
+  const headers = { 'Content-Type': blob.type || 'video/webm' };
+  if (cfg.cloudUser || cfg.cloudPass) {
+    headers['Authorization'] = 'Basic ' + btoa((cfg.cloudUser || '') + ':' + (cfg.cloudPass || ''));
+  }
+  showToast('Caricamento su cloud/NAS...', 'warning');
+  try {
+    const resp = await fetch(url, { method: 'PUT', headers: headers, body: blob });
+    if (resp.ok) { showToast('Registrazione caricata su cloud/NAS.', 'success'); return true; }
+    showToast('Caricamento cloud fallito (HTTP ' + resp.status + ').', 'error');
+  } catch (e) {
+    showToast('Cloud non raggiungibile: ' + e.message + '. Controlla URL e CORS.', 'error');
+  }
+  return false;
+}
+async function downloadRecording(id) {
+  const r = state.recordings.find(x => x.id === id);
+  if (!r) return;
+  logApp('REC', 'INFO', 'Salvataggio registrazione', {
+    titolo: r.title, destinazione: state.saveDestination, byte: r.size || 0
+  });
+  const blob = new Blob(r.chunks || [], { type: r.mimeType || 'video/webm' });
+  const safeTitle = (r.title || 'registrazione').replace(/[^a-zA-Z0-9À-ÿ \-]/g, '_');
+  const fileName = safeTitle + '-' + new Date(r.startTs).toISOString().replace(/[:.]/g, '-') + '.webm';
+
+  if (state.saveDestination === 'usb') {
+    const handle = await getUsbDirHandle();
+    if (handle && await ensureUsbPermission(handle)) {
+      try {
+        const fh = await handle.getFileHandle(fileName, { create: true });
+        const w = await fh.createWritable();
+        await w.write(blob);
+        await w.close();
+        showToast('Salvato su USB (' + handle.name + '): ' + fileName, 'success');
+        return;
+      } catch (e) { showToast('Errore salvataggio USB: ' + e.message, 'error'); }
+    }
+    if (window.showSaveFilePicker) {
+      try {
+        const fh = await window.showSaveFilePicker({ suggestedName: fileName, types: [{ description: 'Video WebM', accept: { 'video/webm': ['.webm'] } }] });
+        const w = await fh.createWritable();
+        await w.write(blob);
+        await w.close();
+        showToast('Salvato su: ' + fh.name, 'success');
+        return;
+      } catch (e) { /* annullato */ }
+    }
+    showToast('Nessuna cartella USB selezionata: salvataggio locale.', 'warning');
+  }
+
+  if (state.saveDestination === 'cloud') {
+    if (await uploadToCloud(blob, fileName)) return;
+    showToast('Cloud non disponibile: salvataggio locale.', 'warning');
+  }
+
+  downloadBlob(blob, fileName);
+}
+
+function playRecording(id) {
+  const r = state.recordings.find(x => x.id === id);
+  if (!r) return;
+  hideModal('recordingsModal');
+  const video = $('#videoPlayer');
+  video.src = r.url;
+  video.load();
+  video.play().catch(err => { showToast('Impossibile riprodurre la registrazione: ' + err.message, 'error'); });
+}
+
+function saveRecordingState() {
+  try {
+    const meta = state.recordings.map(r => ({ id: r.id, title: r.title, startTs: r.startTs, durationMs: r.durationMs, size: r.size }));
+    localStorage.setItem('iptv_solution_recordings', JSON.stringify(meta));
+  } catch (e) {}
+}
+
+function finalizeRecording(sourceInfo) {
+  state.recording.active = false;
+  const rec = state.recording ? state.recording.rec : null;
+  const btn = $('#btnRecord');
+  if (btn) { btn.classList.remove('recording'); btn.textContent = '⏺'; btn.title = 'Registra'; }
+  const startTs = state.recording ? state.recording.startTs : Date.now();
+  const chunks = (state.recording && state.recording.chunks) || [];
+  const blob = new Blob(chunks, { type: 'video/webm' });
+  const url = URL.createObjectURL(blob);
+  addRecording({
+    id: 'rec_' + Date.now(),
+    title: sourceInfo.title || 'Registrazione',
+    startTs: startTs,
+    durationMs: Date.now() - startTs,
+    size: blob.size,
+    url: url,
+    mimeType: blob.type || 'video/webm',
+    chunks: chunks
+  });
+  if (sourceInfo && sourceInfo.kind === 'scheduled' && sourceInfo.scheduledId) {
+    state.scheduledRecordings.forEach(s => { if (s.id === sourceInfo.scheduledId) s.status = 'done'; });
+    saveScheduledState();
+    renderScheduled();
+  }
+}
+
+// ===== Scheduled recordings (web) =====
+const SCHED_KEY = 'iptv_solution_scheduled';
+function saveScheduledState() {
+  try {
+    localStorage.setItem(SCHED_KEY, JSON.stringify(state.scheduledRecordings.map(s => ({ id: s.id, title: s.title, streamUrl: s.streamUrl, startTs: s.startTs, durationMs: s.durationMs, status: s.status }))));
+  } catch (e) {}
+}
+function scheduleRecording(title, streamUrl, startTs, durationMs) {
+  state.scheduledRecordings.unshift({ id: 'sched_' + Date.now(), title: title || 'Registrazione', streamUrl: streamUrl, startTs: startTs, durationMs: durationMs, status: 'scheduled' });
+  saveScheduledState();
+  renderScheduled();
+  showToast('Registrazione programmata.', 'success');
+}
+function cancelScheduled(id) {
+  state.scheduledRecordings = state.scheduledRecordings.filter(s => s.id !== id);
+  saveScheduledState();
+  renderScheduled();
+}
+function renderScheduled() {
+  const list = $('#scheduledList');
+  if (!list) return;
+  if (state.scheduledRecordings.length === 0) { list.innerHTML = '<p class="hint">Nessuna registrazione programmata.</p>'; return; }
+  list.innerHTML = state.scheduledRecordings.map(s => `
+    <div class="saved-source" style="flex-direction:row;align-items:center;gap:10px;">
+      <div style="flex:1;min-width:0;">
+        <div class="saved-source-name">${escapeHtml(s.title)}</div>
+        <div class="saved-source-type">${new Date(s.startTs).toLocaleString()} · tra ${Math.round(s.durationMs / 60000)} min · ${s.status}</div>
+      </div>
+      <button class="btn btn-danger" style="font-size:12px;padding:4px 8px;" onclick="cancelScheduled('${s.id}')">✕</button>
+    </div>
+  `).join('');
+}
+function startScheduledRecording(s) {
+  if (state.recording && state.recording.active) return;
+  const video = $('#videoPlayer');
+  state.recording = { active: true, startTs: Date.now(), chunks: [], rec: null, sourceInfo: { kind: 'scheduled', scheduledId: s.id, title: s.title } };
+  const btn = $('#btnRecord');
+  if (btn) { btn.classList.add('recording'); btn.textContent = '■'; btn.title = 'Stop registrazione'; }
+  const resetRecBtn = () => { const b = $('#btnRecord'); if (b) { b.classList.remove('recording'); b.textContent = '⏺'; b.title = 'Registra'; } };
+  video.src = s.streamUrl;
+  video.load();
+  const start = () => {
+    let stream = null;
+    try { stream = video.captureStream ? video.captureStream(30) : null; } catch (e) { stream = null; }
+    if (!stream) { resetRecBtn(); state.recording.active = false; return; }
+    const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(m => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m)) || '';
+    let rec;
+    try { rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined); } catch (e) { resetRecBtn(); state.recording.active = false; return; }
+    const chunks = [];
+    state.recording.rec = rec;
+    rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+    rec.onstop = () => { finalizeRecording({ kind: 'scheduled', scheduledId: s.id, title: s.title }); };
+    try { rec.start(1000); } catch (e) { resetRecBtn(); state.recording.active = false; return; }
+  };
+  const onCanPlay = () => { video.removeEventListener('canplay', onCanPlay); video.removeEventListener('error', onErr); start(); };
+  const onErr = () => { video.removeEventListener('canplay', onCanPlay); video.removeEventListener('error', onErr); resetRecBtn(); state.recording.active = false; showToast('Impossibile avviare la registrazione: riproduzione non disponibile.', 'error'); };
+  video.addEventListener('canplay', onCanPlay);
+  video.addEventListener('error', onErr);
+  video.play().catch(err => { video.removeEventListener('canplay', onCanPlay); video.removeEventListener('error', onErr); resetRecBtn(); state.recording.active = false; showToast('Impossibile avviare la registrazione: ' + err.message, 'error'); });
+}
+function checkScheduledRecordings() {
+  const now = Date.now();
+  state.scheduledRecordings.forEach(s => {
+    if (s.status === 'scheduled' && now >= s.startTs) {
+      if (!(state.recording && state.recording.active && state.recording.sourceInfo && state.recording.sourceInfo.kind === 'scheduled' && state.recording.sourceInfo.scheduledId === s.id)) {
+        startScheduledRecording(s);
+      }
+    }
+  });
+}
+function saveScheduleFromForm() {
+  const title = ($('#schedTitle').value || '').trim() || 'Registrazione';
+  const streamUrl = ($('#schedUrl').value || '').trim();
+  const startEl = document.getElementById('schedStart');
+  const dur = parseInt(($('#schedDuration').value || '60'), 10) || 60;
+  if (!streamUrl) { showToast('Inserisci l\'URL dello stream.', 'error'); return; }
+  if (!startEl || !startEl.value) { showToast('Scegli data e ora.', 'error'); return; }
+  const startTs = new Date(startEl.value).getTime();
+  if (isNaN(startTs)) { showToast('Data non valida.', 'error'); return; }
+  scheduleRecording(title, streamUrl, startTs, dur * 60 * 1000);
+  const schedTitle = document.getElementById('schedTitle');
+  const schedUrl = document.getElementById('schedUrl');
+  const schedDur = document.getElementById('schedDuration');
+  if (schedTitle) schedTitle.value = '';
+  if (schedUrl) schedUrl.value = '';
+  if (schedDur) schedDur.value = '60';
+  const schedStart = document.getElementById('schedStart');
+  if (schedStart) schedStart.value = '';
+}
+
+// Detect channel type from name, group, url
+// Cache for extractSeriesName
+const _seriesNameCache = {};
+
+// Extract series name from channel name
+function extractSeriesName(name) {
+  if (!name) return 'Serie sconosciuta';
+  if (_seriesNameCache[name]) return _seriesNameCache[name];
+  const original = name;
+  let seriesName = name
+    .replace(/\s*S\d+\s*E\d+.*$/i, '')
+    .replace(/\s*Stagione\s*\d+.*$/i, '')
+    .replace(/\s*Season\s*\d+.*$/i, '')
+    .replace(/\s*Episodio\s*\d+.*$/i, '')
+    .replace(/\s*Episode\s*\d+.*$/i, '')
+    .replace(/\s*E\d+.*$/i, '')
+    .replace(/\s*-\s*\d+x\d+.*$/i, '')
+    .replace(/\.S\d+\.E\d+.*$/i, '')
+    .trim();
+  let result = original;
+  if (seriesName !== original && seriesName.length > 0) result = seriesName;
+  else {
+    const seMatch = original.match(/^(.*?)[\s._-]+(?:S\d+|Stagione|Season|Episodio|Episode|\d+x\d+)/i);
+    if (seMatch && seMatch[1] && seMatch[1].trim().length > 1) {
+      result = seMatch[1].trim();
+    }
+  }
+  _seriesNameCache[name] = result;
+  return result;
+}
+
+// Group series by common prefix (for M3U where series name is followed by episode title)
+function groupSeriesByPrefix(channels) {
+  if (channels.length < 2) return null;
+  
+  const lowerNames = channels.map(c => (c.name || '').toLowerCase());
+  const groups = {};
+  
+  for (let i = 0; i < channels.length; i++) {
+    const name = channels[i].name || '';
+    const words = name.split(/\s+/);
+    let bestPrefix = '';
+    
+    for (let w = words.length - 1; w >= 1; w--) {
+      const prefix = words.slice(0, w).join(' ');
+      if (prefix.length < 2) break;
+      const prefixLower = prefix.toLowerCase();
+      
+      let count = 0;
+      for (let j = 0; j < lowerNames.length; j++) {
+        if (lowerNames[j].startsWith(prefixLower + ' ') || lowerNames[j] === prefixLower) {
+          count++;
+          if (count >= 2) break;
+        }
+      }
+      if (count >= 2) {
+        bestPrefix = prefix;
+        break;
+      }
+    }
+    
+    if (bestPrefix) {
+      bestPrefix = bestPrefix.replace(/\s+(Episodio|Episode|S\d+|E\d+|Stagione|Season)\s*$/i, '').trim();
+    }
+    
+    const key = bestPrefix || name || 'Serie sconosciuta';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(channels[i]);
+  }
+  
+  const result = {};
+  Object.keys(groups).forEach(k => {
+    if (groups[k].length > 0) result[k] = groups[k];
+  });
+  return result;
+}
+function detectChannelType(name, group, url, attrs) {
+  const text = ((name || '') + ' ' + (group || '') + ' ' + (url || '')).toLowerCase();
+  const g = (group || '').toLowerCase();
+  const u = (url || '').toLowerCase();
+  const a = attrs || {};
+
+  // PRIORITY 1: type attribute (IPTV Extreme / OTT Navigator standard)
+  if (a.type === 'movie') return 'vod';
+  if (a.type === 'series') return 'series';
+  if (a.type === 'radio') return 'live';
+
+  // PRIORITY 2: tvg-season/tvg-episode (series episode)
+  if (a['tvg-season'] || a['tvg-episode']) return 'series';
+
+  // PRIORITY 3: tvg-serie (groups episodes into a series)
+  if (a['tvg-serie']) return 'series';
+
+  // PRIORITY 4: URL path (Xtream Codes M3U Plus - most reliable)
+  if (/\/movie\//i.test(u)) return 'vod';
+  if (/\/series\//i.test(u)) return 'series';
+  if (/\/live\//i.test(u)) return 'live';
+
+  // PRIORITY 5: Series name patterns (prima dell'estensione: le serie Xtream usano spesso .ts/.m3u8)
+  if (/\bS\d+\s*E\d+\b/i.test(name || '') || /\bStagione\s*\d+/i.test(name || '') || /\bSeason\s*\d+/i.test(name || '') || /\b\d+x\d+\b/i.test(name || '')) return 'series';
+
+  // PRIORITY 6: Country prefix (es. "IT | Cinema") = canale LIVE
+  if (/^[a-z]{2}\s*\|/i.test(group || '')) return 'live';
+
+  // PRIORITY 7: Group title analysis (prima dell'estensione: i VOD M3U Plus usano spesso .ts)
+  const movieGenres = /\b(azione|thriller|commedia|dramma|fantascienza|horror|romance|romantico|storico|documentario|avventura|supereroi|superhero|fantasy|musical|western|guerra|war|animazione|animation|crime|crimine|mystery|mistero|noir|biografico|biography|sportivo|sport|natale|christmas|xmas|drammatico|storico|biography)\b/i;
+  const vodKeywords = /\b(vod|movie|film|cinema|movies|on.?demand|on.?request|saga|netflix|adult|xxx|18\+)\b/i;
+  if (movieGenres.test(g) || vodKeywords.test(g)) return 'vod';
+
+  // Series keywords (senza prefisso paese e senza parole "live")
+  if (/\b(serie|series|stagione|season|tv.?show|tv.?series)\b/.test(g) && !/\b(live|canal|channel)\b/.test(g)) return 'series';
+
+  // PRIORITY 8: File extension (video files = VOD, stream files = Live)
+  if (/\.(mp4|mkv|avi|mov|wmv|flv|webm)(\?|$)/i.test(u)) return 'vod';
+  if (/\.(ts|m3u8)(\?|$)/i.test(u)) return 'live';
+
+  // PRIORITY 9: Full text - only very explicit keywords
+  if (/\b(vod|on.?demand|on.?request)\b/.test(text)) return 'vod';
+
+  // Default: live (most IPTV channels are live TV, not VOD)
+  return 'live';
+}
+
+// M3U Parser
+function parseM3u(text) {
+  const lines = text.split(/\r?\n/);
+  const channels = [];
+  let current = null;
+  let attrs = {};
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('#EXTINF:')) {
+      const info = trimmed.substring(8);
+      attrs = {};
+      const attrRegex = /(\w+(?:-\w+)*)="([^"]*)"/g;
+      let m;
+      while ((m = attrRegex.exec(info)) !== null) attrs[m[1]] = m[2];
+      const commaIdx = info.lastIndexOf(',');
+      const name = commaIdx >= 0 ? info.substring(commaIdx + 1).trim() : 'Canale';
+      const group = attrs['group-title'] || 'Generale';
+      current = {
+        id: attrs['tvg-id'] || 'ch_' + channels.length,
+        name: name || attrs['tvg-name'] || 'Canale',
+        logo: attrs['tvg-logo'] || '',
+        group: group,
+        epgId: attrs['tvg-id'] || attrs['tvg-name'] || '',
+        url: '',
+        type: 'live',
+        language: attrs['tvg-language'] || '',
+        country: attrs['tvg-country'] || '',
+        shift: attrs['tvg-shift'] || '0',
+        chNumber: attrs['ch-number'] || attrs['tvg-chno'] || '',
+        radio: attrs['type'] === 'radio' || attrs['radio'] === 'true',
+        adult: attrs['adult'] === '1' || (attrs['parent-code'] && attrs['parent-code'] !== '0000')
+      };
+    } else if (trimmed && !trimmed.startsWith('#') && current) {
+      current.url = trimmed;
+      current.type = detectChannelType(current.name, current.group, current.url, attrs);
+      channels.push(current);
+      current = null;
+    }
+  }
+  if (current && current.url) {
+    current.type = detectChannelType(current.name, current.group, current.url);
+    channels.push(current);
+  }
+  return channels;
+}
+
+// Source handlers
+async function handleM3uSubmit(e) {
+  e.preventDefault();
+  const name = $('#m3uName').value.trim();
+  const url = $('#m3uUrl').value.trim();
+  if (!name || !url) return;
+  showLoading('Caricamento playlist M3U...');
+  try {
+    let text;
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      text = await resp.text();
+    } catch (fetchErr) {
+      console.warn('Direct fetch failed, trying proxy...', fetchErr);
+      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+      const resp = await fetch(proxyUrl);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status + ' (proxy)');
+      text = await resp.text();
+    }
+    const channels = parseM3u(text);
+    if (channels.length === 0) throw new Error('Nessun canale trovato nella playlist');
+    addSource({ id: 'src_' + Date.now(), name: name, type: 'm3u', url: url, channels: channels, rawText: text.length < 400000 ? text : '' });
+    showToast(channels.length + ' canali caricati', 'success');
+    hideModal('addSourceModal');
+    e.target.reset();
+  } catch (err) {
+    showToast('Errore: ' + err.message, 'error');
+    console.error(err);
+  } finally { hideLoading(); }
+}
+
+async function handleXtreamSubmit(e) {
+  e.preventDefault();
+  const name = $('#xtreamName').value.trim();
+  const url = $('#xtreamUrl').value.trim().replace(/\/$/, '');
+  const user = $('#xtreamUser').value.trim();
+  const pass = $('#xtreamPass').value.trim();
+  if (!name || !url || !user || !pass) return;
+  showLoading('Connessione a Xtream Codes...');
+  try {
+    const infoUrl = url + '/player_api.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass);
+    const resp = await fetch(infoUrl);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const info = await resp.json();
+    if (info.user_info && info.user_info.auth === 0) throw new Error('Credenziali non valide');
+
+    const channels = [];
+
+    // Live streams
+    try {
+      const liveUrl = url + '/player_api.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&action=get_live_streams';
+      const liveResp = await fetch(liveUrl);
+      const liveData = await liveResp.json();
+      const catUrl = url + '/player_api.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&action=get_live_categories';
+      const catResp = await fetch(catUrl);
+      const catData = await catResp.json();
+      const catMap = {};
+      (catData || []).forEach(c => catMap[c.category_id] = c.category_name);
+      (liveData || []).forEach(ch => {
+        channels.push({
+          id: 'xtream_' + ch.stream_id,
+          name: ch.name || 'Canale ' + ch.stream_id,
+          logo: ch.stream_icon || '',
+          group: catMap[ch.category_id] || 'Live',
+          epgId: ch.epg_channel_id || '',
+          url: url + '/live/' + user + '/' + pass + '/' + ch.stream_id + '.ts',
+          type: 'live'
+        });
+      });
+    } catch (e) { console.warn('Live fetch failed:', e); }
+
+    // VOD
+    try {
+      const vodUrl = url + '/player_api.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&action=get_vod_streams';
+      const vodResp = await fetch(vodUrl);
+      const vodData = await vodResp.json();
+      const vodCatUrl = url + '/player_api.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&action=get_vod_categories';
+      const vodCatResp = await fetch(vodCatUrl);
+      const vodCatData = await vodCatResp.json();
+      const vodCatMap = {};
+      (vodCatData || []).forEach(c => vodCatMap[c.category_id] = c.category_name);
+      (vodData || []).forEach(v => {
+        channels.push({
+          id: 'xtream_vod_' + v.stream_id,
+          name: v.name || 'VOD ' + v.stream_id,
+          logo: v.stream_icon || '',
+          group: vodCatMap[v.category_id] || 'VOD',
+          url: url + '/movie/' + user + '/' + pass + '/' + v.stream_id + '.' + (v.container_extension || 'mp4'),
+          type: 'vod'
+        });
+      });
+    } catch (e) { console.warn('VOD fetch failed:', e); }
+
+    // Series
+    try {
+      const serUrl = url + '/player_api.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&action=get_series';
+      const serResp = await fetch(serUrl);
+      const serData = await serResp.json();
+      const serCatUrl = url + '/player_api.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&action=get_series_categories';
+      const serCatResp = await fetch(serCatUrl);
+      const serCatData = await serCatResp.json();
+      const serCatMap = {};
+      (serCatData || []).forEach(c => serCatMap[c.category_id] = c.category_name);
+      (serData || []).forEach(s => {
+        channels.push({
+          id: 'xtream_series_' + s.series_id,
+          name: s.name || 'Serie ' + s.series_id,
+          logo: s.cover || '',
+          group: serCatMap[s.category_id] || 'Serie TV',
+          url: '', // Series need episode selection
+          type: 'series'
+        });
+      });
+    } catch (e) { console.warn('Series fetch failed:', e); }
+
+    // Also fetch raw M3U for analysis
+    let rawText = '';
+    try {
+      const m3uUrl = url + '/get.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&type=m3u_plus&output=ts';
+      const m3uResp = await fetch(m3uUrl);
+      if (m3uResp.ok) rawText = await m3uResp.text();
+    } catch (e) { console.warn('M3U fetch for analysis failed:', e); }
+    addSource({ id: 'src_' + Date.now(), name: name, type: 'xtream', url: url, user: user, pass: pass, channels: channels, rawText: rawText.length < 400000 ? rawText : '' });
+    showToast(channels.length + ' elementi caricati', 'success');
+    hideModal('addSourceModal');
+    e.target.reset();
+  } catch (err) {
+    showToast('Errore Xtream: ' + err.message, 'error');
+    console.error(err);
+  } finally { hideLoading(); }
+}
+
+async function handleStalkerSubmit(e) {
+  e.preventDefault();
+  const name = $('#stalkerName').value.trim();
+  const url = $('#stalkerUrl').value.trim().replace(/\/$/, '');
+  const mac = $('#stalkerMac').value.trim();
+  if (!name || !url || !mac) return;
+  showLoading('Connessione a Stalker...');
+  try {
+    const handshakeUrl = url + '/server/load.php?type=stb&action=handshake&token=&JsHttpRequest=1-xml';
+    let resp;
+    try {
+      resp = await fetch(handshakeUrl, {
+        headers: { 'Cookie': 'mac=' + mac + '; stb_lang=en; timezone=Europe/Rome' }
+      });
+    } catch (e) {
+      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(handshakeUrl);
+      resp = await fetch(proxyUrl);
+    }
+    let token = '';
+    try {
+      const data = await resp.json();
+      token = (data.js && data.js.token) || data.token || '';
+    } catch (e) {
+      const text = await resp.text();
+      const match = text.match(/"token"\s*:\s*"([^"]+)"/);
+      token = match ? match[1] : '';
+    }
+
+    const channelsUrl = url + '/server/load.php?type=itv&action=get_ordered_list&JsHttpRequest=1-xml';
+    const chResp = await fetch(channelsUrl, {
+      headers: { 'Cookie': 'mac=' + mac + '; stb_lang=en; timezone=Europe/Rome; token=' + token }
+    });
+    const chData = await chResp.json();
+    const items = (chData.js && chData.js.data) || chData.data || [];
+
+    const channels = items.map((ch, i) => ({
+      id: 'stalker_' + (ch.id || i),
+      name: ch.name || 'Canale ' + (i + 1),
+      logo: ch.logo || '',
+      group: ch.tv_genre_name || 'Generale',
+      url: ch.cmd ? ch.cmd.replace('ffmpeg ', '') : '',
+      type: detectChannelType(ch.name || '', ch.tv_genre_name || '', ch.cmd || '')
+    }));
+
+    addSource({ id: 'src_' + Date.now(), name: name, type: 'stalker', url: url, mac: mac, token: token, channels: channels });
+    showToast(channels.length + ' canali caricati', 'success');
+    hideModal('addSourceModal');
+    e.target.reset();
+  } catch (err) {
+    showToast('Errore Stalker: ' + err.message, 'error');
+    console.error(err);
+  } finally { hideLoading(); }
+}
+
+async function handleFileSubmit(e) {
+  e.preventDefault();
+  const file = $('#m3uFile').files[0];
+  if (!file) return;
+  showLoading('Lettura file...');
+  try {
+    const text = await file.text();
+    const channels = parseM3u(text);
+    if (channels.length === 0) throw new Error('Nessun canale trovato nel file');
+    addSource({ id: 'src_' + Date.now(), name: file.name, type: 'file', channels: channels, rawText: text.length < 400000 ? text : '' });
+    showToast(channels.length + ' canali caricati', 'success');
+    hideModal('addSourceModal');
+    e.target.reset();
+  } catch (err) {
+    showToast('Errore: ' + err.message, 'error');
+  } finally { hideLoading(); }
+}
+
+function addSource(source) {
+  logApp('SORGENTI', 'INFO', 'Sorgente aggiunta', {
+    nome: source.name, tipo: source.type, canali: source.channels ? source.channels.length : 0,
+    url: safeLogUrl(source.url)
+  });
+  state.sources.push(source);
+  if (source.channels) {
+    state.channels.push(...source.channels.map(ch => ({ ...ch, sourceId: source.id })));
+  }
+  // Invalidate series cache
+  state._seriesCache = null;
+  state._seriesCacheChannelCount = 0;
+  saveState();
+  renderChannelList();
+  renderSavedSources();
+}
+
+// Player
+function initPlayer() {
+  const video = $('#videoPlayer');
+  video.volume = state.settings.volume / 100;
+  if (state.settings.autoplay) video.autoplay = true;
+  // Error handling
+  video.addEventListener('error', () => {
+    const err = video.error;
+    let msg = 'Errore riproduzione';
+    if (err) {
+      switch (err.code) {
+        case 1: msg = 'Caricamento interrotto'; break;
+        case 2: msg = 'Errore di rete (server non raggiungibile o CORS)'; break;
+        case 3: case 4: msg = 'Formato non supportato da Chrome'; break;
+      }
+    }
+    const src = video.currentSrc || video.src || '';
+    logStream('VIDEO_ERROR', {
+      codice: err ? err.code : null, messaggio: err ? err.message : null,
+      readyState: video.readyState, tempo: Number(video.currentTime.toFixed(1)),
+      buffer: video.buffered.length ? video.buffered.end(video.buffered.length - 1) : 0,
+      paused: video.paused, src: src.substring(0, 120)
+    });
+    // Errori di decodifica: prima prova senza audio, poi watchdog con riavvio
+    if (err && (err.code === 3 || err.code === 4) && state.hls && state._lastHlsUrl) {
+      const url = state._lastHlsUrl;
+      if (!state._noAudioRetry) {
+        state._noAudioRetry = true;
+        logStream('VIDEO_SENZA_AUDIO', {});
+        showToast('Audio non compatibile: riprovo senza audio...', 'warning');
+        attachHls(url, true);
+        return;
+      }
+      if (startTsFallback(url)) return;
+      if ((state._watchdogRestarts || 0) < 20) {
+        state._watchdogRestarts = (state._watchdogRestarts || 0) + 1;
+        logStream('WATCHDOG_RIAVVIO', { numero: state._watchdogRestarts });
+        showToast('Ripristino stream ' + state._watchdogRestarts + '/20 · ' + contextLabel(), 'warning');
+        setTimeout(() => { if (state._lastHlsUrl === url) attachHls(url, true); }, 800);
+        return;
+      }
+    }
+    // Tenta automaticamente un formato compatibile (.mkv -> .mp4, .ts -> .m3u8)
+    let alt = null;
+    if (/\.mkv(\?|$)/i.test(src)) alt = src.replace(/\.mkv(\?|$)/i, '.mp4$1');
+    else if (/\.ts(\?|$)/i.test(src) && !/\.m3u8/i.test(src)) alt = src.replace(/\.ts(\?|$)/i, '.m3u8$1');
+    if (alt && state._decodeRetrySrc !== alt) {
+      state._decodeRetrySrc = alt;
+      showToast('Formato non compatibile: tentativo con formato alternativo...', 'warning');
+      if (state.hls) { state.hls.destroy(); state.hls = null; }
+      if (/\.m3u8/i.test(alt) && typeof Hls !== 'undefined' && Hls.isSupported()) {
+        state.hls = new Hls({ enableWorker: true });
+        state.hls.loadSource(alt);
+        state.hls.attachMedia(video);
+        state.hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
+      } else {
+        video.src = alt; video.load(); video.play().catch(() => {});
+      }
+      return;
+    }
+    state._decodeRetrySrc = null;
+    const hint = (err && (err.code === 3 || err.code === 4))
+      ? ' Formato non compatibile: usa una playlist con output=m3u8.'
+      : '';
+    const ctx = contextLabel();
+    showToast(msg + ' · ' + ctx + hint, 'error');
+    console.error('Video error:', err, 'src:', src, 'contesto:', ctx);
+    $('#currentChannelInfo').textContent = '❌ ' + msg + ' · ' + ctx;
+  });
+  ['stalled', 'waiting', 'playing'].forEach(function (ev) {
+    video.addEventListener(ev, function () {
+      logStream('VIDEO_' + ev.toUpperCase(), {
+        tempo: Number(video.currentTime.toFixed(1)),
+        readyState: video.readyState,
+        paused: video.paused
+      });
+    });
+  });
+}
+
+// Switch season in series detail view
+function switchSeriesSeason(season) {
+  state._seriesCurrentSeason = season;
+  renderChannelList();
+}
+
+// Play an episode from a series
+function playSeriesEpisode(episodeId, ext, seriesName, title) {
+  // First, try to find the channel in state.channels (for M3U series)
+  const ch = state.channels.find(c => c.id === episodeId || c.id === 'xtream_series_' + episodeId);
+  if (ch && ch.url) {
+    // M3U series: use the channel's URL directly
+    const video = $('#videoPlayer');
+    $('#currentChannelName').textContent = seriesName + ' - ' + title;
+    $('#currentChannelInfo').textContent = 'Serie TV';
+
+    if (state.hls) { state.hls.destroy(); state.hls = null; }
+
+    let playUrl = ch.url;
+    if (playUrl.toLowerCase().includes('.ts') && !playUrl.toLowerCase().includes('.m3u8')) {
+      playUrl = playUrl.replace(/\.ts(\?|$)/i, '.m3u8$1');
+    }
+    const isHls = playUrl.toLowerCase().includes('.m3u8');
+
+    if (isHls) {
+      if (typeof Hls === 'undefined') {
+        video.src = playUrl;
+        video.play().catch(err => console.error('Native play failed:', err));
+      } else if (Hls.isSupported()) {
+        state.hls = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 90 });
+        state.hls.loadSource(playUrl);
+        state.hls.attachMedia(video);
+        state.hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(err => console.warn('Play failed:', err)); });
+        state.hls.on(Hls.Events.ERROR, (e, data) => {
+          if (data.fatal) {
+            showToast('Errore HLS. Prova con output=m3u8.', 'error');
+            state.hls.destroy();
+            state.hls = null;
+          }
+        });
+      } else {
+        video.src = playUrl;
+        video.play().catch(() => {});
+      }
+    } else {
+      video.src = playUrl;
+      video.load();
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.error('Play error:', err, 'URL:', playUrl);
+          if (err.name === 'NotSupportedError') {
+            showToast('Formato non supportato. Prova a cambiare output=m3u8.', 'error');
+          } else {
+            showToast('Impossibile riprodurre: ' + err.message, 'error');
+          }
+        });
+      }
+    }
+    return;
+  }
+
+  // Xtream series: construct URL from source
+  const source = window._currentSeries ? state.sources.find(s => s.id === (state.channels.find(c => c.id === 'xtream_series_' + episodeId) || {}).sourceId) : null;
+  let src = null;
+  const ch2 = state.channels.find(c => c.id === 'xtream_series_' + episodeId || c.id === episodeId);
+  if (ch2) src = state.sources.find(s => s.id === ch2.sourceId);
+  if (!src) {
+    src = state.sources.find(s => s.type === 'xtream');
+  }
+  if (!src || !src.user || !src.pass) {
+    showToast('Sorgente Xtream non trovata. Verifica le credenziali.', 'error');
+    return;
+  }
+  const safeExt = ext || 'mp4';
+  const url = src.url + '/series/' + src.user + '/' + src.pass + '/' + episodeId + '.' + safeExt;
+  const video = $('#videoPlayer');
+  $('#currentChannelName').textContent = seriesName + ' - ' + title;
+  $('#currentChannelInfo').textContent = 'Serie TV';
+
+  if (state.hls) { state.hls.destroy(); state.hls = null; }
+
+  let playUrl = url;
+  const lowerUrl = url.toLowerCase();
+  if (lowerUrl.includes('.ts') && !lowerUrl.includes('.m3u8')) {
+    playUrl = url.replace(/\.ts(\?|$)/i, '.m3u8$1');
+  }
+  const isHls = playUrl.toLowerCase().includes('.m3u8');
+
+  if (isHls) {
+    if (typeof Hls === 'undefined') {
+      video.src = playUrl;
+      video.play().catch(err => console.error('Native play failed:', err));
+      return;
+    }
+    if (Hls.isSupported()) {
+      state.hls = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 90 });
+      state.hls.loadSource(playUrl);
+      state.hls.attachMedia(video);
+      state.hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(err => console.warn('Play failed:', err)); });
+      state.hls.on(Hls.Events.ERROR, (e, data) => {
+        if (data.fatal) {
+          showToast('Errore riproduzione HLS', 'error');
+          state.hls.destroy();
+          state.hls = null;
+        }
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = playUrl;
+      video.play().catch(err => console.warn('Play failed:', err));
+    }
+  } else {
+    video.src = playUrl;
+    video.load();
+    video.play().catch(err => {
+      console.error('Play error:', err);
+      showToast('Impossibile riprodurre: ' + err.message, 'error');
+    });
+  }
+}
+
+function playChannel(channel, directPlay) {
+  // Virtual series group from search: navigate to series detail
+  if (channel._isSeriesGroup) {
+    navigateToSeries(channel._seriesName);
+    return;
+  }
+  // Series: show episode selector instead of playing (unless directPlay)
+  if (channel.type === 'series' && !directPlay) {
+    let seriesName = (channel.name || '')
+      .replace(/\s*S\d+\s*E\d+.*$/i, '')
+      .replace(/\s*Stagione\s*\d+.*$/i, '')
+      .replace(/\s*Season\s*\d+.*$/i, '')
+      .replace(/\s*Episodio\s*\d+.*$/i, '')
+      .replace(/\s*Episode\s*\d+.*$/i, '')
+      .replace(/\s*E\d+.*$/i, '')
+      .replace(/\s*-\s*\d+x\d+.*$/i, '')
+      .replace(/\.S\d+\.E\d+.*$/i, '')
+      .trim();
+    if (!seriesName) {
+      const seMatch = (channel.name || '').match(/^(.*?)[\s._-]+(?:S\d+|Stagione|Season|Episodio|Episode|\d+x\d+)/i);
+      if (seMatch && seMatch[1]) seriesName = seMatch[1].trim();
+    }
+    if (!seriesName) seriesName = channel.name || '';
+    // Check if it's an Xtream series (empty URL)
+    if (!channel.url || channel.id.startsWith('xtream_series_')) {
+      openSeriesDetail(channel);
+    } else {
+      openSeriesByName(seriesName);
+    }
+    return;
+  }
+  // ===== Parental Control PIN gate =====
+  if (pinLockEnabled()) {
+    const pinState = getPinState();
+    if (Date.now() < pinState.lockUntil) {
+      const waitSec = Math.ceil((pinState.lockUntil - Date.now()) / 1000);
+      showToast('Troppi tentativi di PIN. Riprova tra ' + waitSec + ' secondi.', 'error');
+      return;
+    }
+    showPinModal(() => startPlayback(channel));
+    return;
+  }
+  if (!channel || !channel.url) {
+    showToast('URL non disponibile per questo elemento', 'error');
+    console.error('No URL for channel:', channel);
+    return;
+  }
+  startPlayback(channel);
+}
+
+// Player alternativo: decodifica MPEG-TS con WebCodecs, ignorando completamente l'audio
+function stopTsFallback() {
+  if (state.tsPlayer) { try { state.tsPlayer.stop(); } catch (e) {} state.tsPlayer = null; }
+  const canvas = $('#tsCanvas'); if (canvas) canvas.style.display = 'none';
+  const video = $('#videoPlayer'); if (video) video.style.visibility = 'visible';
+}
+function startTsFallback(url) {
+  if (state._tsFallback || typeof TsLivePlayer === 'undefined') return false;
+  state._tsFallback = true;
+  stopTsFallback();
+  if (state.hls) { try { state.hls.destroy(); } catch (e) {} state.hls = null; }
+  const canvas = $('#tsCanvas');
+  if (!canvas) return false;
+  canvas.style.display = 'block';
+  const video = $('#videoPlayer'); if (video) video.style.visibility = 'hidden';
+  logStream('TS_FALLBACK_START', { url: url });
+  const p = new TsLivePlayer(canvas, url);
+  p.onStatus = s => { if (String(s).indexOf('video PID') === 0) logStream('TS_FALLBACK_PID', { stato: s }); };
+  p.onError = e => { logStream('TS_FALLBACK_ERROR', { errore: e.message || String(e) }); };
+  p.start().catch(e => {
+    logStream('TS_FALLBACK_ERROR', { errore: e.message || String(e) });
+    showToast('Player alternativo non disponibile · ' + contextLabel(), 'error');
+    stopTsFallback();
+  });
+  state.tsPlayer = p;
+  const ci = $('#currentChannelInfo');
+  if (ci && !ci.textContent.includes('player alternativo')) ci.textContent += ' · 🎞 player alternativo (senza audio)';
+  showToast('Player alternativo attivo: video senza audio · ' + contextLabel(), 'warning');
+  return true;
+}
+
+// Riproduzione HLS con recupero automatico dell'audio non compatibile
+function attachHls(url, noAudio) {
+  const video = $('#videoPlayer');
+  if (state.hls) { try { state.hls.destroy(); } catch (e) {} state.hls = null; }
+  if (typeof Hls === 'undefined') {
+    showToast('HLS.js non caricato. Verifica la connessione.', 'error');
+    video.src = url; video.play().catch(() => {}); return;
+  }
+  if (!Hls.isSupported()) {
+    if (video.canPlayType('application/vnd.apple.mpegurl')) { video.src = url; video.play().catch(() => {}); }
+    else showToast('HLS non supportato dal browser', 'error');
+    return;
+  }
+  state._lastHlsUrl = url;
+  state._decodeRetrySrc = null;
+  let restarts = 0;
+
+  function start() {
+    if (state.hls) { try { state.hls.destroy(); } catch (e) {} state.hls = null; }
+    state._mediaRecovered = false;
+    const h = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90 });
+    state.hls = h;
+    logStream('HLS_START', { url: url, senzaAudio: noAudio, riavvio: restarts });
+    h.loadSource(url);
+    h.attachMedia(video);
+    h.on(Hls.Events.MANIFEST_PARSED, () => {
+      logStream('HLS_MANIFEST', { livelli: h.levels.length, tracceAudio: h.audioTracks.length, livello: h.currentLevel });
+      const ci = $('#currentChannelInfo');
+      if (ci && ci.textContent.startsWith('❌')) {
+        const ch = state.currentChannel || {};
+        ci.textContent = (ch.group || '') + (ch.type ? ' · ' + ch.type.toUpperCase() : '') + ' · 📋 ' + getSourceLabel();
+      }
+      if (noAudio) {
+        try { h.audioTrack = -1; } catch (e) {}
+        if (ci && !ci.textContent.includes('senza audio')) ci.textContent += ' · 🔇 senza audio';
+      }
+      video.play().catch(err => console.warn('Play failed:', err));
+    });
+    h.on(Hls.Events.ERROR, (e, data) => {
+      logStream('HLS_ERROR', {
+        tipo: data.type, dettaglio: data.details, fatale: data.fatal,
+        codice: data.code, errore: data.err ? data.err.message : null,
+        frammento: data.frag ? data.frag.url : null,
+        buffer: video.buffered.length ? video.buffered.end(video.buffered.length - 1) : 0,
+        tempo: Number(video.currentTime.toFixed(1))
+      });
+      if (!data.fatal) return;
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+        logStream('HLS_RETE_RETRY', {});
+        showToast('Errore di rete HLS · ' + contextLabel(), 'error');
+        h.startLoad();
+        return;
+      }
+      if (data.type === Hls.ErrorTypes.MEDIA_ERROR && !state._mediaRecovered) {
+        state._mediaRecovered = true;
+        logStream('HLS_MEDIA_RECOVER', {});
+        h.recoverMediaError();
+        return;
+      }
+      if (!noAudio && !state._noAudioRetry) {
+        state._noAudioRetry = true;
+        logStream('HLS_SENZA_AUDIO', {});
+        showToast('Audio non compatibile: riprovo senza audio...', 'warning');
+        attachHls(url, true);
+        return;
+      }
+      // Dopo alcuni tentativi HLS, passa al decoder TS alternativo
+      if (restarts >= 1 && startTsFallback(url)) return;
+      // Stream live instabile: riavvia automaticamente fino a 10 volte
+      if (restarts < 10) {
+        restarts++;
+        logStream('HLS_RIAVVIO', { numero: restarts });
+        showToast('Stream interrotto, riavvio ' + restarts + '/10 · ' + contextLabel(), 'warning');
+        setTimeout(() => { if (state._lastHlsUrl === url) start(); }, 800);
+        return;
+      }
+      logStream('HLS_ABORT', { motivo: 'tentativi esauriti' });
+      showToast('Stream non disponibile · ' + contextLabel(), 'error');
+      try { h.destroy(); } catch (e) {}
+      state.hls = null;
+    });
+  }
+  start();
+}
+
+function startPlayback(channel) {
+  // Validate URL
+  try {
+    new URL(channel.url);
+  } catch (e) {
+    showToast('URL non valido: ' + channel.url, 'error');
+    console.error('Invalid URL:', channel.url);
+    return;
+  }
+  state.currentChannel = channel;
+  logApp('PLAY', 'INFO', 'Riproduzione', {
+    canale: channel.name, tipo: channel.type || 'live',
+    url: safeLogUrl(channel.url), sorgente: channel.sourceId || '-'
+  });
+  state._tsFallback = false;
+  stopTsFallback();
+  state._noAudioRetry = false;
+  state._mediaRecovered = false;
+  state._watchdogRestarts = 0;
+  state._lastHlsUrl = null;
+  // Track watch history
+  const histEntry = { id: channel.id, name: channel.name, type: channel.type, group: channel.group, time: Date.now() };
+  state.watchHistory = state.watchHistory.filter(h => h.id !== channel.id);
+  state.watchHistory.unshift(histEntry);
+  if (state.watchHistory.length > 50) state.watchHistory = state.watchHistory.slice(0, 50);
+  saveState();
+  const video = $('#videoPlayer');
+  $('#currentChannelName').textContent = channel.name;
+  $('#currentChannelInfo').textContent = (channel.group || '') + (channel.type ? ' · ' + channel.type.toUpperCase() : '') + ' · 📋 ' + getSourceLabel();
+
+  $$('.channel-item').forEach(el => el.classList.remove('active'));
+  try {
+    const activeEl = document.querySelector(`.channel-item[data-id="${CSS.escape(channel.id)}"]`);
+    if (activeEl) activeEl.classList.add('active');
+  } catch (e) { console.warn('Selector error:', e); }
+
+  if (state.hls) { state.hls.destroy(); state.hls = null; }
+
+  let url = channel.url;
+  console.log('Playing:', url);
+  const lowerUrl = url.toLowerCase();
+
+  // Auto-convert .ts to .m3u8 for Xtream Codes streams (Chrome doesn't support .ts)
+  if (lowerUrl.includes('.ts') && !lowerUrl.includes('.m3u8')) {
+    const m3u8Url = url.replace(/\.ts(\?|$)/i, '.m3u8$1');
+    console.log('Converted .ts to .m3u8:', m3u8Url);
+    url = m3u8Url;
+  }
+
+  const isHls = url.toLowerCase().includes('.m3u8');
+
+  if (isHls) {
+    attachHls(url, false);
+  } else {
+    // Direct playback (mp4, webm, etc.) - only if not converted to HLS
+    video.src = url;
+    video.load();
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(err => {
+        console.error('Play error:', err, 'URL:', url);
+        if (err.name === 'NotSupportedError') {
+          showToast('Formato non supportato da Chrome. Prova a cambiare output=m3u8 nell\'URL.', 'error');
+        } else if (err.name === 'NotAllowedError') {
+          showToast('Riproduzione bloccata dal browser. Clicca sul video per avviare.', 'error');
+        } else {
+          showToast('Impossibile riprodurre: ' + err.message, 'error');
+        }
+      });
+    }
+  }
+
+  loadEpg(channel);
+}
+
+// EPG
+function loadEpg(channel) {
+  const panel = $('#epgPanel');
+  panel.style.display = 'flex';
+  const content = $('#epgContent');
+  content.innerHTML = '<p class="hint">Caricamento guida...</p>';
+  setTimeout(() => {
+    content.innerHTML = `
+      <div class="epg-item">
+        <div class="epg-time">Ora</div>
+        <div class="epg-title">${escapeHtml(channel.name)}</div>
+        <div class="epg-desc">Riproduzione in corso · ${channel.type ? channel.type.toUpperCase() : ''}</div>
+      </div>
+      <div class="epg-item">
+        <div class="epg-time">+30 min</div>
+        <div class="epg-title">Prossimo programma</div>
+        <div class="epg-desc">EPG non configurato per questa sorgente</div>
+      </div>
+    `;
+  }, 300);
+}
+
+// History rendering
+function renderHistory() {
+  const bar = $('#historyBar');
+  const list = $('#historyList');
+  if (!state.watchHistory || state.watchHistory.length === 0) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'block';
+  const recent = state.watchHistory.slice(0, 10);
+  list.innerHTML = recent.map(h => {
+    const ch = state.channels.find(c => c.id === h.id);
+    if (!ch) return '';
+    const typeIcon = h.type === 'vod' ? '🎬' : h.type === 'series' ? '📺' : '📡';
+    return `<div style="min-width:80px;max-width:100px;cursor:pointer;text-align:center;" onclick="playChannelById('${escapeAttr(h.id)}')" title="${escapeHtml(h.name)}">
+      <div style="width:70px;height:40px;background:var(--bg3);border-radius:4px;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:18px;">${typeIcon}</div>
+      <div style="font-size:10px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(h.name)}</div>
+    </div>`;
+  }).join('');
+}
+
+// Channel list rendering
+function navigateTo(level, type, category) {
+  state.navLevel = level;
+  state.navType = type || null;
+  state.navCategory = category || null;
+  logApp('NAV', 'INFO', 'Navigazione', { livello: level, tipo: type || '-', categoria: category || '-' });
+  // Update breadcrumb
+  const bc = $('#navBreadcrumb');
+  const bt = $('#breadcrumbType');
+  const bcat = $('#breadcrumbCategory');
+  if (level === 'home') {
+    bc.style.display = 'none';
+  } else {
+    bc.style.display = 'block';
+    const typeLabels = { live: '📡 Live', vod: '🎬 Film', series: '📺 Serie' };
+    bt.innerHTML = ' › <span style="cursor:pointer;color:var(--accent);" onclick="navigateTo(\'type\',\'' + (type || state.navType) + '\')">' + (typeLabels[type || state.navType] || '') + '</span>';
+    if (category) {
+      bcat.innerHTML = ' › <span style="color:var(--text);">' + escapeHtml(category) + '</span>';
+    } else {
+      bcat.innerHTML = '';
+    }
+  }
+  // Show/hide quick nav
+  const qn = $('#quickNav');
+  if (level === 'home') {
+    if (qn) qn.style.display = 'none';
+  } else {
+    if (qn) qn.style.display = 'flex';
+  }
+  // Handle series_detail breadcrumb
+  if (level === 'series_detail') {
+    const bc = $('#navBreadcrumb');
+    const bt = $('#breadcrumbType');
+    const bcat = $('#breadcrumbCategory');
+    if (bc) bc.style.display = 'block';
+    if (bt) bt.innerHTML = ' › <span style="cursor:pointer;color:var(--accent);" onclick="navigateTo(\'type\',\'series\')">📺 Serie</span>';
+    if (bcat) bcat.innerHTML = ' › <span style="color:var(--text);">' + escapeHtml(state.navCategory || '') + '</span>';
+  }
+  renderChannelList();
+}
+
+// Navigate to a series detail (seasons + episodes in sidebar)
+async function navigateToSeries(seriesName) {
+  // Find the channel for this series
+  const seriesChannel = state.channels.find(ch => {
+    if ((ch.type || 'live') !== 'series') return false;
+    let name = (ch.name || '').replace(/\s*S\d+\s*E\d+.*$/i, '').replace(/\s*Stagione\s*\d+.*$/i, '').replace(/\s*Season\s*\d+.*$/i, '').replace(/\s*Episodio\s*\d+.*$/i, '').replace(/\s*Episode\s*\d+.*$/i, '').replace(/\s*E\d+.*$/i, '').replace(/\s*-\s*\d+x\d+.*$/i, '').trim();
+    if (!name) name = ch.name || '';
+    return name === seriesName;
+  });
+
+  const source = seriesChannel ? state.sources.find(s => s.id === seriesChannel.sourceId) : null;
+  const isXtream = source && source.type === 'xtream' && seriesChannel && seriesChannel.id.startsWith('xtream_series_');
+
+  state.navLevel = 'series_detail';
+  state.navType = 'series';
+  state.navCategory = seriesName;
+
+  // Update breadcrumb
+  const bc = $('#navBreadcrumb');
+  const bt = $('#breadcrumbType');
+  const bcat = $('#breadcrumbCategory');
+  if (bc) bc.style.display = 'block';
+  if (bt) bt.innerHTML = ' › <span style="cursor:pointer;color:var(--accent);" onclick="navigateTo(\'type\',\'series\')">📺 Serie</span>';
+  if (bcat) bcat.innerHTML = ' › <span style="color:var(--text);">' + escapeHtml(seriesName) + '</span>';
+
+  // Show quick nav
+  const qn = $('#quickNav');
+  if (qn) qn.style.display = 'flex';
+
+  if (isXtream) {
+    // Fetch series info from Xtream API
+    window._currentSeries = { name: seriesName, episodes: [], seasons: {}, loading: true, source: source, seriesId: seriesChannel.id.replace('xtream_series_', '') };
+    state._seriesSeasons = [];
+    state._seriesCurrentSeason = '1';
+    renderChannelList();
+
+    try {
+      const url = source.url;
+      const user = source.user;
+      const pass = source.pass;
+      const seriesId = seriesChannel.id.replace('xtream_series_', '');
+      const infoUrl = url + '/player_api.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&action=get_series_info&series_id=' + seriesId;
+      const resp = await fetch(infoUrl);
+      const data = await resp.json();
+      const seriesInfo = data.info || {};
+      const episodes = data.episodes || {};
+
+      window._currentSeries = {
+        name: seriesInfo.name || seriesName,
+        info: seriesInfo,
+        episodes: episodes,
+        seasons: episodes,
+        loading: false,
+        source: source,
+        seriesId: seriesId
+      };
+      state._seriesSeasons = Object.keys(episodes).sort((a, b) => parseInt(a) - parseInt(b));
+      state._seriesCurrentSeason = state._seriesSeasons[0] || '1';
+      renderChannelList();
+    } catch (err) {
+      console.error('Failed to fetch series info:', err);
+      window._currentSeries.loading = false;
+      window._currentSeries.error = err.message;
+      renderChannelList();
+    }
+  } else {
+    // M3U series: group episodes by series name
+    const episodes = state.channels.filter(ch => {
+      if ((ch.type || 'live') !== 'series') return false;
+      let name = extractSeriesName(ch.name || '');
+      // Flexible match
+      return name === seriesName || name.toLowerCase() === seriesName.toLowerCase() ||
+             (ch.name || '').toLowerCase().startsWith(seriesName.toLowerCase());
+    });
+    console.log('navigateToSeries:', seriesName, 'found', episodes.length, 'episodes');
+
+    const seasons = {};
+    episodes.forEach(ep => {
+      let season = '1';
+      const match = (ep.name || '').match(/S(\d+)/i) || (ep.name || '').match(/Stagione\s*(\d+)/i) || (ep.name || '').match(/Season\s*(\d+)/i);
+      if (match) season = String(parseInt(match[1], 10));
+      if (!seasons[season]) seasons[season] = [];
+      seasons[season].push(ep);
+    });
+
+    window._currentSeries = { name: seriesName, episodes: episodes, seasons: seasons, loading: false, source: source };
+    state._seriesSeasons = Object.keys(seasons).sort((a, b) => parseInt(a) - parseInt(b));
+    state._seriesCurrentSeason = state._seriesSeasons[0] || '1';
+    renderChannelList();
+  }
+}
+
+// Ordinamento categorie: Serie TV alfabetiche; Live/VOD ordine della playlist,
+// con "Sala 2026" in cima e le categorie adult/XXX in fondo.
+function sortCategoryKeys(keys, type) {
+  if (type === 'series') return keys.sort((a, b) => a.localeCompare(b, 'it'));
+  const isTop = n => /sala[\s._-]*2026/i.test(n);
+  const isBottom = n => /\bxxx\b|\badult\b|x[\s._-]*tra|18\+|porn|hardcore/i.test(n);
+  return keys
+    .map((name, idx) => ({ name, idx, rank: isTop(name) ? 0 : isBottom(name) ? 2 : 1 }))
+    .sort((a, b) => a.rank - b.rank || a.idx - b.idx)
+    .map(x => x.name);
+}
+
+// Chiave "saga" per raggruppare i film della stessa serie nella lista VOD
+function extractSagaKey(name) {
+  let s = (name || '').trim();
+  s = s.replace(/\s*\(\s*(19|20)\d{2}\s*\)/g, ' ').replace(/\s+(19|20)\d{2}\s*$/, ' ');
+  s = s.replace(/\s*(?:[-–—:]\s*)?(?:parte|part|capitolo|chapter|volume|vol|episodio|ep|pt)\.?\s*[0-9IVXLCDM]+(?:\b.*)?$/i, ' ');
+  s = s.replace(/\s+[-–—:]\s+.*$/, ' ');
+  s = s.replace(/\s+\d+\s*$/, ' ');
+  s = s.replace(/\s+[IVXLCDM]+\s*$/, ' ');
+  s = s.replace(/\s+/g, ' ').trim();
+  return s || (name || '').trim();
+}
+
+// Correzione manuale del tipo di un singolo canale (utile per serie classificate male)
+function setChannelType(id, type) {
+  const ch = state.channels.find(c => c.id === id);
+  if (!ch) return;
+  ch.type = type;
+  state.sources.forEach(s => (s.channels || []).forEach(c => { if (c.id === id) c.type = type; }));
+  saveState();
+  renderChannelList();
+  showToast('Tipo aggiornato: ' + type, 'success');
+}
+function promptChannelType(id) {
+  const ch = state.channels.find(c => c.id === id);
+  if (!ch) return;
+  const choice = window.prompt('Tipo per "' + ch.name + '":\n1 = Live TV\n2 = Film / VOD\n3 = Serie TV', ch.type === 'series' ? '3' : ch.type === 'vod' ? '2' : '1');
+  if (choice === null) return;
+  const map = { '1': 'live', '2': 'vod', '3': 'series' };
+  if (map[choice]) setChannelType(id, map[choice]);
+  else showToast('Scelta non valida', 'error');
+}
+
+function channelItemHtml(ch) {
+  const isFav = state.favorites.has(ch.id);
+  const isActive = state.currentChannel && state.currentChannel.id === ch.id;
+  const typeBadge = ch.type ? `<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:var(--bg3);color:var(--text3);margin-left:4px;">${ch.type.toUpperCase()}</span>` : '';
+  return `
+    <div class="channel-item ${isActive ? 'active' : ''}" data-id="${escapeHtml(ch.id)}" onclick="playChannelById('${escapeAttr(ch.id)}')">
+      <div class="channel-icon">${ch.logo ? `<img src="${escapeAttr(ch.logo)}" onerror="this.style.display='none';this.parentElement.textContent='📺'">` : '📺'}</div>
+      <div class="channel-info">
+        <div class="channel-name">${escapeHtml(ch.name)}${typeBadge}</div>
+        <div class="channel-group">${escapeHtml(ch.group || '')}</div>
+      </div>
+      <span class="channel-fav" onclick="event.stopPropagation();toggleFav('${escapeAttr(ch.id)}')" title="Preferito">${isFav ? '★' : '☆'}</span>
+      <span class="channel-fav" onclick="event.stopPropagation();promptChannelType('${escapeAttr(ch.id)}')" title="Cambia tipo (Live/Film/Serie)">⚙</span>
+    </div>
+  `;
+}
+
+function updateSideNav() {
+  const cur = state.navLevel === 'home' ? 'all' : state.navType;
+  $$('.side-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === cur));
+}
+
+function renderChannelList() {
+  renderHistory();
+  updateSideNav();
+  const list = $('#channelList');
+
+  // Filter by active playlist
+  let baseChannels = state.channels.slice();
+  if (state.activePlaylist && state.activePlaylist !== 'all') {
+    baseChannels = baseChannels.filter(c => c.sourceId === state.activePlaylist);
+  }
+
+  // HOME LEVEL: show type selection cards
+  if (state.navLevel === 'home' && !state.searchQuery) {
+    const counts = { live: 0, vod: 0, series: 0, fav: 0 };
+    state.channels.forEach(ch => {
+      const t = ch.type || 'live';
+      if (counts[t] !== undefined) counts[t]++;
+      if (state.favorites.has(ch.id)) counts.fav++;
+    });
+    // Count all channels per type (all categories always visible)
+    const visibleCounts = { live: 0, vod: 0, series: 0, fav: 0 };
+    state.channels.forEach(ch => {
+      const t = ch.type || 'live';
+      if (visibleCounts[t] !== undefined) visibleCounts[t]++;
+      if (state.favorites.has(ch.id)) visibleCounts.fav++;
+    });
+
+    let html = '<div style="padding:12px;">';
+    html += '<div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Seleziona una categoria</div>';
+
+    const types = [
+      { key: 'live', icon: '📡', label: 'Live TV', color: '#34C759', count: visibleCounts.live },
+      { key: 'vod', icon: '🎬', label: 'Film / VOD', color: '#FF9500', count: visibleCounts.vod },
+      { key: 'series', icon: '📺', label: 'Serie TV', color: '#5856D6', count: visibleCounts.series },
+      { key: 'fav', icon: '★', label: 'Preferiti', color: '#FFCC00', count: visibleCounts.fav }
+    ];
+
+    types.forEach(t => {
+      if (t.count === 0 && t.key !== 'fav') return;
+      html += `<div class="type-card" onclick="navigateTo('type','${t.key}')" style="display:flex;align-items:center;gap:12px;padding:14px;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='${t.color}'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="width:44px;height:44px;border-radius:10px;background:${t.color}22;display:flex;align-items:center;justify-content:center;font-size:22px;">${t.icon}</div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:600;color:var(--text);">${t.label}</div>
+          <div style="font-size:12px;color:var(--text2);">${t.count} elementi</div>
+        </div>
+        <div style="color:var(--text3);font-size:18px;">›</div>
+      </div>`;
+    });
+
+    if (state.channels.length === 0) {
+      html += '<div class="empty-state"><p>Nessun canale caricato</p><p class="hint">Aggiungi una sorgente per iniziare</p></div>';
+    }
+    html += '</div>';
+    list.innerHTML = html;
+    return;
+  }
+
+  // TYPE LEVEL: show categories for the selected type
+  // Le Serie TV seguono lo stesso flusso dei Film: prima la categoria, poi la serie, poi stagioni/episodi.
+  // (blocco storico di raggruppamento per nome disattivato)
+  if (false && state.navType === 'series' && state.navLevel === 'type') {
+    // Use cached grouping if available and channels haven't changed
+    if (!state._seriesCache || state._seriesCacheChannelCount !== state.channels.length) {
+      const seriesChannels = state.channels.filter(c => (c.type || 'live') === 'series');
+      console.log('Series type level. Series channels:', seriesChannels.length);
+
+      // Group by series name
+      const seriesMap = {};
+      seriesChannels.forEach(ch => {
+        let seriesName = extractSeriesName(ch.name || 'Serie sconosciuta');
+        if (!seriesMap[seriesName]) seriesMap[seriesName] = [];
+        seriesMap[seriesName].push(ch);
+      });
+
+      const _seriesNames = Object.keys(seriesMap);
+      const _singleEpCount = _seriesNames.filter(n => seriesMap[n].length === 1).length;
+
+      // Only run expensive prefix grouping if needed
+      if (_singleEpCount > _seriesNames.length * 0.5 && seriesChannels.length > 5) {
+        const regrouped = groupSeriesByPrefix(seriesChannels);
+        if (regrouped && Object.keys(regrouped).length < _seriesNames.length) {
+          Object.keys(seriesMap).forEach(k => delete seriesMap[k]);
+          Object.assign(seriesMap, regrouped);
+        }
+      }
+
+      // Cache the result
+      state._seriesCache = seriesMap;
+      state._seriesCacheChannelCount = state.channels.length;
+      console.log('Series cached:', Object.keys(seriesMap).length, 'series');
+    }
+
+    let seriesMap = state._seriesCache;
+    let channels = Object.values(seriesMap).flat();
+
+    if (state.searchQuery) {
+      channels = channels.filter(c => (c.name || '').toLowerCase().includes(state.searchQuery));
+      // Re-group search results
+      const searchMap = {};
+      channels.forEach(ch => {
+        let seriesName = extractSeriesName(ch.name || 'Serie sconosciuta');
+        if (!searchMap[seriesName]) searchMap[seriesName] = [];
+        searchMap[seriesName].push(ch);
+      });
+      seriesMap = searchMap;
+    }
+
+    const seriesNames = Object.keys(seriesMap).sort();
+
+    if (seriesNames.length === 0) {
+      list.innerHTML = '<div class="empty-state"><p>Nessuna serie</p><p class="hint">Nessun risultato</p></div>';
+      return;
+    }
+
+    let html = '<div style="padding:8px;">';
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <button onclick="navigateTo('home')" style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 10px;cursor:pointer;color:var(--text);font-size:12px;">← Home</button>
+      <span style="font-size:13px;color:var(--text2);">📺 Serie TV — ${seriesNames.length} serie</span>
+    </div>`;
+
+    seriesNames.forEach(seriesName => {
+      const episodes = seriesMap[seriesName];
+      const firstCh = episodes[0];
+      html += `<div class="category-card" onclick="navigateToSeries('${escapeAttr(seriesName)}')" style="display:flex;align-items:center;gap:10px;padding:12px;margin-bottom:6px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='#5856D6'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="width:36px;height:36px;border-radius:6px;background:#5856D622;display:flex;align-items:center;justify-content:center;font-size:16px;">📺</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(seriesName)}</div>
+          <div style="font-size:11px;color:var(--text2);">${episodes.length} episodi${firstCh.group ? ' · ' + escapeHtml(firstCh.group) : ''}</div>
+        </div>
+        <div style="color:var(--text3);font-size:16px;">›</div>
+      </div>`;
+    });
+    html += '</div>';
+    list.innerHTML = html;
+    return;
+  }
+
+  if (state.navLevel === 'type') {
+    const type = state.navType;
+    const typeLabels = { live: 'Live TV', vod: 'Film / VOD', series: 'Serie TV', fav: 'Preferiti' };
+    const typeColors = { live: '#34C759', vod: '#FF9500', series: '#5856D6', fav: '#FFCC00' };
+    const typeIcons = { live: '📡', vod: '🎬', series: '📺', fav: '★' };
+
+    let channels = state.channels.slice();
+    // All categories are always visible
+
+    if (type === 'fav') {
+      channels = channels.filter(c => state.favorites.has(c.id));
+    } else {
+      channels = channels.filter(c => (c.type || 'live') === type);
+    }
+
+    if (state.searchQuery) {
+      channels = channels.filter(c => (c.name || '').toLowerCase().includes(state.searchQuery));
+    }
+
+    // Group by group-title
+    const groups = {};
+    channels.forEach(ch => {
+      const g = ch.group || 'Generale';
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(ch);
+    });
+
+    // Serie TV: alfabetico. Live/VOD: playlist, con Sala 2026 in cima e adult/XXX in fondo.
+    const groupKeys = sortCategoryKeys(Object.keys(groups), type);
+
+    if (groupKeys.length === 0) {
+      list.innerHTML = '<div class="empty-state"><p>Nessun canale</p><p class="hint">Nessun risultato</p></div>';
+      return;
+    }
+
+    let html = '<div style="padding:8px;">';
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <button onclick="navigateTo('home')" style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 10px;cursor:pointer;color:var(--text);font-size:12px;">← Home</button>
+      <span style="font-size:13px;color:var(--text2);">${typeIcons[type]} ${typeLabels[type]} — ${groupKeys.length} categorie</span>
+    </div>`;
+
+    groupKeys.forEach(group => {
+      html += `<div class="category-card" onclick="navigateTo('category','${type}','${escapeAttr(group)}')" style="display:flex;align-items:center;gap:10px;padding:12px;margin-bottom:6px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='${typeColors[type]}'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="width:36px;height:36px;border-radius:6px;background:${typeColors[type]}22;display:flex;align-items:center;justify-content:center;font-size:16px;">${typeIcons[type]}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(group)}</div>
+          <div style="font-size:11px;color:var(--text2);">${groups[group].length} elementi</div>
+        </div>
+        <div style="color:var(--text3);font-size:16px;">›</div>
+      </div>`;
+    });
+    html += '</div>';
+    list.innerHTML = html;
+    return;
+  }
+
+  // SERIES DETAIL LEVEL: show seasons and episodes
+  if (state.navLevel === 'series_detail') {
+    const series = window._currentSeries;
+    if (!series) {
+      navigateTo('type', 'series');
+      return;
+    }
+
+    // Loading state
+    if (series.loading) {
+      let html = '<div style="padding:8px;">';
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <button onclick="navigateTo('type','series')" style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 10px;cursor:pointer;color:var(--text);font-size:12px;">← Serie</button>
+        <span style="font-size:13px;color:var(--text2);font-weight:600;">${escapeHtml(series.name)}</span>
+      </div>`;
+      html += '<div style="text-align:center;padding:40px;"><div class="spinner"></div><p style="margin-top:12px;color:var(--text2);">Caricamento episodi...</p></div>';
+      html += '</div>';
+      list.innerHTML = html;
+      return;
+    }
+
+    // Error state
+    if (series.error) {
+      let html = '<div style="padding:8px;">';
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <button onclick="navigateTo('type','series')" style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 10px;cursor:pointer;color:var(--text);font-size:12px;">← Serie</button>
+        <span style="font-size:13px;color:var(--text2);font-weight:600;">${escapeHtml(series.name)}</span>
+      </div>`;
+      html += '<div class="empty-state"><p>Errore caricamento</p><p class="hint">' + escapeHtml(series.error) + '</p></div>';
+      html += '</div>';
+      list.innerHTML = html;
+      return;
+    }
+
+    const seasons = series.seasons || {};
+    const seasonKeys = state._seriesSeasons || Object.keys(seasons).sort((a, b) => parseInt(a) - parseInt(b));
+    const currentSeason = state._seriesCurrentSeason || seasonKeys[0] || '1';
+    const episodes = seasons[currentSeason] || [];
+
+    // Series info header
+    let infoHtml = '';
+    if (series.info && series.info.cover) {
+      infoHtml += `<img src="${escapeAttr(series.info.cover)}" style="width:60px;height:90px;object-fit:cover;border-radius:6px;float:left;margin-right:10px;margin-bottom:8px;" onerror="this.style.display='none'">`;
+    }
+    if (series.info && series.info.plot) {
+      infoHtml += `<p style="font-size:11px;color:var(--text2);margin-bottom:8px;line-height:1.4;">${escapeHtml(series.info.plot.substring(0, 200))}${series.info.plot.length > 200 ? '...' : ''}</p>`;
+    }
+    if (series.info && series.info.genre) {
+      infoHtml += `<p style="font-size:10px;color:var(--text3);">Genere: ${escapeHtml(series.info.genre)}</p>`;
+    }
+
+    let html = '<div style="padding:8px;">';
+    // Back button + series name
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <button onclick="navigateTo('type','series')" style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 10px;cursor:pointer;color:var(--text);font-size:12px;">← Serie</button>
+      <span style="font-size:13px;color:var(--text2);font-weight:600;">${escapeHtml(series.name)}</span>
+    </div>`;
+    if (infoHtml) {
+      html += `<div style="margin-bottom:12px;padding:8px;background:var(--bg3);border-radius:6px;">${infoHtml}<div style="clear:both;"></div></div>`;
+    }
+
+    // Season selector
+    if (seasonKeys.length > 1) {
+      html += '<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">';
+      seasonKeys.forEach(s => {
+        const isActive = s === currentSeason;
+        html += `<button onclick="switchSeriesSeason('${s}')" style="padding:6px 14px;border-radius:20px;border:1px solid ${isActive ? 'var(--accent)' : 'var(--border)'};background:${isActive ? 'var(--accent)' : 'var(--bg3)'};color:${isActive ? 'white' : 'var(--text2)'};font-size:12px;cursor:pointer;">Stagione ${s}</button>`;
+      });
+      html += '</div>';
+    } else {
+      html += `<div style="font-size:12px;color:var(--text2);margin-bottom:12px;">Stagione ${currentSeason} · ${episodes.length} episodi</div>`;
+    }
+
+    // Episodes
+    if (episodes.length === 0) {
+      html += '<div class="empty-state"><p>Nessun episodio</p></div>';
+    } else {
+      episodes.forEach(ep => {
+        const epNum = ep.episode_num || ep.id || '';
+        const title = ep.title || ep.name || 'Episodio ' + epNum;
+        const duration = (ep.info && ep.info.duration) ? ep.info.duration : '';
+        const containerExt = ep.container_extension || 'mp4';
+        const plot = (ep.info && ep.info.plot) ? ep.info.plot : '';
+        const epId = ep.id || epNum;
+        const hasDirectUrl = ep.url && ep.url.length > 0;
+        const onclick = hasDirectUrl
+          ? "playChannelById('" + escapeAttr(ep.id || epId) + "', true)"
+          : "playSeriesEpisode('" + escapeAttr(epId) + "', '" + escapeAttr(containerExt) + "', '" + escapeAttr(series.name) + "', '" + escapeAttr(title) + "')";
+        html += `
+          <div class="channel-item" style="cursor:pointer;" onclick="${onclick}">
+            <div class="channel-icon" style="background:#5856D622;color:#5856D6;font-weight:700;font-size:11px;">S${String(currentSeason).padStart(2,'0')}E${String(epNum).padStart(2,'0')}</div>
+            <div class="channel-info">
+              <div class="channel-name">${escapeHtml(title)}</div>
+              <div class="channel-group">${duration ? '⏱ ' + escapeHtml(duration) + ' · ' : ''}VOD · ${escapeHtml(containerExt.toUpperCase())}</div>
+              ${plot ? '<div style="font-size:10px;color:var(--text3);margin-top:2px;">' + escapeHtml(plot.substring(0, 80)) + (plot.length > 80 ? '...' : '') + '</div>' : ''}
+            </div>
+            <span style="color:var(--accent);font-size:18px;">▶</span>
+          </div>
+        `;
+      });
+    }
+    html += '</div>';
+    list.innerHTML = html;
+    return;
+  }
+
+  // CATEGORY LEVEL: show channels in the selected category
+  if (state.navLevel === 'category') {
+    const type = state.navType;
+    const category = state.navCategory;
+
+    let channels = state.channels.slice();
+    // Filtra per categoria E tipo: una serie non deve comparire dentro i Film/VOD (e viceversa)
+    channels = channels.filter(c =>
+      (c.group || 'Generale') === category &&
+      (type === 'fav' ? state.favorites.has(c.id) : (c.type || 'live') === type)
+    );
+
+    if (state.searchQuery) {
+      channels = channels.filter(c => (c.name || '').toLowerCase().includes(state.searchQuery));
+    }
+
+    if (channels.length === 0) {
+      list.innerHTML = '<div class="empty-state"><p>Nessun canale</p><p class="hint">Nessun risultato</p></div>';
+      return;
+    }
+
+    // SERIE TV: come per Film/VOD, dopo la categoria mostriamo le serie (poi stagioni → episodi)
+    if (type === 'series') {
+      const seriesMap = {};
+      channels.forEach(ch => {
+        const sname = extractSeriesName(ch.name || 'Serie sconosciuta');
+        if (!seriesMap[sname]) seriesMap[sname] = [];
+        seriesMap[sname].push(ch);
+      });
+      const seriesNames = Object.keys(seriesMap).sort((a, b) => a.localeCompare(b, 'it'));
+      let sh = `<div style="padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);margin-bottom:4px;">
+        <button onclick="navigateTo('type','series')" style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 10px;cursor:pointer;color:var(--text);font-size:12px;">← Indietro</button>
+        <span style="font-size:12px;color:var(--text2);font-weight:600;">📺 ${escapeHtml(category)} (${seriesNames.length} serie)</span>
+      </div>`;
+      seriesNames.forEach(sname => {
+        const eps = seriesMap[sname];
+        sh += `<div class="category-card" onclick="navigateToSeries('${escapeAttr(sname)}')" style="display:flex;align-items:center;gap:10px;padding:12px;margin-bottom:6px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='#5856D6'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="width:36px;height:36px;border-radius:6px;background:#5856D622;display:flex;align-items:center;justify-content:center;font-size:16px;">📺</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(sname)}</div>
+            <div style="font-size:11px;color:var(--text2);">${eps.length} episodi</div>
+          </div>
+          <div style="color:var(--text3);font-size:16px;">›</div>
+        </div>`;
+      });
+      list.innerHTML = sh;
+      return;
+    }
+
+    let html = '';
+    // Back button
+    html += `<div style="padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);margin-bottom:4px;">
+      <button onclick="navigateTo('type','${state.navType}')" style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 10px;cursor:pointer;color:var(--text);font-size:12px;">← Indietro</button>
+      <span style="font-size:12px;color:var(--text2);font-weight:600;">${escapeHtml(category)} (${channels.length})</span>
+    </div>`;
+
+    if (type === 'vod') {
+      // Raggruppa i film della stessa saga, mantenendo l'ordine della playlist
+      const sagaMap = {};
+      const sagaOrder = [];
+      channels.forEach(ch => {
+        const key = extractSagaKey(ch.name);
+        if (!sagaMap[key]) { sagaMap[key] = []; sagaOrder.push(key); }
+        sagaMap[key].push(ch);
+      });
+      sagaOrder.forEach(key => {
+        const items = sagaMap[key];
+        if (items.length > 1) {
+          html += `<div style="padding:6px 12px;font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;border-top:1px solid var(--border);margin-top:6px;">🎬 ${escapeHtml(key)} (${items.length}) — Saga</div>`;
+        }
+        items.forEach(ch => { html += channelItemHtml(ch); });
+      });
+    } else {
+      channels.forEach(ch => { html += channelItemHtml(ch); });
+    }
+    list.innerHTML = html;
+    return;
+  }
+
+  // FALLBACK: flat list (when searching or navLevel is 'all')
+  let channels = state.channels.slice();
+
+  // When searching, group series episodes by series name
+  if (state.searchQuery) {
+    const seriesGroups = {};
+    const nonSeriesChannels = [];
+    channels.forEach(ch => {
+      if ((ch.type || 'live') === 'series' && (ch.name || '').toLowerCase().includes(state.searchQuery)) {
+        let seriesName = extractSeriesName(ch.name || '');
+        if (!seriesGroups[seriesName]) seriesGroups[seriesName] = [];
+        seriesGroups[seriesName].push(ch);
+      } else if ((ch.name || '').toLowerCase().includes(state.searchQuery)) {
+        nonSeriesChannels.push(ch);
+      }
+    });
+    const groupedChannels = [];
+    Object.keys(seriesGroups).sort((a, b) => a.localeCompare(b, 'it')).forEach(sn => {
+      const eps = seriesGroups[sn];
+      groupedChannels.push({
+        id: 'search_series_' + sn,
+        name: sn + ' (' + eps.length + ' episodi)',
+        group: eps[0].group || 'Serie TV',
+        type: 'series',
+        url: '',
+        logo: eps[0].logo || '',
+        _isSeriesGroup: true,
+        _seriesName: sn,
+        _episodes: eps
+      });
+    });
+    channels = [...groupedChannels, ...nonSeriesChannels];
+  } else {
+    if (state.filter === 'live') channels = channels.filter(c => c.type === 'live' || !c.type);
+    else if (state.filter === 'vod') channels = channels.filter(c => c.type === 'vod');
+    else if (state.filter === 'series') channels = channels.filter(c => c.type === 'series');
+    else if (state.filter === 'fav') channels = channels.filter(c => state.favorites.has(c.id));
+  }
+
+  if (channels.length === 0) {
+    const msg = state.channels.length === 0 ? 'Aggiungi una sorgente per iniziare' :
+      (state.searchQuery ? 'Nessun risultato per la ricerca' : 'Nessun canale in questa categoria');
+    list.innerHTML = `<div class="empty-state"><p>Nessun canale</p><p class="hint">${msg}</p></div>`;
+    return;
+  }
+
+  const groups = {};
+  channels.forEach(ch => {
+    const g = ch.group || 'Generale';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(ch);
+  });
+
+  let html = '';
+  const groupKeys = Object.keys(groups).sort();
+  groupKeys.forEach(group => {
+    if (groupKeys.length > 1) {
+      html += `<div style="padding:8px 12px;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;border-top:1px solid var(--border);margin-top:4px;">${escapeHtml(group)} (${groups[group].length})</div>`;
+    }
+    groups[group].forEach(ch => { html += channelItemHtml(ch); });
+  });
+  list.innerHTML = html;
+}
+
+function playChannelById(id, directPlay) {
+  // Handle virtual series entries from search
+  if (id.startsWith('search_series_')) {
+    const seriesName = id.replace('search_series_', '');
+    navigateToSeries(seriesName);
+    return;
+  }
+  const ch = state.channels.find(c => c.id === id);
+  if (ch) playChannel(ch, directPlay);
+  else console.warn('Channel not found:', id);
+}
+
+function toggleFav(id) {
+  if (state.favorites.has(id)) state.favorites.delete(id);
+  else state.favorites.add(id);
+  saveState();
+  renderChannelList();
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s || '';
+  return div.innerHTML;
+}
+
+function escapeAttr(s) {
+  return (s || '').replace(/'/g, "\'").replace(/"/g, '&quot;');
+}
+
+// Saved sources
+function renderSavedSources() {
+  const container = $('#savedSources');
+  if (state.sources.length === 0) {
+    container.innerHTML = '<p class="hint">Nessuna sorgente salvata</p>';
+    return;
+  }
+  container.innerHTML = state.sources.map(src => {
+    const counts = { live: 0, vod: 0, series: 0 };
+    (src.channels || []).forEach(c => { if (counts[c.type] !== undefined) counts[c.type]++; else counts.live++; });
+    return `
+    <div class="saved-source">
+      <div>
+        <div class="saved-source-name">${escapeHtml(src.name)}</div>
+        <div class="saved-source-type">${src.type.toUpperCase()} · ${src.channels ? src.channels.length : 0} elementi (Live:${counts.live} Film:${counts.vod} Serie:${counts.series})</div>
+      </div>
+      <button class="btn btn-danger" style="padding:4px 8px;font-size:12px;" onclick="deleteSourceEnhanced('${escapeAttr(src.id)}')">✕</button>
+    </div>
+  `;
+  }).join('');
+}
+
+function deleteSource(id) {
+  if (!confirm('Eliminare questa sorgente?')) return;
+  state.sources = state.sources.filter(s => s.id !== id);
+  state.channels = state.channels.filter(c => c.sourceId !== id);
+  saveState();
+  renderChannelList();
+  renderSavedSources();
+  showToast('Sorgente eliminata', 'success');
+}
+
+// Player controls
+function toggleFullscreen() {
+  const container = $('#videoContainer');
+  if (document.fullscreenElement) document.exitFullscreen();
+  else container.requestFullscreen().catch(() => {});
+}
+
+async function togglePip() {
+  const video = $('#videoPlayer');
+  try {
+    if (document.pictureInPictureElement) await document.exitPictureInPicture();
+    else await video.requestPictureInPicture();
+  } catch (e) { showToast('PiP non supportato', 'error'); }
+}
+
+// Open series detail by name (for M3U series grouped by name)
+function openSeriesByName(seriesName) {
+  const episodes = state.channels.filter(ch => {
+    if ((ch.type || 'live') !== 'series') return false;
+    let name = extractSeriesName(ch.name || '');
+    return name === seriesName || name.toLowerCase() === seriesName.toLowerCase() ||
+           (ch.name || '').toLowerCase().startsWith(seriesName.toLowerCase());
+  });
+
+  if (episodes.length === 0) {
+    showToast('Nessun episodio trovato', 'error');
+    return;
+  }
+
+  // Check if it's an Xtream series (has source with xtream type)
+  const firstEp = episodes[0];
+  const source = state.sources.find(s => s.id === firstEp.sourceId);
+  if (source && source.type === 'xtream' && firstEp.id.startsWith('xtream_series_')) {
+    // Use Xtream series detail
+    openSeriesDetail(firstEp);
+    return;
+  }
+
+  // M3U series: show episodes directly
+  const modal = $('#seriesModal');
+  $('#seriesModalTitle').textContent = seriesName;
+  const info = $('#seriesInfo');
+  info.innerHTML = `<h3 style="margin-bottom:4px;">${escapeHtml(seriesName)}</h3><p style="font-size:12px;color:var(--text2);">${episodes.length} episodi disponibili</p>`;
+  $('#seasonSelector').innerHTML = '';
+  $('#episodeList').innerHTML = '';
+
+  // Group episodes by season (extract from name)
+  const seasons = {};
+  episodes.forEach(ep => {
+    let season = '1';
+    const match = (ep.name || '').match(/S(\d+)/i) || (ep.name || '').match(/Stagione\s*(\d+)/i) || (ep.name || '').match(/Season\s*(\d+)/i);
+    if (match) season = String(parseInt(match[1], 10));
+    if (!seasons[season]) seasons[season] = [];
+    seasons[season].push(ep);
+  });
+
+  const seasonKeys = Object.keys(seasons).sort((a, b) => parseInt(a) - parseInt(b));
+  const seasonSel = $('#seasonSelector');
+  if (seasonKeys.length > 1) {
+    seasonSel.innerHTML = seasonKeys.map((s, i) =>
+      `<button class="season-btn ${i === 0 ? 'active' : ''}" onclick="showM3uSeason('${escapeAttr(seriesName)}', '${s}', this)">Stagione ${s}</button>`
+    ).join('');
+  }
+
+  window._m3uEpisodes = seasons;
+  if (seasonKeys.length > 0) {
+    showM3uSeason(seriesName, seasonKeys[0]);
+  }
+  showModal('seriesModal');
+}
+
+function showM3uSeason(seriesName, season) {
+  const seasons = window._m3uEpisodes || {};
+  const episodes = seasons[season] || [];
+  const list = $('#episodeList');
+  $$('.season-btn').forEach(b => b.classList.remove('active'));
+  event && event.target && event.target.classList.add('active');
+
+  if (episodes.length === 0) {
+    list.innerHTML = '<p class="hint">Nessun episodio</p>';
+    return;
+  }
+  list.innerHTML = episodes.map(ep => {
+    // Extract season and episode numbers
+    let seasonNum = season;
+    let epNum = '';
+    const seMatch = (ep.name || '').match(/S(\d+)\s*E(\d+)/i);
+    if (seMatch) { seasonNum = seMatch[1]; epNum = seMatch[2]; }
+    else {
+      const epMatch = (ep.name || '').match(/E(\d+)/i) || (ep.name || '').match(/Episodio\s*(\d+)/i) || (ep.name || '').match(/Episode\s*(\d+)/i);
+      if (epMatch) epNum = epMatch[1];
+      const sMatch = (ep.name || '').match(/Stagione\s*(\d+)/i) || (ep.name || '').match(/Season\s*(\d+)/i) || (ep.name || '').match(/S(\d+)/i);
+      if (sMatch) seasonNum = sMatch[1];
+    }
+    // Clean title: remove series name, season/episode info
+    let title = ep.name || '';
+    title = title.replace(/\s*S\d+\s*E\d+.*/i, '').replace(/\s*Stagione\s*\d+.*/i, '').replace(/\s*Season\s*\d+.*/i, '').trim();
+    if (!title || title === seriesName) title = ep.name || 'Episodio ' + epNum;
+
+    return `
+      <div class="episode-item" onclick="playChannelById('${escapeAttr(ep.id)}', true)">
+        <div class="episode-num">S${seasonNum}E${epNum || '?'}</div>
+        <div class="episode-info">
+          <div class="episode-title">${escapeHtml(title)}</div>
+          <div class="episode-meta">${escapeHtml(seriesName)} · Stagione ${seasonNum}</div>
+        </div>
+        <span style="color:var(--accent);font-size:18px;">▶</span>
+      </div>
+    `;
+  }).join('');
+}
+
+// Series detail (Xtream)
+async function openSeriesDetail(channel) {
+  const modal = $('#seriesModal');
+  $('#seriesModalTitle').textContent = channel.name;
+  const info = $('#seriesInfo');
+  info.innerHTML = '<p class="hint">Caricamento episodi...</p>';
+  $('#seasonSelector').innerHTML = '';
+  $('#episodeList').innerHTML = '';
+  showModal('seriesModal');
+
+  // Find source
+  const source = state.sources.find(s => s.id === channel.sourceId);
+  if (!source || source.type !== 'xtream') {
+    info.innerHTML = '<p class="hint">Episodi disponibili solo per sorgenti Xtream Codes</p>';
+    return;
+  }
+
+  try {
+    const url = source.url;
+    const user = source.user;
+    const pass = source.pass;
+    const seriesId = channel.id.replace('xtream_series_', '');
+    const infoUrl = url + '/player_api.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&action=get_series_info&series_id=' + seriesId;
+    const resp = await fetch(infoUrl);
+    const data = await resp.json();
+    const seriesInfo = data.info || {};
+    const episodes = data.episodes || {};
+
+    // Show info
+    let infoHtml = '';
+    if (seriesInfo.cover) infoHtml += `<img src="${escapeAttr(seriesInfo.cover)}" class="series-poster" style="float:left;margin-right:12px;" onerror="this.style.display='none'">`;
+    infoHtml += `<h3 style="margin-bottom:4px;">${escapeHtml(seriesInfo.name || channel.name)}</h3>`;
+    if (seriesInfo.plot) infoHtml += `<p style="font-size:12px;color:var(--text2);margin-bottom:8px;">${escapeHtml(seriesInfo.plot)}</p>`;
+    if (seriesInfo.genre) infoHtml += `<p style="font-size:11px;color:var(--text3);">Genere: ${escapeHtml(seriesInfo.genre)}</p>`;
+    if (seriesInfo.rating) infoHtml += `<p style="font-size:11px;color:var(--text3);">Rating: ${escapeHtml(String(seriesInfo.rating))}</p>`;
+    info.innerHTML = infoHtml;
+
+    // Season selector
+    const seasons = Object.keys(episodes).sort((a, b) => parseInt(a) - parseInt(b));
+    const seasonSel = $('#seasonSelector');
+    seasonSel.innerHTML = seasons.map((s, i) =>
+      `<button class="season-btn ${i === 0 ? 'active' : ''}" data-season="${s}" onclick="selectSeason('${escapeAttr(seriesId)}', '${escapeAttr(s)}', this)">${s === '0' ? 'Speciali' : 'Stagione ' + s}</button>`
+    ).join('');
+
+    // Store episodes data globally
+    window._seriesEpisodes = episodes;
+    window._seriesSource = source;
+
+    // Show first season
+    if (seasons.length > 0) {
+      showSeasonEpisodes(seriesId, seasons[0]);
+    }
+  } catch (err) {
+    info.innerHTML = '<p class="hint">Errore caricamento episodi: ' + escapeHtml(err.message) + '</p>';
+    console.error(err);
+  }
+}
+
+function selectSeason(seriesId, season, btn) {
+  $$('.season-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  showSeasonEpisodes(seriesId, season);
+}
+
+function showSeasonEpisodes(seriesId, season) {
+  const episodes = (window._seriesEpisodes || {})[season] || [];
+  const list = $('#episodeList');
+  if (episodes.length === 0) {
+    list.innerHTML = '<p class="hint">Nessun episodio in questa stagione</p>';
+    return;
+  }
+  list.innerHTML = episodes.map(ep => {
+    const epNum = ep.episode_num || ep.id;
+    // Try multiple fields for title
+    const title = ep.title || ep.name || (ep.info && ep.info.name) || (ep.info && ep.info.title) || 'Episodio ' + epNum;
+    const duration = (ep.info && ep.info.duration) ? ep.info.duration : (ep.duration || '');
+    const containerExt = ep.container_extension || (ep.info && ep.info.container_extension) || 'mp4';
+    const plot = (ep.info && ep.info.plot) ? ep.info.plot : (ep.plot || '');
+    const rating = (ep.info && ep.info.rating) ? ep.info.rating : '';
+    return `
+      <div class="episode-item" onclick="playEpisode('${escapeAttr(ep.id)}', '${escapeAttr(containerExt)}')">
+        <div class="episode-num">S${String(season).padStart(2,'0')}E${String(epNum).padStart(2,'0')}</div>
+        <div class="episode-info">
+          <div class="episode-title">${escapeHtml(title)}</div>
+          <div class="episode-meta">
+            ${duration ? '⏱ ' + escapeHtml(duration) + ' · ' : ''}VOD · ${escapeHtml(containerExt.toUpperCase())}
+            ${rating ? ' · ⭐ ' + escapeHtml(String(rating)) : ''}
+            ${plot ? '<br>' + escapeHtml(plot.substring(0, 120)) + (plot.length > 120 ? '...' : '') : ''}
+          </div>
+        </div>
+        <span style="color:var(--accent);font-size:18px;">▶</span>
+      </div>
+    `;
+  }).join('');
+}
+
+async function playEpisode(episodeId, ext, seriesName, title) {
+  // ===== Parental Control PIN gate =====
+  if (pinLockEnabled()) {
+    const pinState = getPinState();
+    if (Date.now() < pinState.lockUntil) {
+      const waitSec = Math.ceil((pinState.lockUntil - Date.now()) / 1000);
+      showToast('Troppi tentativi di PIN. Riprova tra ' + waitSec + ' secondi.', 'error');
+      return;
+    }
+    showPinModal(() => startEpisodePlayback(episodeId, ext, seriesName, title));
+    return;
+  }
+  await startEpisodePlayback(episodeId, ext, seriesName, title);
+}
+
+async function startEpisodePlayback(episodeId, ext, seriesName, title) {
+  const source = window._seriesSource;
+  if (!source) {
+    showToast('Sorgente non trovata. Riprova.', 'error');
+    return;
+  }
+  const safeExt = ext || 'mp4';
+  let url = null;
+  if (source.user && source.pass) {
+    // Xtream Codes source: build series URL
+    url = source.url + '/series/' + source.user + '/' + source.pass + '/' + episodeId + '.' + safeExt;
+  } else {
+    // M3U source: look for the episode channel with its URL
+    const chEp = state.channels.find(c => c.id === episodeId || c.id === 'xtream_series_' + episodeId);
+    if (chEp && chEp.url) {
+      url = chEp.url;
+    } else {
+      url = source.url + '/series/' + source.user + '/' + source.pass + '/' + episodeId + '.' + safeExt;
+    }
+  }
+  console.log('Playing episode:', url);
+  const video = $('#videoPlayer');
+  const epLabel = (seriesName ? (title ? seriesName + ' - ' + title : seriesName) : 'Episodio ' + episodeId);
+  $('#currentChannelName').textContent = epLabel;
+  $('#currentChannelInfo').textContent = 'Serie TV · ' + safeExt.toUpperCase();
+
+  if (state.hls) { state.hls.destroy(); state.hls = null; }
+
+  // Auto-convert .ts to .m3u8
+  let playUrl = url;
+  if (url.toLowerCase().includes('.ts') && !url.toLowerCase().includes('.m3u8')) {
+    playUrl = url.replace(/\.ts(\?|$)/i, '.m3u8$1');
+  }
+  const isHls = playUrl.toLowerCase().includes('.m3u8');
+
+  if (isHls) {
+    if (typeof Hls === 'undefined') {
+      video.src = playUrl;
+      video.play().catch(err => console.error('Native play failed:', err));
+    } else if (Hls.isSupported()) {
+      state.hls = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 90 });
+      state.hls.loadSource(playUrl);
+      state.hls.attachMedia(video);
+      state.hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(err => console.warn('Play failed:', err)); });
+      state.hls.on(Hls.Events.ERROR, (e, data) => {
+        if (data.fatal) {
+          showToast('Errore HLS. Prova con output=m3u8.', 'error');
+          state.hls.destroy();
+          state.hls = null;
+        }
+      });
+    } else {
+      video.src = playUrl;
+      video.play().catch(() => {});
+    }
+  } else {
+    video.src = playUrl;
+    video.load();
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(err => {
+        console.error('Play error:', err, 'URL:', playUrl);
+        if (err.name === 'NotSupportedError') {
+          showToast('Formato non supportato. Prova a cambiare output=m3u8 nell\'URL della sorgente.', 'error');
+        } else if (err.name === 'NotAllowedError') {
+          showToast('Riproduzione bloccata. Clicca sul video per avviare.', 'error');
+        } else {
+          showToast('Impossibile riprodurre: ' + err.message, 'error');
+        }
+      });
+    }
+  }
+  hideModal('seriesModal');
+}
+
+// EPG from XMLTV
+async function loadEpgFromUrl() {
+  const url = $('#settingEpgUrl').value.trim();
+  if (!url) { showToast('Inserisci un URL XMLTV', 'error'); return; }
+  state.settings.epgUrl = url;
+  saveState();
+  showLoading('Caricamento EPG...');
+  try {
+    state._epgLoading = false;
+    await ensureEpgLoaded();
+    const total = Object.values(state.epgData || {}).reduce((s, a) => s + a.length, 0);
+    if (total > 0) showToast('EPG caricato: ' + total + ' programmi', 'success');
+    else showToast('Nessun programma EPG trovato', 'warning');
+  } finally { hideLoading(); }
+}
+
+function normalizeEpgName(s) {
+  return String(s || '').toLowerCase()
+    .replace(/\b(hd|fhd|uhd|sd)\b/g, ' ')
+    .replace(/[^a-z0-9à-ÿ]+/g, ' ')
+    .trim();
+}
+function findEpgKey(channel) {
+  const data = state.epgData || {};
+  if (channel.epgId && data[channel.epgId]) return channel.epgId;
+  if (channel.id && data[channel.id]) return channel.id;
+  const target = normalizeEpgName(channel.name);
+  const names = state._epgNames || {};
+  if (!target) return null;
+  for (const name in names) {
+    if (normalizeEpgName(name) === target) return names[name];
+  }
+  for (const name in names) {
+    const n = normalizeEpgName(name);
+    if (n && (n.indexOf(target) >= 0 || target.indexOf(n) >= 0)) return names[name];
+  }
+  return null;
+}
+
+// Enhanced EPG display
+function loadEpg(channel) {
+  const panel = $('#epgPanel');
+  panel.style.display = 'flex';
+  const content = $('#epgContent');
+  content.innerHTML = '<p class="hint">Caricamento guida...</p>';
+
+  setTimeout(() => {
+    const epgData = state.epgData || {};
+    const key = findEpgKey(channel);
+    const channelEpg = key ? (epgData[key] || []) : [];
+    const now = new Date();
+    const totalProgrammi = Object.values(epgData).reduce((s, a) => s + a.length, 0);
+
+    if (channelEpg.length === 0) {
+      const msg = totalProgrammi > 0
+        ? 'Guida TV caricata, ma nessun programma per questo canale'
+        : 'Guida TV non disponibile: controlla la connessione';
+      content.innerHTML = `
+        <div class="epg-item">
+          <div class="epg-time">Ora</div>
+          <div class="epg-title">${escapeHtml(channel.name)}</div>
+          <div class="epg-desc">Riproduzione in corso · ${channel.type ? channel.type.toUpperCase() : ''}</div>
+        </div>
+        <div class="epg-item">
+          <div class="epg-time">📺</div>
+          <div class="epg-title">${msg}</div>
+          <div class="epg-desc">${totalProgrammi > 0 ? totalProgrammi + ' programmi disponibili per altri canali' : 'La guida si carica automaticamente all\'avvio'}</div>
+        </div>
+      `;
+      return;
+    }
+
+    // Parse and filter current/upcoming
+    const parsed = channelEpg.map(p => {
+      const start = parseXmltvTime(p.start);
+      const stop = parseXmltvTime(p.stop);
+      return { ...p, startDate: start, stopDate: stop };
+    }).sort((a, b) => a.startDate - b.startDate);
+
+    const current = parsed.find(p => p.startDate <= now && p.stopDate > now);
+    const upcoming = parsed.filter(p => p.startDate > now).slice(0, 5);
+
+    let html = '';
+    if (current) {
+      html += `<div class="epg-item epg-now">
+        <div class="epg-time">${formatTime(current.startDate)} - ${formatTime(current.stopDate)} (IN ONDA)</div>
+        <div class="epg-title">${escapeHtml(current.title)}</div>
+        ${current.desc ? `<div class="epg-desc">${escapeHtml(current.desc)}</div>` : ''}
+      </div>`;
+    }
+    upcoming.forEach(p => {
+      html += `<div class="epg-item epg-upcoming">
+        <div class="epg-time">${formatTime(p.startDate)} - ${formatTime(p.stopDate)}</div>
+        <div class="epg-title">${escapeHtml(p.title)}</div>
+        ${p.desc ? `<div class="epg-desc">${escapeHtml(p.desc.substring(0, 100))}</div>` : ''}
+      </div>`;
+    });
+    if (!current && upcoming.length === 0) {
+      html = '<p class="hint">Nessun programma trovato per questo canale</p>';
+    }
+    content.innerHTML = html;
+  }, 200);
+}
+
+function parseXmltvTime(str) {
+  if (!str) return new Date();
+  // Format: 20231225120000 +0100
+  const match = str.match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})\s*([+-]\d{4})?$/);
+  if (!match) return new Date(str);
+  const [, y, mo, d, h, mi, s, tz] = match;
+  let dateStr = `${y}-${mo}-${d}T${h}:${mi}:${s}`;
+  if (tz) {
+    const tzSign = tz[0];
+    const tzH = tz.substring(1, 3);
+    const tzM = tz.substring(3, 5);
+    dateStr += `${tzSign}${tzH}:${tzM}`;
+  }
+  return new Date(dateStr);
+}
+
+function formatTime(date) {
+  if (!(date instanceof Date) || isNaN(date)) return '--:--';
+  return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+}
+
+// Analyze playlist structure
+function analyzePlaylist() {
+  if (state.channels.length === 0) {
+    showToast('Nessun canale caricato. Carica una playlist prima.', 'warning');
+    return;
+  }
+  // Collect unique group titles and their counts
+  const groups = {};
+  state.channels.forEach(ch => {
+    const g = ch.group || '(nessun gruppo)';
+    if (!groups[g]) groups[g] = { count: 0, types: {}, sampleUrl: '' };
+    groups[g].count++;
+    groups[g].types[ch.type] = (groups[g].types[ch.type] || 0) + 1;
+    if (!groups[g].sampleUrl && ch.url) groups[g].sampleUrl = ch.url;
+  });
+
+  const sorted = Object.keys(groups).sort((a, b) => groups[b].count - groups[a].count);
+
+  // Separate groups by dominant type
+  const byType = { live: [], vod: [], series: [] };
+  sorted.forEach(g => {
+    const info = groups[g];
+    const types = Object.keys(info.types);
+    let dominant = 'live';
+    let maxCount = 0;
+    types.forEach(t => {
+      if (info.types[t] > maxCount) { maxCount = info.types[t]; dominant = t; }
+    });
+    if (!byType[dominant]) byType[dominant] = [];
+    byType[dominant].push({ name: g, ...info });
+  });
+
+  let html = '<div style="max-height:500px;overflow-y:auto;">';
+  html += '<h3 style="margin-bottom:8px;">Analisi Playlist (' + state.channels.length + ' canali)</h3>';
+
+  // Summary counts
+  const totalLive = state.channels.filter(c => (c.type || 'live') === 'live').length;
+  const totalVod = state.channels.filter(c => c.type === 'vod').length;
+  const totalSeries = state.channels.filter(c => c.type === 'series').length;
+  html += '<div style="display:flex;gap:12px;margin-bottom:12px;font-size:12px;">';
+  html += '<span style="color:#34C759;">Live: ' + totalLive + '</span>';
+  html += '<span style="color:#FF9500;">Film: ' + totalVod + '</span>';
+  html += '<span style="color:#5856D6;">Serie: ' + totalSeries + '</span>';
+  html += '</div>';
+
+  // Groups separated by type
+  ['live', 'vod', 'series'].forEach(type => {
+    const typeGroups = byType[type] || [];
+    if (typeGroups.length === 0) return;
+    const totalCount = typeGroups.reduce((s, g) => s + g.count, 0);
+    const typeLabel = type === 'live' ? 'LIVE TV' : type === 'vod' ? 'FILM / VOD' : 'SERIE TV';
+    const typeColor = type === 'live' ? '#34C759' : type === 'vod' ? '#FF9500' : '#5856D6';
+
+    html += '<div style="margin-bottom:16px;">';
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:6px 8px;border-radius:6px;background:var(--bg3);">';
+    html += '<span style="font-weight:700;color:' + typeColor + ';">' + typeLabel + '</span>';
+    html += '<span style="margin-left:auto;font-size:11px;color:var(--text2);">' + typeGroups.length + ' categorie . ' + totalCount + ' canali</span>';
+    html += '</div>';
+    html += '<table style="width:100%;font-size:11px;border-collapse:collapse;">';
+    typeGroups.sort((a, b) => b.count - a.count).forEach(g => {
+      const typeStr = Object.keys(g.types).map(t => t + ':' + g.types[t]).join(', ');
+      const shortUrl = g.sampleUrl ? g.sampleUrl.replace(/^https?:\/\/[^\/]+/, '').substring(0, 50) : '';
+      html += '<tr style="border-bottom:1px solid var(--border);">';
+      html += '<td style="padding:3px 4px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + escapeHtml(g.name) + '">' + escapeHtml(g.name) + '</td>';
+      html += '<td style="text-align:right;padding:3px 4px;">' + g.count + '</td>';
+      html += '<td style="padding:3px 4px;font-size:10px;">' + typeStr + '</td>';
+      html += '<td style="padding:3px 4px;font-size:9px;color:var(--text3);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + escapeHtml(g.sampleUrl) + '">' + escapeHtml(shortUrl) + '</td>';
+      html += '</tr>';
+    });
+    html += '</table>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'dynamic-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
+  const content = document.createElement('div');
+  content.style.cssText = 'background:var(--bg2);border-radius:12px;padding:20px;max-width:700px;width:95%;max-height:85vh;overflow-y:auto;';
+  content.innerHTML = html + '<button class="btn btn-primary" style="margin-top:12px;width:100%;" onclick="this.parentElement.parentElement.remove()">Chiudi</button>';
+  overlay.appendChild(content);
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
+// Category overview: show all groups separated by Live/VOD/Series
+function showCategoryOverview() {
+  if (state.channels.length === 0) {
+    showToast('Nessun canale caricato', 'warning');
+    return;
+  }
+
+  const byType = { live: {}, vod: {}, series: {} };
+  state.channels.forEach(ch => {
+    const type = ch.type || 'live';
+    const group = ch.group || 'Generale';
+    if (!byType[type]) byType[type] = {};
+    if (!byType[type][group]) byType[type][group] = 0;
+    byType[type][group]++;
+  });
+
+  const typeLabels = { live: '📡 LIVE TV', vod: '🎬 FILM / VOD', series: '📺 SERIE TV' };
+  const typeColors = { live: '#34C759', vod: '#FF9500', series: '#5856D6' };
+
+  let html = '<div style="max-height:500px;overflow-y:auto;">';
+  html += '<h3 style="margin-bottom:12px;">Categorie per tipo</h3>';
+  html += '<input type="text" id="catSearchInput" placeholder="Cerca categoria..." style="width:100%;padding:8px 12px;margin-bottom:12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;" oninput="filterCategoryOverview(this.value)">';
+
+  ['live', 'vod', 'series'].forEach(type => {
+    const groups = byType[type];
+    const groupKeys = sortCategoryKeys(Object.keys(groups), type);
+    const totalCount = Object.values(groups).reduce((s, c) => s + c, 0);
+    if (groupKeys.length === 0) return;
+
+    html += `<div data-cat-section style="margin-bottom:16px;">`;
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;border-radius:6px;background:var(--bg3);">`;
+    html += `<span style="font-size:16px;">${typeLabels[type].split(' ')[0]}</span>`;
+    html += `<span style="font-weight:700;color:${typeColors[type]};">${typeLabels[type].split(' ').slice(1).join(' ')}</span>`;
+    html += `<span style="margin-left:auto;font-size:12px;color:var(--text2);">${groupKeys.length} categorie · ${totalCount} canali</span>`;
+    html += `</div>`;
+
+    groupKeys.forEach(g => {
+      html += `<div data-cat-row data-cat-name="${escapeAttr(g)}" style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;font-size:12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''" onclick="navigateToCategory('${escapeAttr(type)}','${escapeAttr(g)}')">
+        <span style="color:var(--text);flex:1;">${escapeHtml(g)}</span>
+        <span style="color:var(--text2);margin-right:8px;">${groups[g]}</span>
+        <span style="display:flex;gap:2px;align-items:center;">
+          <span style="color:var(--accent);font-size:14px;">›</span>
+        </span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  html += '</div>';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'dynamic-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
+  const content = document.createElement('div');
+  content.style.cssText = 'background:var(--bg2);border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;';
+  content.innerHTML = html + '<button class="btn btn-primary" style="margin-top:12px;width:100%;" onclick="this.parentElement.parentElement.remove()">Chiudi</button>';
+  overlay.appendChild(content);
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
+// Show raw M3U content
+function showRawM3u() {
+  if (state.sources.length === 0) {
+    showToast('Nessuna sorgente caricata', 'warning');
+    return;
+  }
+  const src = state.sources[0];
+  if (!src.rawText) {
+    showToast('Contenuto raw non disponibile per questa sorgente', 'warning');
+    return;
+  }
+  const lines = src.rawText.split(/\r?\n/);
+  const preview = lines.slice(0, 50).join('\n');
+  const overlay = document.createElement('div');
+  overlay.className = 'dynamic-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
+  const content = document.createElement('div');
+  content.style.cssText = 'background:var(--bg2);border-radius:12px;padding:20px;max-width:800px;width:95%;max-height:85vh;overflow-y:auto;';
+  content.innerHTML = '<h3 style="margin-bottom:12px;">Contenuto raw M3U (prime 50 righe)</h3>' +
+    '<pre style="font-size:11px;color:var(--text2);background:var(--bg3);padding:12px;border-radius:8px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;">' + escapeHtml(preview) + '</pre>' +
+    '<p style="font-size:11px;color:var(--text3);margin-top:8px;">Totale righe: ' + lines.length + '</p>' +
+    '<button class="btn btn-primary" style="margin-top:12px;width:100%;" onclick="this.parentElement.parentElement.remove()">Chiudi</button>';
+  overlay.appendChild(content);
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
+// Reclassify a category (change all channels in that group to a new type)
+function reclassifyCategory(group, newType) {
+  let count = 0;
+  state.channels.forEach(ch => {
+    if ((ch.group || 'Generale') === group) {
+      ch.type = newType;
+      count++;
+    }
+  });
+  // Also update in sources
+  state.sources.forEach(src => {
+    if (src.channels) {
+      src.channels.forEach(ch => {
+        if ((ch.group || 'Generale') === group) ch.type = newType;
+      });
+    }
+  });
+  saveState();
+  showToast(count + ' canali riclassificati come ' + (newType === 'vod' ? 'Film' : newType === 'series' ? 'Serie TV' : 'Live'), 'success');
+  // Re-render
+  showCategoryOverview();
+  renderChannelList();
+}
+
+// Re-categorize all channels
+function recategorizeAll() {
+  let count = 0;
+  state.channels.forEach(ch => {
+    const oldType = ch.type;
+    ch.type = detectChannelType(ch.name, ch.group, ch.url, {});
+    if (oldType !== ch.type) count++;
+  });
+  state._seriesCache = null;
+  state._seriesCacheChannelCount = 0;
+  state.sources.forEach(src => {
+    if (src.channels) {
+      src.channels.forEach(ch => {
+        ch.type = detectChannelType(ch.name, ch.group, ch.url, {});
+      });
+    }
+  });
+  saveState();
+  renderChannelList();
+  showToast('Ricategorizzati ' + state.channels.length + ' canali (' + count + ' modificati)', 'success');
+}
+
+// Navigate to a specific category from the category overview
+function navigateToCategory(type, category) {
+  // Close the dynamic overlay
+  document.querySelectorAll('.dynamic-overlay').forEach(el => el.remove());
+  // Also close any open modal
+  $$('.modal').forEach(m => m.classList.remove('active'));
+  navigateTo('category', type, category);
+}
+
+// Filter category overview by search term
+function filterCategoryOverview(term) {
+  term = (term || '').toLowerCase();
+  document.querySelectorAll('[data-cat-row]').forEach(row => {
+    const name = (row.getAttribute('data-cat-name') || '').toLowerCase();
+    row.style.display = name.includes(term) ? '' : 'none';
+  });
+  // Also hide empty type sections
+  document.querySelectorAll('[data-cat-section]').forEach(section => {
+    const visibleRows = section.querySelectorAll('[data-cat-row]:not([style*="display: none"])');
+    section.style.display = visibleRows.length > 0 ? '' : 'none';
+  });
+}
+
+// Debug info
+function showDebugInfo() {
+  const video = $('#videoPlayer');
+  const info = [
+    'Browser: ' + navigator.userAgent,
+    'HLS.js: ' + (typeof Hls !== 'undefined' ? 'loaded (v' + (Hls.version || '?') + ')' : 'NOT loaded'),
+    'Video src: ' + (video.src || '(vuoto)'),
+    'Video readyState: ' + video.readyState,
+    'Video networkState: ' + video.networkState,
+    'Video error: ' + (video.error ? video.error.code + ' - ' + video.error.message : 'nessuno'),
+    'Can play HLS: ' + video.canPlayType('application/vnd.apple.mpegurl'),
+    'Can play MP4: ' + video.canPlayType('video/mp4'),
+    'Can play WebM: ' + video.canPlayType('video/webm'),
+    'Current channel: ' + (state.currentChannel ? state.currentChannel.name + ' (' + state.currentChannel.type + ')' : 'nessuno'),
+    'Channel URL: ' + (state.currentChannel ? state.currentChannel.url : 'N/A'),
+    'Total channels: ' + state.channels.length,
+    'HLS instance: ' + (state.hls ? 'active' : 'none')
+  ].join('\n');
+  alert(info);
+  console.log('Debug info:', info);
+}
+
+// Playlist management
+async function reloadAllSources() {
+  if (state.sources.length === 0) { showToast('Nessuna sorgente da ricaricare', 'warning'); return; }
+  if (!confirm('Ricaricare tutte le ' + state.sources.length + ' sorgenti?')) return;
+  showLoading('Ricaricamento sorgenti...');
+  let success = 0, failed = 0;
+  for (const src of state.sources) {
+    try {
+      if (src.type === 'm3u' || src.type === 'file') {
+        let text;
+        try {
+          const resp = await fetch(src.url);
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          text = await resp.text();
+        } catch (e) {
+          const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(src.url);
+          const resp = await fetch(proxyUrl);
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          text = await resp.text();
+        }
+        const channels = parseM3u(text);
+        if (channels.length > 0) {
+          src.channels = channels;
+          success++;
+        } else { failed++; }
+      } else if (src.type === 'xtream') {
+        // Re-fetch Xtream channels
+        const url = src.url;
+        const user = src.user;
+        const pass = src.pass;
+        const channels = [];
+        try {
+          const liveUrl = url + '/player_api.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&action=get_live_streams';
+          const liveResp = await fetch(liveUrl);
+          const liveData = await liveResp.json();
+          const catUrl = url + '/player_api.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&action=get_live_categories';
+          const catResp = await fetch(catUrl);
+          const catData = await catResp.json();
+          const catMap = {};
+          (catData || []).forEach(c => catMap[c.category_id] = c.category_name);
+          (liveData || []).forEach(ch => {
+            channels.push({
+              id: 'xtream_' + ch.stream_id,
+              name: ch.name || 'Canale ' + ch.stream_id,
+              logo: ch.stream_icon || '',
+              group: catMap[ch.category_id] || 'Live',
+              epgId: ch.epg_channel_id || '',
+              url: url + '/live/' + user + '/' + pass + '/' + ch.stream_id + '.ts',
+              type: 'live'
+            });
+          });
+        } catch (e) { console.warn('Live reload failed:', e); }
+        try {
+          const vodUrl = url + '/player_api.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&action=get_vod_streams';
+          const vodResp = await fetch(vodUrl);
+          const vodData = await vodResp.json();
+          const vodCatUrl = url + '/player_api.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&action=get_vod_categories';
+          const vodCatResp = await fetch(vodCatUrl);
+          const vodCatData = await vodCatResp.json();
+          const vodCatMap = {};
+          (vodCatData || []).forEach(c => vodCatMap[c.category_id] = c.category_name);
+          (vodData || []).forEach(v => {
+            channels.push({
+              id: 'xtream_vod_' + v.stream_id,
+              name: v.name || 'VOD ' + v.stream_id,
+              logo: v.stream_icon || '',
+              group: vodCatMap[v.category_id] || 'VOD',
+              url: url + '/movie/' + user + '/' + pass + '/' + v.stream_id + '.' + (v.container_extension || 'mp4'),
+              type: 'vod'
+            });
+          });
+        } catch (e) { console.warn('VOD reload failed:', e); }
+        src.channels = channels;
+        success++;
+      } else {
+        failed++;
+      }
+    } catch (err) {
+      console.error('Reload failed for:', src.name, err);
+      failed++;
+    }
+  }
+  // Rebuild channels array
+  state.channels = [];
+  state.sources.forEach(src => {
+    if (src.channels) {
+      state.channels.push(...src.channels.map(ch => ({ ...ch, sourceId: src.id })));
+    }
+  });
+  state._seriesCache = null;
+  state._seriesCacheChannelCount = 0;
+  saveState();
+  renderChannelList();
+  renderSavedSources();
+  hideLoading();
+  showToast('Ricaricate: ' + success + ' OK, ' + failed + ' errori', success > 0 ? 'success' : 'error');
+}
+
+function exportPlaylists() {
+  if (state.sources.length === 0) { showToast('Nessuna sorgente da esportare', 'warning'); return; }
+  const data = {
+    exported: new Date().toISOString(),
+    app: 'IP-TVSOLUTION Web',
+    sources: state.sources.map(s => ({
+      name: s.name,
+      type: s.type,
+      url: s.url,
+      channels: s.channels ? s.channels.length : 0
+    }))
+  };
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'iptv-playlists-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Lista playlist esportata', 'success');
+}
+
+// Enhanced deleteSource with confirmation
+function deleteSourceEnhanced(id) {
+  const src = state.sources.find(s => s.id === id);
+  if (!src) return;
+  const chCount = src.channels ? src.channels.length : 0;
+  if (!confirm('Eliminare "' + src.name + '" (' + chCount + ' canali)?')) return;
+  state.sources = state.sources.filter(s => s.id !== id);
+  state.channels = state.channels.filter(c => c.sourceId !== id);
+  state._seriesCache = null;
+  state._seriesCacheChannelCount = 0;
+  saveState();
+  renderChannelList();
+  renderSavedSources();
+  showToast('Playlist eliminata: ' + src.name, 'success');
+}
+
+// Playlist selector
+function showPlaylistSelector() {
+  const list = $('#playlistList');
+  if (state.sources.length === 0) {
+    list.innerHTML = '<p class="hint">Nessuna playlist salvata</p>';
+  } else {
+    list.innerHTML = state.sources.map(src => {
+      const isActive = state.activePlaylist === src.id;
+      const count = src.channels ? src.channels.length : 0;
+      const counts = { live: 0, vod: 0, series: 0 };
+      (src.channels || []).forEach(c => { if (counts[c.type] !== undefined) counts[c.type]++; });
+      return `<div class="saved-source" style="cursor:pointer;${isActive ? 'border:2px solid var(--accent);' : ''}" onclick="filterByPlaylist('${escapeAttr(src.id)}')">
+        <div>
+          <div class="saved-source-name">${escapeHtml(src.name)} ${isActive ? '✓' : ''}</div>
+          <div class="saved-source-type">${src.type.toUpperCase()} · ${count} elementi (L:${counts.live} F:${counts.vod} S:${counts.series})</div>
+        </div>
+        <button class="btn btn-danger" style="padding:4px 8px;font-size:12px;" onclick="event.stopPropagation();deleteSourceEnhanced('${escapeAttr(src.id)}')">✕</button>
+      </div>`;
+    }).join('');
+  }
+  // Update active playlist name in button
+  updatePlaylistButton();
+  showModal('playlistModal');
+}
+
+function filterByPlaylist(sourceId) {
+  state.activePlaylist = sourceId;
+  saveState();
+  hideModal('playlistModal');
+  renderChannelList();
+  updatePlaylistButton();
+  const src = state.sources.find(s => s.id === sourceId);
+  if (sourceId === 'all') {
+    showToast('Tutte le playlist (' + state.channels.length + ' canali)', 'success');
+  } else if (src) {
+    showToast('Playlist: ' + src.name, 'success');
+  }
+}
+
+function updatePlaylistButton() {
+  const btn = $('#btnPlaylistSelector');
+  if (!btn) return;
+  if (state.activePlaylist === 'all') {
+    btn.textContent = '📋 Tutte le playlist';
+  } else {
+    const src = state.sources.find(s => s.id === state.activePlaylist);
+    btn.textContent = src ? '📋 ' + src.name : '📋 Playlist';
+  }
+}
+
+// Data management
+function exportData() {
+  const data = JSON.stringify({ sources: state.sources, favorites: [...state.favorites], settings: state.settings }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'iptv-solution-backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Dati esportati', 'success');
+}
+
+function clearData() {
+  if (!confirm('Cancellare tutti i dati? Questa azione è irreversibile.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state.sources = [];
+  state.channels = [];
+  state.favorites = new Set();
+  state.currentChannel = null;
+  $('#videoPlayer').src = '';
+  renderChannelList();
+  renderSavedSources();
+  showToast('Dati cancellati', 'success');
+}

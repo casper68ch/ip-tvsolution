@@ -6,10 +6,12 @@ import { absoluteUrl } from "@/lib/site";
 export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date("2026-11-23");
+  const lastModified = new Date("2026-11-24");
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: absoluteUrl("/"), lastModified, changeFrequency: "weekly", priority: 1 },
+    { url: absoluteUrl("/download/"), lastModified, changeFrequency: "weekly", priority: 0.9 },
+    { url: absoluteUrl("/web-app/"), lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: absoluteUrl("/guida/"), lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: absoluteUrl("/faq/"), lastModified, changeFrequency: "monthly", priority: 0.6 },
     { url: absoluteUrl("/chi-siamo/"), lastModified, changeFrequency: "monthly", priority: 0.6 },

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IP-TVSOLUTION Web Player</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="hls.min.js"></script>
+  <script src="ts-player.js"></script>
+  <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo">
+        <img src="brand.png" alt="IP-TVSOLUTION" class="logo-img">
+        <span class="logo-text">IP-TVSOLUTION</span>
+        <span id="versionBadge" class="version-badge">v?</span>
+      </div>
+      <div class="header-actions" style="gap:6px;">
+        <button id="btnPlaylistSelector" class="btn btn-secondary" onclick="showPlaylistSelector()" style="font-size:13px;padding:8px 10px;">📋 Tutte le playlist</button>
+        <button id="btnCategories" class="btn btn-secondary" onclick="showCategoryOverview()" style="font-size:13px;padding:8px 10px;">📂 Esplora categorie</button>
+        <button id="btnRecordings" class="btn btn-secondary" onclick="updateSaveDestinationUI();showModal('recordingsModal')" style="font-size:13px;padding:8px 10px;">🎙 Registrazioni</button>
+        <button id="btnAddSource" class="btn btn-primary" onclick="showModal('addSourceModal')">+ Aggiungi sorgente</button>
+        <button id="btnSettings" class="btn btn-secondary" onclick="showModal('settingsModal');renderSavedSources()" style="font-size:14px;">☰ Menu</button>
+      </div>
+      <div id="headerUser" class="header-user" style="display:none;">
+        <img src="brand.png" alt="" class="header-user-logo">
+        <span id="headerUserName"></span>
+        <button class="btn btn-secondary" onclick="IPtvActivation.logout()" title="Esci" style="font-size:11px;padding:3px 9px;border-radius:12px;">Esci</button>
+      </div>
+    </header>
+
+    <!-- Update banner -->
+    <div id="updateBanner" class="update-banner" style="display:none;">
+      <span id="updateBannerText">🔄 Aggiornamento disponibile</span>
+      <button onclick="applyUpdate()">⚙️ Aggiorna ora</button>
+      <button onclick="dismissUpdateBanner()" title="Chiudi">✕</button>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+      <!-- Sidebar: Channel List -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <input type="text" id="searchChannels" placeholder="🔍 Cerca canale, film, serie..." class="search-input">
+          <div class="side-nav" style="display:flex;gap:4px;margin-top:8px;">
+            <button class="side-nav-btn active" data-nav="all" onclick="navigateTo('home')">🏠 Home</button>
+            <button class="side-nav-btn" data-nav="live" onclick="navigateTo('type','live')">📡 Live</button>
+            <button class="side-nav-btn" data-nav="vod" onclick="navigateTo('type','vod')">🎬 Film</button>
+            <button class="side-nav-btn" data-nav="series" onclick="navigateTo('type','series')">📺 Serie</button>
+            <button class="side-nav-btn" data-nav="fav" onclick="navigateTo('type','fav')">★ Fav</button>
+          </div>
+          <div class="nav-breadcrumb" id="navBreadcrumb" style="display:none;margin-bottom:8px;font-size:12px;color:var(--text2);">
+            <button onclick="navigateTo('home')" style="background:var(--accent);color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;margin-right:6px;">🏠 Home</button>
+            <span id="breadcrumbType"></span>
+            <span id="breadcrumbCategory"></span>
+          </div>
+        </div>
+        <div class="history-bar" id="historyBar" style="display:none;padding:8px;border-bottom:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Continua a guardare</div>
+          <div id="historyList" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;"></div>
+        </div>
+        <div class="channel-list" id="channelList">
+          <div class="empty-state">
+            <p style="font-size:17px;font-weight:600;">Benvenuto in IP-TVSOLUTION 👋</p>
+            <p class="hint" style="line-height:1.8;margin-top:10px;text-align:left;">
+              1️⃣ Clicca <b>+ Aggiungi sorgente</b> e incolla il link della tua playlist<br>
+              2️⃣ Scegli <b>Live</b>, <b>Film</b> o <b>Serie</b> in alto<br>
+              3️⃣ Clicca un canale per iniziare a guardare
+            </p>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Player Area -->
+      <main class="player-area">
+        <div class="video-container" id="videoContainer">
+          <video id="videoPlayer" controls autoplay></video>
+          <canvas id="tsCanvas" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;background:#000;"></canvas>
+          <div class="player-overlay" id="playerOverlay">
+            <div class="player-info">
+              <h2 id="currentChannelName">Seleziona un canale</h2>
+              <p id="currentChannelInfo"></p>
+            </div>
+          </div>
+          <div class="player-controls" id="playerControls">
+            <button id="btnFullscreen" class="ctrl-btn" title="Schermo intero" data-label="Schermo">⛶</button>
+            <button id="btnPip" class="ctrl-btn" title="Picture in Picture" data-label="PiP">⧉</button>
+            <button id="btnRecord" class="ctrl-btn" title="Registra video" data-label="Registra">⏺</button>
+            <button id="btnSaveRecording" class="ctrl-btn" title="Salva registrazione su disco/USB" data-label="Salva">💾</button>
+          </div>
+        </div>
+
+        <!-- EPG Panel -->
+        <div class="epg-panel" id="epgPanel">
+          <div class="epg-header">
+            <h3>Guida TV (EPG)</h3>
+            <button id="btnCloseEpg" class="btn-close">×</button>
+          </div>
+          <div class="epg-content" id="epgContent">
+            <p class="hint">Seleziona un canale per vedere la guida</p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Source Modal -->
+    <div class="modal" id="addSourceModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Aggiungi sorgente</h2>
+          <button class="btn-close" id="btnCloseAddSource">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="source-type-selector">
+            <button class="source-type-btn active" data-type="m3u">M3U URL</button>
+            <button class="source-type-btn" data-type="xtream">Xtream Codes</button>
+            <button class="source-type-btn" data-type="stalker">Stalker/Ministra</button>
+            <button class="source-type-btn" data-type="file">File M3U</button>
+          </div>
+
+          <!-- M3U Form -->
+          <form id="formM3u" class="source-form active">
+            <div class="form-group">
+              <label>Nome</label>
+              <input type="text" id="m3uName" placeholder="La mia playlist" required>
+            </div>
+            <div class="form-group">
+              <label>URL M3U / M3U Plus</label>
+              <input type="url" id="m3uUrl" placeholder="https://server/get.php?username=X&password=Y&type=m3u_plus&output=m3u8" required>
+            </div>
+            <div class="form-group">
+              <label style="font-size:11px;color:var(--text3);">
+                💡 Per Xtream Codes: usa <code>output=m3u8</code> invece di <code>output=ts</code> per stream compatibili con Chrome
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Carica</button>
+          </form>
+
+          <!-- Xtream Form -->
+          <form id="formXtream" class="source-form">
+                        <div class="form-group">
+              <label>Nome</label>
+              <input type="text" id="xtreamName" placeholder="Il mio server" required>
+            </div>
+            <div class="form-group">
+              <label>URL server</label>
+              <input type="url" id="xtreamUrl" placeholder="http://server:porta" required>
+            </div>
+            <div class="form-group">
+              <label>Username</label>
+              <input type="text" id="xtreamUser" required>
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="xtreamPass" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Connetti</button>
+          </form>
+
+          <!-- Stalker Form -->
+          <form id="formStalker" class="source-form">
+            <div class="form-group">
+              <label>Nome</label>
+              <input type="text" id="stalkerName" placeholder="Portale Stalker" required>
+            </div>
+            <div class="form-group">
+              <label>URL portale</label>
+              <input type="url" id="stalkerUrl" placeholder="http://portale/stalker_portal" required>
+            </div>
+            <div class="form-group">
+              <label>MAC address</label>
+              <input type="text" id="stalkerMac" placeholder="00:1A:79:XX:XX:XX" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Connetti</button>
+          </form>
+
+          <!-- File Form -->
+          <form id="formFile" class="source-form">
+            <div class="form-group">
+              <label>Seleziona file M3U</label>
+              <input type="file" id="m3uFile" accept=".m3u,.m3u8,.txt" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Carica file</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Impostazioni</h2>
+          <button class="btn-close" id="btnCloseSettings">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="settings-section">
+            <h3>ℹ️ Informazioni</h3>
+            <p class="hint" id="serverInfo">Web: 1.9-web-20261120</p>
+          </div>
+          <div class="settings-section">
+            <h3>🔍 Diagnostica stream</h3>
+            <p class="hint">Registra errori, buffer e riavvii dei canali per capire i blocchi.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-secondary" onclick="hideModal('settingsModal');openStreamLog()">📄 Apri log</button>
+              <button class="btn btn-secondary" onclick="downloadStreamLog()">💾 Scarica log</button>
+              <button class="btn btn-danger" onclick="clearStreamLog()">🗑 Cancella log</button>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>Le tue sorgenti</h3>
+            <p class="hint" style="margin-bottom:8px;">Le playlist caricate. Usa 🔄 per aggiornarle.</p>
+            <div id="savedSources" class="saved-sources"></div>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+              <button id="btnReloadAll" class="btn btn-secondary" style="font-size:12px;">🔄 Ricarica tutte</button>
+            </div>
+            <details style="margin-top:10px;">
+              <summary style="cursor:pointer;font-size:12px;color:var(--text2);">🔧 Strumenti avanzati</summary>
+              <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                <button id="btnExportPlaylists" class="btn btn-secondary" style="font-size:12px;">📤 Esporta lista</button>
+                <button id="btnAnalyze" class="btn btn-secondary" style="font-size:12px;" onclick="analyzePlaylist()">🔍 Analizza M3U</button>
+                <button id="btnRawM3u" class="btn btn-secondary" style="font-size:12px;" onclick="showRawM3u()">📄 Raw M3U</button>
+                <button id="btnRecategorize" class="btn btn-secondary" style="font-size:12px;" onclick="recategorizeAll()">🔄 Ricategorizza</button>
+              </div>
+            </details>
+          </div>
+          <div class="settings-section">
+            <h3>Player</h3>
+            <label class="setting-row">
+              <span>Autoplay</span>
+              <input type="checkbox" id="settingAutoplay" checked>
+            </label>
+            <label class="setting-row">
+              <span>Volume predefinito</span>
+              <input type="range" id="settingVolume" min="0" max="100" value="80">
+            </label>
+          </div>
+          <div class="settings-section">
+            <h3>Controllo parentale</h3>
+            <label class="setting-row">
+              <span>Abilita PIN di controllo parentale</span>
+              <input type="checkbox" id="settingPinEnabled">
+            </label>
+            <div class="form-group" id="pinSetupGroup" style="display:none;">
+              <label for="settingPinInput">Nuovo PIN (4 cifre)</label>
+              <input type="password" id="settingPinInput" inputmode="numeric" maxlength="4" placeholder="••••">
+              <label for="settingPinConfirm" style="margin-top:8px;">Conferma PIN</label>
+              <input type="password" id="settingPinConfirm" inputmode="numeric" maxlength="4" placeholder="••••">
+              <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+                <button id="btnSavePin" class="btn btn-primary" style="font-size:12px;">💾 Salva PIN</button>
+                <button id="btnDisablePin" class="btn btn-danger" style="font-size:12px;">🔒 Disattiva</button>
+              </div>
+            </div>
+            <p class="hint" style="margin-top:8px;" id="pinStatusHint">Nessun PIN configurato: la riproduzione di tutti i canali richiederà il PIN.</p>
+          </div>
+          <div class="settings-section">
+            <h3>EPG (Guida TV)</h3>
+            <div class="form-group">
+              <label>URL XMLTV</label>
+              <input type="url" id="settingEpgUrl" placeholder="https://esempio.com/epg.xml">
+            </div>
+            <button id="btnLoadEpg" class="btn btn-secondary">Carica EPG</button>
+            <p class="hint" id="epgStatus">Nessun EPG caricato</p>
+          </div>
+          <div class="settings-section">
+            <h3>Dati</h3>
+            <button id="btnExportData" class="btn btn-secondary">Esporta dati</button>
+            <button id="btnClearData" class="btn btn-danger">Cancella tutto</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Playlist Selector Modal -->
+    <div class="modal" id="playlistModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>📋 Playlist</h2>
+          <button class="btn-close" onclick="hideModal('playlistModal')">×</button>
+        </div>
+        <div class="modal-body">
+          <p class="hint" style="margin-bottom:12px;">Seleziona la playlist da visualizzare. I canali verranno filtrati per sorgente.</p>
+          <div id="playlistList" class="saved-sources"></div>
+          <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="btn btn-secondary" style="flex:1;" onclick="filterByPlaylist('all')">📋 Mostra tutte</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Series Detail Modal -->
+    <div class="modal" id="seriesModal">
+      <div class="modal-content" style="max-width:700px;">
+        <div class="modal-header">
+          <h2 id="seriesModalTitle">Serie TV</h2>
+          <button class="btn-close" id="btnCloseSeries">×</button>
+        </div>
+        <div class="modal-body">
+          <div id="seriesInfo" style="margin-bottom:16px;"></div>
+          <div class="season-selector" id="seasonSelector" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;"></div>
+          <div id="episodeList" class="episode-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recordings Modal -->
+    <div class="modal" id="recordingsModal">
+      <div class="modal-content" style="max-width:600px;">
+        <div class="modal-header">
+          <h2>🎙 Registrazioni</h2>
+          <button class="btn-close" onclick="hideModal('recordingsModal')">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="settings-section">
+            <h3>💾 Dove salvare le registrazioni</h3>
+            <p class="hint">Scegli la destinazione: verrà usata per ogni registrazione.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
+              <button class="btn btn-secondary save-dest" data-dest="internal" onclick="setSaveDestination('internal')">💾 Disco interno</button>
+              <button class="btn btn-secondary save-dest" data-dest="usb" onclick="setSaveDestination('usb')">🔌 Chiavetta USB</button>
+              <button class="btn btn-secondary save-dest" data-dest="cloud" onclick="setSaveDestination('cloud')">☁️ Cloud / NAS</button>
+            </div>
+            <div id="destUsbInfo" class="hint" style="display:none;margin-bottom:10px;">
+              Seleziona una volta la cartella sulla chiavetta USB inserita:
+              <button id="btnPickUsbFolder" class="btn btn-secondary" style="margin-top:6px;font-size:12px;">📁 Scegli cartella USB</button>
+              <span id="usbFolderName" style="margin-left:8px;"></span>
+            </div>
+            <div id="destCloudConfig" style="display:none;">
+              <div class="form-group">
+                <label>URL WebDAV / NAS (es. https://nas.local/webdav)</label>
+                <input type="url" id="cloudUrl" placeholder="https://.../webdav">
+              </div>
+              <div class="form-group">
+                <label>Utente (facoltativo)</label>
+                <input type="text" id="cloudUser" placeholder="username">
+              </div>
+              <div class="form-group">
+                <label>Password (facoltativa)</label>
+                <input type="password" id="cloudPass" placeholder="password">
+              </div>
+              <button id="btnSaveCloudConfig" class="btn btn-secondary" style="font-size:12px;">💾 Salva configurazione cloud</button>
+              <p class="hint" style="margin-top:8px;">Il caricamento usa WebDAV (richiede CORS abilitato sul server). Se non configurato, il salvataggio ricade sul disco interno.</p>
+            </div>
+          </div>
+          <p class="hint" style="margin-bottom:12px;">Per registrare quello che stai guardando, clicca ⏺ nel player. Per registrare in anticipo, apri il pannello qui sotto.</p>
+          <details class="settings-section">
+            <summary style="cursor:pointer;font-weight:600;color:var(--accent);margin-bottom:8px;">⏰ Programma una registrazione (clicca per aprire)</summary>
+            <div style="margin-top:12px;">
+              <div class="form-group">
+                <label>Titolo</label>
+                <input type="text" id="schedTitle" placeholder="Nome registrazione">
+              </div>
+              <div class="form-group">
+                <label>URL stream (lascia vuoto per usare quello in riproduzione)</label>
+                <input type="url" id="schedUrl" placeholder="https://.../video.ts">
+              </div>
+              <div class="form-group">
+                <label>Data e ora</label>
+                <input type="datetime-local" id="schedStart">
+              </div>
+              <div class="form-group">
+                <label>Durata (minuti)</label>
+                <input type="number" id="schedDuration" min="1" value="60">
+              </div>
+              <button id="btnScheduleSave" class="btn btn-primary" style="font-size:12px;">⏰ Programma</button>
+            </div>
+          </details>
+          <div class="settings-section">
+            <h3>Programmate</h3>
+            <div id="scheduledList" class="saved-sources"></div>
+          </div>
+          <div class="settings-section">
+            <h3>Registrazioni</h3>
+            <div id="recordingsList" class="saved-sources"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stream Log Modal -->
+    <div class="modal" id="streamLogModal">
+      <div class="modal-content" style="max-width:820px;">
+        <div class="modal-header">
+          <h2>📄 Log applicazione, stream e server</h2>
+          <button class="btn-close" onclick="hideModal('streamLogModal')">×</button>
+        </div>
+        <div class="modal-body">
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <button class="btn btn-secondary" onclick="renderStreamLog()">🔄 Aggiorna</button>
+            <button class="btn btn-secondary" onclick="showServerLog()">📡 Log server</button>
+            <button class="btn btn-secondary" onclick="downloadStreamLog()">💾 Scarica</button>
+            <button class="btn btn-danger" onclick="clearStreamLog()">🗑 Cancella</button>
+          </div>
+          <pre id="streamLogContent" style="font-size:11px;max-height:450px;overflow:auto;background:var(--bg);padding:10px;border-radius:6px;color:var(--text2);white-space:pre-wrap;"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <p id="loadingText">Caricamento...</p>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Parental Control PIN Modal -->
+    <div class="modal" id="pinModal">
+      <div class="modal-content" style="max-width:380px;">
+        <div class="modal-header">
+          <h2>Controllo parentale</h2>
+          <button class="btn-close" id="btnClosePin">×</button>
+        </div>
+        <div class="modal-body" style="text-align:center;">
+          <p class="hint" id="pinModalHint">Inserisci il PIN per riprodurre questo contenuto.</p>
+          <div class="form-group" style="text-align:left;">
+            <input type="password" id="pinInput" placeholder="PIN" inputmode="numeric" maxlength="4" autocomplete="off" style="text-align:center;font-size:22px;letter-spacing:10px;font-weight:700;">
+          </div>
+          <button type="button" class="btn btn-primary" style="width:100%;" onclick="submitPin()">OK</button>
+          <div style="margin-top:12px;">
+            <button type="button" class="btn btn-secondary" style="width:100%;" onclick="hidePinModal()">Annulla</button>
+          </div>
+          <p class="hint" id="pinModalError" style="display:none;margin-top:12px;color:var(--danger);"></p>
+          <p class="hint" id="pinModalLock" style="display:none;margin-top:12px;"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attivazione utente -->
+  <div id="activationOverlay" class="act-overlay">
+    <div class="act-card">
+      <div class="act-logo"><img src="brand.png" alt="logo"><h2>IP-TVSOLUTION</h2></div>
+      <p class="act-sub">Attivazione applicazione — crea il tuo account e invia la richiesta al proprietario.</p>
+
+      <div id="actFormBox">
+        <div class="act-field"><label>Nome utente</label><input id="actUser" type="text" placeholder="es. Mario" autocomplete="username"></div>
+        <div class="act-field"><label>Password</label><input id="actPass" type="password" placeholder="almeno 4 caratteri" autocomplete="new-password"></div>
+        <div class="act-field"><label>La tua email</label><input id="actEmail" type="email" placeholder="nome@email.com" autocomplete="email"></div>
+        <button class="act-btn" onclick="IPtvActivation.sendRequest()">Invia richiesta di attivazione</button>
+        <div id="actRequestInfo" class="act-info">Richiesta pronta. Codice: <span id="actRequestCode" class="act-code"></span><br>Il programma di posta si aprirà con la richiesta già compilata.</div>
+        <div class="act-field" style="margin-top:14px;"><label>Codice di attivazione (ricevuto via email)</label><input id="actConfirmCode" type="text" placeholder="IPTV-XXXX-XXXX"></div>
+        <button class="act-btn secondary" onclick="IPtvActivation.confirmActivation()">Conferma e attiva</button>
+      </div>
+
+      <div id="actLoginBox" style="display:none;">
+        <div class="act-field"><label>Nome utente</label><input id="loginUser" type="text" autocomplete="username"></div>
+        <div class="act-field"><label>Password</label><input id="loginPass" type="password" autocomplete="current-password"></div>
+        <button class="act-btn" onclick="IPtvActivation.login()">Accedi</button>
+      </div>
+      <div id="actMsg" class="act-msg"></div>
+      <div class="act-footer">Richieste a: ip.tv-solution@tutamail.com</div>
+    </div>
+  </div>
+
+  <script src="activation.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

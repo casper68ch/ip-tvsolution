@@ -7,6 +7,8 @@ import { siteConfig } from "@/lib/site";
 const navItems = [
   { label: "Catalogo", href: "/#catalogo" },
   { label: "Piattaforme", href: "/#piattaforme" },
+  { label: "Download", href: "/download/" },
+  { label: "Web App", href: "/web-app/" },
   { label: "Guida", href: "/guida/" },
   { label: "FAQ", href: "/faq/" },
   { label: "Chi siamo", href: "/chi-siamo/" },

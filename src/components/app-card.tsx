@@ -75,15 +75,25 @@ export function AppCard({ app }: AppCardProps) {
         <div className="mt-auto pt-5">
           <div className="flex flex-wrap gap-2">
             {primary ? (
-              <a
-                href={primary.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="tap-target inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-accent px-3 text-xs font-semibold text-white transition hover:bg-accent-hover"
-              >
-                <span className="truncate">{primary.label}</span>
-                <span aria-hidden="true">↗</span>
-              </a>
+              app.project ? (
+                <Link
+                  href={`/download/#${app.slug}`}
+                  className="tap-target inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-accent px-3 text-xs font-semibold text-white transition hover:bg-accent-hover"
+                >
+                  <span className="truncate">Vai al download</span>
+                  <span aria-hidden="true">→</span>
+                </Link>
+              ) : (
+                <a
+                  href={primary.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="tap-target inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-accent px-3 text-xs font-semibold text-white transition hover:bg-accent-hover"
+                >
+                  <span className="truncate">{primary.label}</span>
+                  <span aria-hidden="true">↗</span>
+                </a>
+              )
             ) : null}
             {primary ? (
               <button

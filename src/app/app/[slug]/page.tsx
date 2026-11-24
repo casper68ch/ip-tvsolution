@@ -252,15 +252,25 @@ export default async function AppPage({ params }: AppPageProps) {
                     </p>
                   ) : null}
 
-                  <a
-                    href={install.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="tap-target mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-surface-2 px-4 text-sm font-medium text-fg transition hover:border-accent/50"
-                  >
-                    Apri {install.label}
-                    <span aria-hidden="true">↗</span>
-                  </a>
+                  {app.project ? (
+                    <Link
+                      href={`/download/#${app.slug}`}
+                      className="tap-target mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-surface-2 px-4 text-sm font-medium text-fg transition hover:border-accent/50"
+                    >
+                      Vai al download: {install.label}
+                      <span aria-hidden="true">→</span>
+                    </Link>
+                  ) : (
+                    <a
+                      href={install.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="tap-target mt-4 inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-surface-2 px-4 text-sm font-medium text-fg transition hover:border-accent/50"
+                    >
+                      Apri {install.label}
+                      <span aria-hidden="true">↗</span>
+                    </a>
+                  )}
                 </article>
               ))}
             </div>

@@ -77,9 +77,23 @@ export default function HomePage() {
               </h2>
               <p className="mt-2 max-w-3xl text-sm leading-relaxed text-secondary">
                 Cinque edizioni del progetto per Windows, Web/Chrome, Smart TV, Android e iPhone.
-                        Scaricale dal link ufficiale, registrati con nome, password ed email e ricevi
+                Scaricale dall&apos;hub download, registrati con nome, password ed email e ricevi
                 il codice di attivazione via email. Solo player: nessuna playlist o credenziale inclusa.
               </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  href="/download/"
+                  className="tap-target inline-flex items-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-white transition hover:bg-accent-hover"
+                >
+                  Tutti i download <span aria-hidden="true">→</span>
+                </Link>
+                <Link
+                  href="/web-app/"
+                  className="tap-target inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-4 text-sm text-secondary transition hover:border-accent/50 hover:text-fg"
+                >
+                  Apri la Web App <span aria-hidden="true">↗</span>
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -108,15 +122,13 @@ export default function HomePage() {
                   </div>
                 </div>
                 {app.install[0] ? (
-                  <a
-                    href={app.install[0].url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    href={`/download/#${app.slug}`}
                     className="tap-target mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-white transition hover:bg-accent-hover"
                   >
-                    <span className="truncate">{app.install[0].label}</span>
-                    <span aria-hidden="true">↗</span>
-                  </a>
+                    <span className="truncate">Vai al download</span>
+                    <span aria-hidden="true">→</span>
+                  </Link>
                 ) : null}
               </li>
             ))}

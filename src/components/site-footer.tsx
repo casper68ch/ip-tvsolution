@@ -31,6 +31,8 @@ export function SiteFooter() {
             <ul className="mt-4 space-y-2 text-sm">
               {[
                 { label: "Catalogo player", href: "/#catalogo" },
+                { label: "Download app", href: "/download/" },
+                { label: "Web App IPTV", href: "/web-app/" },
                 { label: "Guida all'installazione", href: "/guida/" },
                 { label: "Domande frequenti", href: "/faq/" },
                 { label: "Chi siamo", href: "/chi-siamo/" },
