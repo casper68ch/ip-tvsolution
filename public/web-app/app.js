@@ -109,8 +109,11 @@ async function autoRestoreSources() {
     state.channels = [];
     state.sources.forEach(s => { if (s.channels) state.channels.push(...s.channels.map(ch => ({ ...ch, sourceId: s.id }))); });
     saveState();
+    state._seriesCache = null;
+    state._seriesCacheChannelCount = 0;
     renderChannelList();
     renderSavedSources();
+    setTimeout(function () { renderChannelList(); renderSavedSources(); }, 600);
     if (typeof showToast === 'function') showToast('Playlist ripristinata: ' + state.channels.length + ' canali', 'success');
   }
 }
