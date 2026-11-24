@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP-TVSOLUTION Web Player</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
   <script src="hls.min.js?v=2"></script>
   <script src="ts-player.js?v=2"></script>
   <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
@@ -269,6 +269,10 @@
           <div class="settings-section">
             <h3>Loghi canali</h3>
             <button id="btnRefreshLogos" class="btn btn-secondary" onclick="refreshLogosFromSources()">Aggiorna loghi (piu fonti)</button>
+            <button id="btnClearPosterCache" class="btn btn-secondary" onclick="clearPosterCache()" style="margin-left:6px;">Cancella cache locandine</button>
+            <button id="btnFillPosters" class="btn btn-secondary" onclick="autoFillMissingPosters(false, 30)" style="margin-left:6px;">Recupera locandine mancanti</button>
+            <p class="hint" style="margin-top:8px;">Location mancanti: TMDB (inserisci API key), TVMaze per le serie e iTunes per i film. Cache 7 giorni; si aggiornano da sole all avvio.</p>
+            <div style="margin-top:8px;"><input id="tmdbKey" type="text" placeholder="TMDB API key (opzionale)" value="" onchange="localStorage.setItem('iptv_tmdb_key', this.value.trim())" style="max-width:260px;"></div>
             <p class="hint" style="margin-top:8px;">Legge i loghi dalla playlist inserita (Xtream / M3U), dall'EPG XMLTV e crea un segnaposto per quelli mancanti. Se hai una sola playlist attiva, aggiorna solo quella.</p>
           </div>
                 <div class="settings-section">
@@ -474,6 +478,6 @@
   </div>
 
   <script src="activation.js?v=3"></script>
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>

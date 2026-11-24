@@ -147,6 +147,8 @@ body {
   overflow: hidden;
 }
 .channel-icon img { width: 100%; height: 100%; object-fit: contain; }
+.channel-icon.poster { width: 46px; height: 58px; border-radius: 4px; }
+.channel-icon.poster img { object-fit: cover; }
 .channel-info { flex: 1; min-width: 0; }
 .channel-name {
   font-size: 14px;

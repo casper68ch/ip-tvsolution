@@ -52,6 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderSavedSources();
   updatePlaylistButton();
   setTimeout(function () { refreshLogosFromSources(true); }, 1200);
+  setTimeout(function () { autoFillMissingPosters(true, 24); }, 2600);
+  setInterval(function () { autoFillMissingPosters(true, 16); }, 30000);
   initPlayer();
   setInterval(checkScheduledRecordings, 15000);
   logApp('APP', 'INFO', 'Avvio applicazione', {
@@ -1465,6 +1467,7 @@ async function handleXtreamSubmit(e) {
           id: 'xtream_vod_' + v.stream_id,
           name: v.name || 'VOD ' + v.stream_id,
           logo: v.stream_icon || '',
+          cover: v.stream_icon || '',
           group: vodCatMap[v.category_id] || 'VOD',
           url: url + '/movie/' + user + '/' + pass + '/' + v.stream_id + '.' + (v.container_extension || 'mp4'),
           type: 'vod'
@@ -1487,6 +1490,7 @@ async function handleXtreamSubmit(e) {
           id: 'xtream_series_' + s.series_id,
           name: s.name || 'Serie ' + s.series_id,
           logo: s.cover || '',
+          cover: s.cover || '',
           group: serCatMap[s.category_id] || 'Serie TV',
           url: '', // Series need episode selection
           type: 'series'
@@ -1601,6 +1605,7 @@ function addSource(source) {
   renderChannelList();
   renderSavedSources();
   updatePlaylistButton();
+  autoFillMissingPosters(true, 4);
 }
 
 // Player
@@ -2325,6 +2330,138 @@ function logoKeysFor(value) {
 function isDirectPng(url) {
   return /^https?:\/\/[^\s"'<>]+?\.png(\?[^\s"'<>]*)?$/i.test(String(url || ''));
 }
+
+// === IP-TVSOLUTION: locandine da database esterni (auto-update) ===
+var POSTER_CACHE_KEY = 'iptv_solution_poster_cache';
+var TMDB_KEY_KEY = 'iptv_tmdb_key';
+function posterTitle(name) {
+  return String(name || '')
+    .replace(/\s*[-–|]\s*(?: stagione|season|serie|film).*$/i, '')
+    .replace(/\((?:19|20)\d{2}\)/g, ' ')
+    .replace(/\b(19|20)\d{2}\b/g, ' ')
+    .replace(/\b( HD | FHD | UHD | 4K | HDTV | SD | 720p | 1080p )\b/gi, ' ')
+    .replace(/[^a-zA-Z0-9\u00E0\u00E8\u00E9\u00EC\u00F2\u00F9\u00C0\u00C8\u00C9\u00CC\u00D2\u00D9 ]+/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+function posterKey(name, type) { return (type === 'series' ? 'tv:' : 'movie:') + posterTitle(name).toLowerCase(); }
+function loadPosterCache() {
+  try { return JSON.parse(localStorage.getItem(POSTER_CACHE_KEY) || '{}') || {}; } catch (e) { return {}; }
+}
+function savePosterCache(c) {
+  try { localStorage.setItem(POSTER_CACHE_KEY, JSON.stringify(c)); } catch (e) {}
+}
+function cachedPoster(name, type) {
+  var c = loadPosterCache(), v = c[posterKey(name, type)];
+  if (v && v.url && Date.now() - (v.ts || 0) < 7 * 24 * 3600 * 1000) return v.url;
+  return '';
+}
+function rememberPoster(name, type, url) {
+  if (!/^https?:\/\//i.test(String(url || ''))) return;
+  var c = loadPosterCache();
+  c[posterKey(name, type)] = { url: url, ts: Date.now() };
+  var keys = Object.keys(c);
+  if (keys.length > 1200) keys.slice(0, keys.length - 1200).forEach(function (k) { delete c[k]; });
+  savePosterCache(c);
+}
+async function fetchPosterFromExternal(name, type) {
+  var title = posterTitle(name);
+  if (!title) return '';
+  var cached = cachedPoster(title, type);
+  if (cached) return cached;
+  var apiKey = (localStorage.getItem(TMDB_KEY_KEY) || '').trim();
+  var url = '';
+  if (apiKey) {
+    try {
+      var kind = type === 'series' ? 'tv' : 'movie';
+      var r = await fetch('https://api.themoviedb.org/3/search/' + kind + '?api_key=' + encodeURIComponent(apiKey) + '&language=it-IT&query=' + encodeURIComponent(title), { cache: 'no-store' });
+      if (r.ok) {
+        var j = await r.json();
+        var hit = (j.results || [])[0];
+        if (hit && hit.poster_path) url = 'https://image.tmdb.org/t/p/w500' + hit.poster_path;
+      }
+    } catch (e) { logApp('LOGO', 'WARN', 'TMDB non disponibile', { titolo: title }); }
+  }
+  if (!url && type === 'series') {
+    try {
+      var r2 = await fetch('https://api.tvmaze.com/singlesearch/shows?q=' + encodeURIComponent(title), { cache: 'no-store' });
+      if (r2.ok) {
+        var j2 = await r2.json();
+        url = (j2.image && (j2.image.original || j2.image.medium)) || '';
+      }
+    } catch (e) { logApp('LOGO', 'WARN', 'TVMaze non disponibile', { titolo: title }); }
+  }
+  if (!url && type !== 'series') {
+    try {
+      var r3 = await fetch('https://itunes.apple.com/search?term=' + encodeURIComponent(title) + '&entity=movie&limit=1', { cache: 'no-store' });
+      if (r3.ok) {
+        var j3 = await r3.json();
+        var res = (j3.results || [])[0];
+        if (res && res.artworkUrl100) url = res.artworkUrl100.replace('100x100bb', '600x600bb');
+      }
+    } catch (e) { logApp('LOGO', 'WARN', 'iTunes non disponibile', { titolo: title }); }
+  }
+  if (url && (type === 'series' ? /^https?:\/\/[^\s"'<>]+?\.(png|jpe?g|webp)(\?[^\s"'<>]*)?$/i.test(url) : /^https?:\/\//i.test(url))) {
+    rememberPoster(title, type, url);
+    return url;
+  }
+  return '';
+}
+async function autoFillMissingPosters(silent, limit) {
+  var max = limit || 12;
+  var missing = (state.channels || []).filter(function (ch) {
+    return (ch.type === 'vod' || ch.type === 'series') && (!ch.logo || /^data:/i.test(ch.logo) || !isDirectImage(ch.logo));
+  });
+  if (!missing.length) { if (!silent) showToast('Nessuna locandina mancante', 'success'); return 0; }
+  var seen = {}, batch = [];
+  for (var i = 0; i < missing.length && batch.length < max; i++) {
+    var k = posterKey(missing[i].name, missing[i].type);
+    if (!seen[k]) { seen[k] = 1; batch.push(missing[i]); }
+  }
+  var found = 0;
+  for (var b = 0; b < batch.length; b++) {
+    var ch = batch[b];
+    try {
+      var u = await fetchPosterFromExternal(ch.name, ch.type);
+      if (u) {
+        ch.logo = u; ch.cover = u; ch.posterSource = 'external';
+        (state.sources || []).forEach(function (src) {
+          (src.channels || []).forEach(function (sc) { if (sc.id === ch.id) { sc.logo = u; sc.cover = u; sc.posterSource = 'external'; } });
+        });
+        found++;
+      }
+    } catch (e) {}
+  }
+  if (found) {
+    saveState();
+    try { renderChannelList(); renderSavedSources(); updatePlaylistButton(); } catch (e) {}
+  }
+  if (!silent) showToast('Locandine recuperate: ' + found, found ? 'success' : 'warning');
+  logApp('LOGO', 'INFO', 'Auto-fill locandine esterne', { trovate: found, mancanti: missing.length });
+  return found;
+}
+function clearPosterCache() {
+  localStorage.removeItem(POSTER_CACHE_KEY);
+  var cleared = 0;
+  (state.channels || []).forEach(function (ch) {
+    if ((ch.type === 'vod' || ch.type === 'series') && ch.posterSource === 'external') {
+      ch.logo = ''; ch.cover = ''; delete ch.posterSource; cleared++;
+      (state.sources || []).forEach(function (src) {
+        (src.channels || []).forEach(function (sc) { if (sc.id === ch.id) { sc.logo = ''; sc.cover = ''; delete sc.posterSource; } });
+      });
+    }
+  });
+  saveState();
+  try { renderChannelList(); renderSavedSources(); updatePlaylistButton(); } catch (e) {}
+  showToast('Cache locandine cancellata', 'success');
+  setTimeout(function () { refreshLogosFromSources(true); }, 200);
+  setTimeout(function () { autoFillMissingPosters(true, 20); }, 900);
+}
+window.IPtvClearPosterCache = clearPosterCache;
+window.IPtvAutoFillPosters = autoFillMissingPosters;
+
+function isDirectImage(url) {
+  return /^https?:\/\/[^\s"'<>]+?\.(png|jpe?g|webp)(\?[^\s"'<>]*)?$/i.test(String(url || ''));
+}
 async function refreshLogosFromSources(silent) {
   if (!state.sources || !state.sources.length) {
     if (!silent) showToast('Nessuna playlist caricata', 'warning');
@@ -2341,13 +2478,13 @@ async function refreshLogosFromSources(silent) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return await r.json();
   }
-  function put(k, v) {
-    if (!isDirectPng(v)) return;
+  function put(k, v, allowImage) {
+    if (allowImage ? !isDirectImage(v) : !isDirectPng(v)) return;
     var names = [];
     if (k) names.push(k);
     var file = String(v).split('?')[0].split('/').pop() || '';
     try { file = decodeURIComponent(file); } catch (e) {}
-    if (file) names.push(file.replace(/\.png$/i, ''));
+    if (file) names.push(file.replace(/\.(png|jpe?g|webp)$/i, ''));
     names.forEach(function (n) {
       logoKeysFor(n).forEach(function (key) { if (key) map[key] = v; });
     });
@@ -2382,8 +2519,8 @@ async function refreshLogosFromSources(silent) {
           (data || []).forEach(function (item) {
             var id = item.stream_id || item.series_id;
             var logo = item.stream_icon || item.cover || item.logo || '';
-            if (id && logo) put(id, logo);
-            if (item.name && logo) put(item.name, logo);
+            if (id && logo) put(id, logo, true);
+            if (item.name && logo) put(item.name, logo, true);
           });
         } catch (e) { logApp('LOGO', 'ERROR', 'Font Xtream non disponibile', { azione: actions[ai] }); }
       }
@@ -2464,9 +2601,13 @@ async function refreshLogosFromSources(silent) {
 
   var found = 0, fallback = 0;
   (state.channels || []).forEach(function (ch) {
+    var isPoster = ch.type === 'vod' || ch.type === 'series';
     var cand = lookup(ch);
-    if (cand) { ch.logo = cand; found++; }
-    else if (!ch.logo || /^data:/i.test(ch.logo)) { ch.logo = initialsLogo(ch.name); fallback++; }
+    if (cand && (!isPoster || !isDirectImage(ch.logo))) { ch.logo = cand; found++; }
+    else if (!ch.logo || /^data:/i.test(ch.logo) || (isPoster && !isDirectImage(ch.logo))) {
+      ch.logo = isPoster && ch.cover ? ch.cover : initialsLogo(ch.name);
+      fallback++;
+    }
   });
   saveState();
   try { renderChannelList(); renderSavedSources(); updatePlaylistButton(); } catch (e) {}
@@ -2477,12 +2618,13 @@ async function refreshLogosFromSources(silent) {
   });
 }
 function channelItemHtml(ch) {
+  const poster = ch.type === 'vod' || ch.type === 'series';
   const isFav = state.favorites.has(ch.id);
   const isActive = state.currentChannel && state.currentChannel.id === ch.id;
   const typeBadge = ch.type ? `<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:var(--bg3);color:var(--text3);margin-left:4px;">${ch.type.toUpperCase()}</span>` : '';
   return `
     <div class="channel-item ${isActive ? 'active' : ''}" data-id="${escapeHtml(ch.id)}" onclick="playChannelById('${escapeAttr(ch.id)}')">
-      <div class="channel-icon" data-initials="${escapeAttr(initialsShort(ch.name))}">${ch.logo ? `<img src="${escapeAttr(ch.logo)}" onerror="this.style.display='none';this.parentElement.textContent=this.parentElement.getAttribute('data-initials')||'IPTV';">` : '${escapeAttr(initialsShort(ch.name))}'}</div>
+      <div class="channel-icon ${poster ? 'poster' : ''}" data-initials="${escapeAttr(initialsShort(ch.name))}">${ch.logo ? `<img src="${escapeAttr(ch.logo)}" onerror="this.style.display='none';this.parentElement.textContent=this.parentElement.getAttribute('data-initials')||'IPTV';">` : '${escapeAttr(initialsShort(ch.name))}'}</div>
       <div class="channel-info">
         <div class="channel-name">${escapeHtml(ch.name)}${typeBadge}</div>
         <div class="channel-group">${escapeHtml(ch.group || '')}</div>
