@@ -213,6 +213,18 @@
   }
 
   // API pubblica
+  function showLogin() {
+    var f = document.getElementById('actFormBox'), l = document.getElementById('actLoginBox');
+    if (f) f.style.display = 'none';
+    if (l) l.style.display = 'block';
+    var m = document.getElementById('actMsg'); if (m) m.textContent = '';
+  }
+  function showRegister() {
+    var f = document.getElementById('actFormBox'), l = document.getElementById('actLoginBox');
+    if (f) f.style.display = 'block';
+    if (l) l.style.display = 'none';
+    var m = document.getElementById('actMsg'); if (m) m.textContent = '';
+  }
   window.IPtvActivation = {
     isActive: isActive,
     show: show,
@@ -220,7 +232,7 @@
     verify: verify, isAdmin: isAdmin,
     sendRequest: sendRequest,
     confirmActivation: confirmActivation,
-    login: login,
+    login: login, showLogin: showLogin, showRegister: showRegister,
     reset: function () { localStorage.removeItem(KEY); location.reload(); },
     logout: function () { localStorage.removeItem(KEY); location.reload(); },
     email: ACTIVATION_EMAIL

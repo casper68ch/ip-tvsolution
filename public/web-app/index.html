@@ -445,12 +445,14 @@
         <div id="actRequestInfo" class="act-info">Richiesta pronta. Codice: <span id="actRequestCode" class="act-code"></span><br>Il programma di posta si aprirà con la richiesta già compilata.</div>
         <div class="act-field" style="margin-top:14px;"><label>Codice di attivazione (ricevuto via email)</label><input id="actConfirmCode" type="text" placeholder="IPTV-XXXX-XXXX"></div>
         <button class="act-btn secondary" onclick="IPtvActivation.confirmActivation()">Conferma e attiva</button>
+      <div style="margin-top:14px;text-align:center;"><button type="button" class="act-btn secondary" onclick="IPtvActivation.showLogin()">Hai gi&agrave; un account? Accedi</button></div>
       </div>
 
       <div id="actLoginBox" style="display:none;">
         <div class="act-field"><label>Nome utente</label><input id="loginUser" type="text" autocomplete="username"></div>
         <div class="act-field"><label>Password</label><input id="loginPass" type="password" autocomplete="current-password"></div>
         <button class="act-btn" onclick="IPtvActivation.login()">Accedi</button>
+      <div style="margin-top:14px;text-align:center;"><button type="button" class="act-btn secondary" onclick="IPtvActivation.showRegister()">Registrati</button></div>
       </div>
       <div id="actMsg" class="act-msg"></div>
       <div class="act-footer">Richieste a: ip.tv-solution@tutamail.com</div>
