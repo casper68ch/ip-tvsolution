@@ -638,3 +638,29 @@ details > summary::-webkit-details-marker { display: none; }
 .qm-portals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .qm-portal { padding: 14px 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-weight: 700; font-size: 11px; letter-spacing: .5px; cursor: pointer; }
 .qm-portal:hover { border-color: var(--accent); }
+
+/* EPG a due pannelli stile guida TV */
+.qm-epg-split { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr); gap:10px; max-height:64vh; }
+.qm-epg-list { overflow:auto; max-height:64vh; border:1px solid var(--border); border-radius:10px; background:var(--bg2); }
+.qm-epg-row { display:grid; grid-template-columns:26px 38px minmax(0,1fr); grid-template-areas:'num logo name' 'num prog prog' 'num foot foot'; align-items:center; gap:2px 8px; padding:7px 9px; border-bottom:1px solid var(--border); cursor:pointer; }
+.qm-epg-row:hover { background:var(--bg3); }
+.qm-epg-row.sel { background:rgba(200,56,56,.18); }
+.qm-epg-row .qm-num { grid-area:num; color:var(--text3); font-size:12px; text-align:center; }
+.qm-epg-logo { grid-area:logo; width:34px; height:34px; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:6px; background:#1a1a1f; }
+.qm-epg-logo img { width:100%; height:100%; object-fit:contain; }
+.qm-epg-name { grid-area:name; font-weight:700; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.qm-epg-prog { grid-area:prog; font-size:11px; color:var(--text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.qm-epg-foot { grid-area:foot; display:flex; align-items:center; gap:6px; font-size:10px; color:var(--text3); }
+.qm-epg-foot em { font-style:normal; min-width:34px; }
+.qm-epg-foot .qm-bar { flex:1; height:3px; background:var(--border); border-radius:3px; overflow:hidden; }
+.qm-epg-foot .qm-bar i { display:block; height:100%; background:var(--accent); }
+.qm-epg-detail { overflow:auto; max-height:64vh; border:1px solid var(--border); border-radius:10px; background:var(--bg2); padding:16px; }
+.qm-epg-detail:empty:before { content:'Seleziona un canale'; color:var(--text3); font-size:13px; }
+.qm-detail-head { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--text2); font-size:12px; margin-bottom:10px; }
+.qm-detail-head b { color:var(--text); font-size:14px; }
+.qm-epg-detail h3 { margin:0 0 10px; font-size:18px; color:var(--text); }
+.qm-detail-bar { height:5px; background:var(--border); border-radius:4px; overflow:hidden; margin-bottom:12px; }
+.qm-detail-bar i { display:block; height:100%; background:var(--accent); }
+.qm-epg-detail p { font-size:13px; line-height:1.5; color:var(--text2); margin:0 0 14px; }
+.qm-detail-actions { display:flex; gap:8px; }
+@media (max-width:700px) { .qm-epg-split { grid-template-columns:1fr; } .qm-epg-detail { max-height:32vh; } }

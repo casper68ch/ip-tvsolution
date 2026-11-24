@@ -507,6 +507,21 @@ function qmGroupMap() {
   });
   return map;
 }
+function qmShowEpg(i) {
+  var d = (window.qmEpgCache || [])[i];
+  if (!d) return;
+  document.querySelectorAll('.qm-epg-row').forEach(function (el) { el.classList.remove('sel'); });
+  var row = document.getElementById('qmEpgRow' + i);
+  if (row) row.classList.add('sel');
+  var box = document.getElementById('qmEpgDetail');
+  if (!box) return;
+  box.innerHTML = '<div class="qm-detail-head"><b>' + escapeHtml(d.name) + '</b><span>' + escapeHtml(d.start) + ' - ' + escapeHtml(d.stop) + '</span></div>' +
+    '<h3>' + escapeHtml(d.title) + '</h3>' +
+    '<div class="qm-detail-bar"><i style="width:' + d.pct + '%"></i></div>' +
+    '<p>' + escapeHtml(d.desc || 'Nessuna descrizione disponibile per questo programma.') + '</p>' +
+    '<div class="qm-detail-actions"><button class="btn btn-primary" onclick="hideModal(\'quickMenuModal\');playChannelById(\'' + escapeAttr(d.id) + '\')">GUARDA</button></div>';
+}
+
 function qmRender(tab) {
   var box = document.getElementById('quickMenuContent');
   if (!box) return;
@@ -545,9 +560,11 @@ function qmRender(tab) {
       html += '<button class="qm-chip" onclick="qmGroup(\'' + groups[g].type + '\',\'' + escapeAttr(g) + '\')">' + escapeHtml(g.toUpperCase()) + '</button>';
     });
     html += '</div>';
-    html += '<div class="qm-section-title">GUIDA TV</div><div class="qm-epg">';
+    html += '<div class="qm-section-title">GUIDA TV</div><div class="qm-epg-split">';
+    window.qmEpgCache = [];
+    var listHtml = '';
     var nowMs = Date.now();
-    chans.slice(0, 60).forEach(function (ch, i) {
+    chans.slice(0, 80).forEach(function (ch, i) {
       var key = ch.epgId || ch.tvgId || ch.id || ch.name;
       var progs = (state.epgData || {})[key] || [];
       var cur = null;
@@ -563,12 +580,18 @@ function qmRender(tab) {
         var a = parseXmltvDate(cur.start), b = parseXmltvDate(cur.stop);
         if (a && b && b > a) pct = Math.max(2, Math.min(100, Math.round((nowMs - a) / (b - a) * 100)));
       }
-      html += '<div class="qm-epg-card" onclick="hideModal(\'quickMenuModal\');playChannelById(\'' + escapeAttr(ch.id) + '\')">' +
-        '<div class="qm-epg-head"><span class="qm-num">' + i + '</span><b>' + escapeHtml(ch.name) + '</b></div>' +
-        '<div class="qm-epg-prog">' + escapeHtml(title) + '</div>' +
-        '<div class="qm-epg-foot"><span>' + escapeHtml(start) + '</span><div class="qm-bar"><i style="width:' + pct + '%"></i></div><span>' + escapeHtml(stop) + '</span></div></div>';
+      window.qmEpgCache.push({ id: ch.id, name: ch.name || '', title: title, start: start, stop: stop, pct: pct, desc: cur && cur.desc ? cur.desc : '' });
+      var logoHtml = ch.logo ? '<img src="' + escapeAttr(ch.logo) + '" onerror="this.style.display=\'none\'">' : '';
+      listHtml += '<div class="qm-epg-row' + (i === 0 ? ' sel' : '') + '" id="qmEpgRow' + i + '" onclick="qmShowEpg(' + i + ')">' +
+        '<span class="qm-num">' + i + '</span>' +
+        '<span class="qm-epg-logo">' + logoHtml + '</span>' +
+        '<span class="qm-epg-name">' + escapeHtml(ch.name || '') + '</span>' +
+        '<span class="qm-epg-prog">' + escapeHtml(title) + '</span>' +
+        '<span class="qm-epg-foot"><em>' + escapeHtml(start) + '</em><div class="qm-bar"><i style="width:' + pct + '%"></i></div><em>' + escapeHtml(stop) + '</em></span></div>';
     });
-    html += '</div>';
+    html += '<div class="qm-epg-list">' + listHtml + '</div>';
+    html += '<div class="qm-epg-detail" id="qmEpgDetail"></div></div>';
+    if (chans.length) setTimeout(function () { qmShowEpg(0); }, 0);
     if (chans.length === 0) html += '<p class="hint">Carica una playlist per vedere la guida TV.</p>';
   } else if (tab === 'CERCA') {
     html += '<input id="qmSearch" class="qm-search" type="text" placeholder="Cerca canale, film, serie..." oninput="qmSearchResults(this.value)" onkeydown="if(event.key===\'Enter\')qmSearchApply()" autofocus>';
