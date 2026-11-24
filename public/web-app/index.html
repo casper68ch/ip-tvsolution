@@ -267,6 +267,11 @@
             <p class="hint" id="epgStatus">Nessun EPG caricato</p>
           </div>
           <div class="settings-section">
+            <h3>Loghi canali</h3>
+            <button id="btnRefreshLogos" class="btn btn-secondary" onclick="refreshLogosFromSources()">Aggiorna loghi (piu fonti)</button>
+            <p class="hint" style="margin-top:8px;">Legge i loghi dalla playlist inserita (Xtream / M3U), dall'EPG XMLTV e crea un segnaposto per quelli mancanti. Se hai una sola playlist attiva, aggiorna solo quella.</p>
+          </div>
+          <div class="settings-section">
             <h3>Dati</h3>
             <button id="btnExportData" class="btn btn-secondary">Esporta dati</button>
             <button id="btnClearData" class="btn btn-danger">Cancella tutto</button>
@@ -287,6 +292,7 @@
           <div id="playlistList" class="saved-sources"></div>
           <div style="margin-top:12px;display:flex;gap:8px;">
             <button class="btn btn-secondary" style="flex:1;" onclick="filterByPlaylist('all')">📋 Mostra tutte</button>
+            <button class="btn btn-secondary" style="flex:1;" onclick="refreshLogosFromSources()">🖼 Aggiorna loghi</button>
           </div>
         </div>
       </div>
@@ -460,6 +466,6 @@
   </div>
 
   <script src="activation.js?v=2"></script>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

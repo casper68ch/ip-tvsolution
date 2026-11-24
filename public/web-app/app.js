@@ -2141,13 +2141,105 @@ function refreshChannelLogos() {
     logApp('LOGO', 'INFO', 'Loghi aggiornati automaticamente', { canali: changed });
   }
 }
+
+// ===== IP-TVSOLUTION: aggiorna loghi da piu' fonti per la playlist attiva =====
+function initialsShort(name) {
+  var parts = String(name || '?').trim().split(/\s+/);
+  var out = parts.map(function (w) { return w.charAt(0); }).join('').substring(0, 2).toUpperCase();
+  return (out || '?').replace(/[<>&"']/g, '');
+}
+async function refreshLogosFromSources() {
+  if (!state.sources || !state.sources.length) {
+    showToast('Nessuna playlist caricata', 'warning');
+    return;
+  }
+  var btn = document.getElementById('btnRefreshLogos');
+  if (btn) { btn.disabled = true; btn.textContent = 'Aggiornamento...'; }
+  var active = (state.activePlaylist && state.activePlaylist !== 'all')
+    ? state.sources.find(function (s) { return s.id === state.activePlaylist; }) : null;
+  var targets = active ? [active] : state.sources;
+  var map = {};
+  function put(k, v) {
+    if (!k || !v) return;
+    map[String(k).toLowerCase()] = v;
+    var n = normalizeEpgName(k);
+    if (n) map[n] = v;
+  }
+  // Fonte 1: EPG XMLTV (icon src, per id e display-name)
+  try { await ensureEpgLoaded(); } catch (e) {}
+  Object.keys(state.epgLogos || {}).forEach(function (k) { put(k, state.epgLogos[k]); });
+
+  for (var si = 0; si < targets.length; si++) {
+    var src = targets[si];
+    // Fonte 2: API Xtream (stream_icon / cover) della playlist inserita
+    if (src.type === 'xtream' && src.url && src.user && src.pass) {
+      var base = String(src.url).replace(/\/+$/, '');
+      var api = base + '/player_api.php?username=' + encodeURIComponent(src.user) +
+        '&password=' + encodeURIComponent(src.pass) + '&action=';
+      var actions = ['get_live_streams', 'get_vod_streams', 'get_series'];
+      for (var ai = 0; ai < actions.length; ai++) {
+        try {
+          var res = await fetch(api + actions[ai]);
+          var data = await res.json();
+          (data || []).forEach(function (item) {
+            var id = item.stream_id || item.series_id;
+            var logo = item.stream_icon || item.cover || item.logo || '';
+            if (id && logo) put(id, logo);
+            if (item.name && logo) put(item.name, logo);
+          });
+        } catch (e) { logApp('LOGO', 'ERROR', 'Font Xtream non disponibile', { azione: actions[ai] }); }
+      }
+    }
+    // Fonte 3: file M3U remoto (tvg-logo / tvg-id / tvg-name)
+    else if (src.type === 'm3u' && src.url && /^https?:\/\//i.test(src.url)) {
+      try {
+        var res2 = await fetch(src.url);
+        var text = await res2.text();
+        var lines = text.split(/\r?\n/);
+        for (var li = 0; li < lines.length; li++) {
+          var line = lines[li];
+          if (line.indexOf('#EXTINF') !== 0) continue;
+          var lm = line.match(/tvg-logo\s*=\s*"([^"]+)"/i);
+          if (!lm) continue;
+          var im = line.match(/tvg-id\s*=\s*"([^"]+)"/i);
+          var nm = line.match(/tvg-name\s*=\s*"([^"]+)"/i);
+          var comma = line.lastIndexOf(',');
+          var plain = comma >= 0 ? line.substring(comma + 1).trim() : '';
+          put(im && im[1], lm[1]);
+          put(nm && nm[1], lm[1]);
+          put(plain, lm[1]);
+        }
+      } catch (e) { logApp('LOGO', 'ERROR', 'Playlist M3U non raggiungibile', {}); }
+    }
+  }
+
+  var found = 0, fallback = 0;
+  (state.channels || []).forEach(function (ch) {
+    var keys = [ch.epgId, ch.name, ch.id,
+      String(ch.id || '').replace(/^xtream(_vod|_series)?_/, ''), ch.streamId].filter(Boolean);
+    var cand = null;
+    for (var ki = 0; ki < keys.length && !cand; ki++) {
+      cand = map[String(keys[ki]).toLowerCase()] || map[normalizeEpgName(keys[ki])] || null;
+    }
+    if (cand) { ch.logo = cand; found++; }
+    else if (!ch.logo || /^data:/i.test(ch.logo)) { ch.logo = initialsLogo(ch.name); fallback++; }
+  });
+  saveState();
+  try { renderChannelList(); renderSavedSources(); updatePlaylistButton(); } catch (e) {}
+  if (btn) { btn.disabled = false; btn.textContent = 'Aggiorna loghi (piu fonti)'; }
+  showToast('Loghi aggiornati: ' + found + ' trovati' + (fallback ? ', ' + fallback + ' segnaposto' : ''), 'success');
+  logApp('LOGO', 'INFO', 'Aggiornamento loghi manuale', {
+    trovati: found, segnaposto: fallback, playlist: active ? active.name : 'tutte'
+  });
+}
+
 function channelItemHtml(ch) {
   const isFav = state.favorites.has(ch.id);
   const isActive = state.currentChannel && state.currentChannel.id === ch.id;
   const typeBadge = ch.type ? `<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:var(--bg3);color:var(--text3);margin-left:4px;">${ch.type.toUpperCase()}</span>` : '';
   return `
     <div class="channel-item ${isActive ? 'active' : ''}" data-id="${escapeHtml(ch.id)}" onclick="playChannelById('${escapeAttr(ch.id)}')">
-      <div class="channel-icon">${ch.logo ? `<img src="${escapeAttr(ch.logo)}" onerror="this.style.display='';this.parentElement.textContent='IPTV';">` : 'IPTV'}</div>
+      <div class="channel-icon" data-initials="${escapeAttr(initialsShort(ch.name))}">${ch.logo ? `<img src="${escapeAttr(ch.logo)}" onerror="this.style.display='none';this.parentElement.textContent=this.parentElement.getAttribute('data-initials')||'IPTV';">` : '${escapeAttr(initialsShort(ch.name))}'}</div>
       <div class="channel-info">
         <div class="channel-name">${escapeHtml(ch.name)}${typeBadge}</div>
         <div class="channel-group">${escapeHtml(ch.group || '')}</div>
