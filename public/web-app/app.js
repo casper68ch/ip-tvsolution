@@ -29,7 +29,8 @@ let state = {
   navLevel: 'home', // 'home', 'type', 'category'
   navType: null,   // 'live', 'vod', 'series'
   navCategory: null, // group name
-  activePlaylist: 'all' // 'all' or source id
+  activePlaylist: 'all', // 'all' or source id,
+  epgLogos: {}, // logo canale da XMLTV
 };
 
 // DOM refs
@@ -39,6 +40,7 @@ const $$ = (sel) => document.querySelectorAll(sel);
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   loadState();
+  autoRestoreSources();
   loadSaveConfig();
   loadStreamLog();
   setupEventListeners();
@@ -93,6 +95,54 @@ function loadState() {
   } catch (e) { logApp('PLAYLIST', 'ERROR', 'Errore caricamento stato', { errore: e.message }); console.error('Load state error:', e); }
 }
 
+
+// Auto-ripristino playlist: se i canali mancano, li ricarica dalle credenziali salvate
+async function autoRestoreSources() {
+  var restored = 0;
+  for (const src of state.sources) {
+    if (src.type === 'xtream' && src.url && src.user && src.pass && (!src.channels || src.channels.length === 0)) {
+      try { await reloadXtreamSource(src); restored++; }
+      catch (e) { console.warn('Ripristino sorgente non riuscito:', src.name, e); }
+    }
+  }
+  if (restored > 0) {
+    state.channels = [];
+    state.sources.forEach(s => { if (s.channels) state.channels.push(...s.channels.map(ch => ({ ...ch, sourceId: s.id }))); });
+    saveState();
+    renderChannelList();
+    renderSavedSources();
+    if (typeof showToast === 'function') showToast('Playlist ripristinata: ' + state.channels.length + ' canali', 'success');
+  }
+}
+
+async function reloadXtreamSource(src) {
+  const base = String(src.url).replace(/\/$/, '');
+  const enc = encodeURIComponent;
+  const chans = [];
+  try {
+    const cResp = await fetch(base + '/player_api.php?username=' + enc(src.user) + '&password=' + enc(src.pass) + '&action=get_live_categories');
+    const cData = await cResp.json();
+    const cat = {}; (cData || []).forEach(c => cat[c.category_id] = c.category_name);
+    const lResp = await fetch(base + '/player_api.php?username=' + enc(src.user) + '&password=' + enc(src.pass) + '&action=get_live_streams');
+    const lData = await lResp.json();
+    (lData || []).forEach(ch => chans.push({
+      id: 'xtream_' + ch.stream_id, name: ch.name || ('Canale ' + ch.stream_id),
+      logo: ch.stream_icon || '', group: cat[ch.category_id] || 'Live',
+      epgId: ch.epg_channel_id || '', url: base + '/live/' + src.user + '/' + src.pass + '/' + ch.stream_id + '.m3u8', type: 'live'
+    }));
+  } catch (e) { console.warn('Ripristino Live non riuscito:', e); }
+  try {
+    const vResp = await fetch(base + '/player_api.php?username=' + enc(src.user) + '&password=' + enc(src.pass) + '&action=get_vod_streams');
+    const vData = await vResp.json();
+    (vData || []).forEach(ch => chans.push({
+      id: 'xtream_vod_' + ch.stream_id, name: ch.name || '', logo: ch.cover || '',
+      group: 'Film / VOD', url: base + '/movie/' + src.user + '/' + src.pass + '/' + ch.stream_id + '.' + (ch.container_extension || 'mp4'), type: 'movie'
+    }));
+  } catch (e) { console.warn('Ripristino VOD non riuscito:', e); }
+  if (chans.length === 0) throw new Error('Nessun canale ricaricato');
+  src.channels = chans;
+  delete src.rawText;
+}
 function saveState() {
   const payload = () => ({
     sources: state.sources,
@@ -164,6 +214,21 @@ async function ensureEpgLoaded() {
       if (id && dn && dn.textContent.trim()) epgNames[dn.textContent.trim().toLowerCase()] = id;
     });
     state._epgNames = epgNames;
+    // Icone canale dall'EPG XMLTV: piu' fonti per i loghi mancanti
+    var epgLogos = {};
+    doc.querySelectorAll('channel').forEach(function(ch) {
+      var id = ch.getAttribute('id');
+      var icon = ch.querySelector('icon');
+      var src = icon ? (icon.getAttribute('src') || '') : '';
+      if (!src) return;
+      if (id) epgLogos[id.toLowerCase()] = src;
+      ch.querySelectorAll('display-name').forEach(function(dn) {
+        var n = normalizeEpgName(dn.textContent);
+        if (n) epgLogos[n] = src;
+      });
+    });
+    state.epgLogos = epgLogos;
+    refreshChannelLogos();
     const programmes = doc.querySelectorAll('programme');
     const now = Date.now();
     const from = now - 2 * 3600 * 1000;
@@ -1365,6 +1430,7 @@ function addSource(source) {
   // Invalidate series cache
   state._seriesCache = null;
   state._seriesCacheChannelCount = 0;
+  refreshChannelLogos();
   saveState();
   renderChannelList();
   renderSavedSources();
@@ -2032,13 +2098,42 @@ function promptChannelType(id) {
   else showToast('Scelta non valida', 'error');
 }
 
+
+// ===== IP-TVSOLUTION: logo multi-sorgente (tvg-logo -> EPG icon -> iniziali) =====
+function initialsLogo(name) {
+  var initials = String(name || '?').trim().split(/\s+/).map(function(w){ return w.charAt(0); }).join('').substring(0, 2).toUpperCase() || '?';
+  initials = initials.replace(/[<>&"']/g, '');
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" rx="10" fill="#C83838"/><text x="32" y="43" font-family="Arial,sans-serif" font-size="27" font-weight="bold" fill="#ffffff" text-anchor="middle">' + initials + '</text></svg>';
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+function refreshChannelLogos() {
+  var logos = state.epgLogos || {};
+  var changed = 0;
+  (state.channels || []).forEach(function(ch) {
+    if (ch.logo && /^(https?:|data:)/i.test(ch.logo)) return;
+    var cand = null;
+    var keys = [ch.epgId, ch.id, ch.name].filter(Boolean);
+    for (var i = 0; i < keys.length && !cand; i++) {
+      var k = String(keys[i]).toLowerCase();
+      cand = logos[k] || logos[normalizeEpgName(keys[i])] || null;
+    }
+    if (cand) { ch.logo = cand; changed++; return; }
+    ch.logo = initialsLogo(ch.name);
+    changed++;
+  });
+  if (changed > 0) {
+    saveState();
+    try { renderChannelList(); } catch (e) {}
+    logApp('LOGO', 'INFO', 'Loghi aggiornati automaticamente', { canali: changed });
+  }
+}
 function channelItemHtml(ch) {
   const isFav = state.favorites.has(ch.id);
   const isActive = state.currentChannel && state.currentChannel.id === ch.id;
   const typeBadge = ch.type ? `<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:var(--bg3);color:var(--text3);margin-left:4px;">${ch.type.toUpperCase()}</span>` : '';
   return `
     <div class="channel-item ${isActive ? 'active' : ''}" data-id="${escapeHtml(ch.id)}" onclick="playChannelById('${escapeAttr(ch.id)}')">
-      <div class="channel-icon">${ch.logo ? `<img src="${escapeAttr(ch.logo)}" onerror="this.style.display='none';this.parentElement.textContent='📺'">` : '📺'}</div>
+      <div class="channel-icon">${ch.logo ? `<img src="${escapeAttr(ch.logo)}" onerror="this.style.display='';this.parentElement.textContent='IPTV';">` : 'IPTV'}</div>
       <div class="channel-info">
         <div class="channel-name">${escapeHtml(ch.name)}${typeBadge}</div>
         <div class="channel-group">${escapeHtml(ch.group || '')}</div>
@@ -2551,6 +2646,7 @@ function deleteSource(id) {
   if (!confirm('Eliminare questa sorgente?')) return;
   state.sources = state.sources.filter(s => s.id !== id);
   state.channels = state.channels.filter(c => c.sourceId !== id);
+  refreshChannelLogos();
   saveState();
   renderChannelList();
   renderSavedSources();
@@ -3335,6 +3431,7 @@ async function reloadAllSources() {
   });
   state._seriesCache = null;
   state._seriesCacheChannelCount = 0;
+  refreshChannelLogos();
   saveState();
   renderChannelList();
   renderSavedSources();
@@ -3375,6 +3472,7 @@ function deleteSourceEnhanced(id) {
   state.channels = state.channels.filter(c => c.sourceId !== id);
   state._seriesCache = null;
   state._seriesCacheChannelCount = 0;
+  refreshChannelLogos();
   saveState();
   renderChannelList();
   renderSavedSources();
