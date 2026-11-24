@@ -1710,7 +1710,7 @@
         "platform": "windows",
         "method": "exe",
         "label": "Setup Windows v1.9",
-        "url": "https://files.catbox.moe/lvujrt.zip",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Windows-Setup-v1.9.zip",
         "devices": [
           "Windows 10",
           "Windows 11"
@@ -1729,7 +1729,7 @@
         "platform": "windows",
         "method": "exe",
         "label": "Versione portatile",
-        "url": "https://files.catbox.moe/lffyh7.zip",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Windows-Portatile-v1.9.zip",
         "devices": [
           "Windows 10",
           "Windows 11"
@@ -1802,7 +1802,7 @@
         "platform": "web",
         "method": "web",
         "label": "Scarica Web / Chrome v1.9",
-        "url": "https://files.catbox.moe/ftjyzn.zip",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Chrome-v1.9.zip",
         "devices": [
           "Chrome",
           "Edge",
@@ -1878,7 +1878,7 @@
         "platform": "lg-webos",
         "method": "web",
         "label": "Pacchetto LG webOS (.ipk)",
-        "url": "https://files.catbox.moe/57ltl3.zip",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-LG-webOS-v1.9.zip",
         "devices": [
           "LG webOS",
           "Smart TV LG"
@@ -1897,7 +1897,7 @@
         "platform": "samsung-tizen",
         "method": "web",
         "label": "Pacchetto Samsung Tizen (.wgt)",
-        "url": "https://files.catbox.moe/6zd9t1.zip",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Samsung-Tizen-v1.9.zip",
         "devices": [
           "Samsung Tizen",
           "Smart TV Samsung"
@@ -1971,7 +1971,7 @@
         "platform": "android",
         "method": "apk",
         "label": "APK Android v1.9",
-        "url": "https://files.catbox.moe/y5oz9k.apk",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Android-v1.9.apk",
         "devices": [
           "Smartphone",
           "Tablet",
@@ -1992,7 +1992,7 @@
         "platform": "android",
         "method": "apk",
         "label": "Pacchetto completo",
-        "url": "https://files.catbox.moe/7y2ldu.zip",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Android-v1.9.zip",
         "devices": [
           "Smartphone",
           "Tablet",
@@ -2065,7 +2065,7 @@
         "platform": "apple",
         "method": "web",
         "label": "iPhone PWA v1.9",
-        "url": "https://files.catbox.moe/26o6yw.zip",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-iPhone-PWA-v1.9.zip",
         "devices": [
           "iPhone",
           "iPad"
