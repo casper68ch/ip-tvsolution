@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP-TVSOLUTION Web Player</title>
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
   <script src="hls.min.js?v=2"></script>
   <script src="ts-player.js?v=2"></script>
   <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
@@ -24,6 +24,7 @@
         <button id="btnRecordings" class="btn btn-secondary" onclick="updateSaveDestinationUI();showModal('recordingsModal')" style="font-size:13px;padding:8px 10px;">🎙 Registrazioni</button>
         <button id="btnAddSource" class="btn btn-primary" onclick="showModal('addSourceModal')">+ Aggiungi sorgente</button>
         <button id="btnViewMode" class="btn btn-secondary" onclick="toggleViewMode()" style="font-size:13px;padding:8px 10px;" title="Cambia vista">▤ Lista</button>
+        <button id="btnQuickMenu" class="btn btn-secondary" onclick="openQuickMenu('MODE')" style="font-size:13px;padding:8px 10px;" title="Menu rapido">▦ Menu</button>
         <button id="btnSettings" class="btn btn-secondary" onclick="showModal('settingsModal');renderSavedSources()" style="font-size:14px;">☰ Menu</button>
       </div>
       <div id="headerUser" class="header-user" style="display:none;">
@@ -188,6 +189,22 @@
             <button type="submit" class="btn btn-primary">Carica file</button>
           </form>
         </div>
+      </div>
+    </div>
+
+    <!-- Quick Menu Modal -->
+    <div class="modal" id="quickMenuModal">
+      <div class="modal-content quick-menu">
+        <div class="qm-topbar">
+          <button class="qm-tab" data-tab="PLAYLISTS" onclick="setQuickMenuTab('PLAYLISTS')">PLAYLISTS</button>
+          <button class="qm-tab" data-tab="GRUPPI" onclick="setQuickMenuTab('GRUPPI')">GRUPPI</button>
+          <button class="qm-tab active" data-tab="MODE" onclick="setQuickMenuTab('MODE')">MODE</button>
+          <button class="qm-tab" data-tab="CERCA" onclick="setQuickMenuTab('CERCA')">CERCA</button>
+          <button class="qm-tab" data-tab="MENU" onclick="setQuickMenuTab('MENU')">MENU</button>
+          <span class="qm-clock" id="qmClock">12:03</span>
+          <button class="btn-close" onclick="hideModal('quickMenuModal')" style="margin-left:6px;">×</button>
+        </div>
+        <div class="modal-body qm-body" id="quickMenuContent"></div>
       </div>
     </div>
 
@@ -479,6 +496,6 @@
   </div>
 
   <script src="activation.js?v=3"></script>
-  <script src="app.js?v=13"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>

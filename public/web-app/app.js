@@ -481,6 +481,130 @@ function setupEventListeners() {
   });
 }
 
+// Quick menu (PLAYLISTS / GRUPPI / MODE / CERCA / MENU)
+function qmChannels() {
+  if (state.activePlaylist && state.activePlaylist !== 'all') {
+    return state.channels.filter(function (c) { return c.sourceId === state.activePlaylist; });
+  }
+  return state.channels.slice();
+}
+function qmTypeLabel(t) { return t === 'vod' ? 'FILM' : t === 'series' ? 'SERIES' : 'LIVE'; }
+function qmGroupMap() {
+  var map = {};
+  qmChannels().forEach(function (ch) {
+    var t = ch.type || 'live';
+    var g = ch.group || 'Generale';
+    if (!map[g]) map[g] = { type: t, count: 0 };
+    map[g].count++;
+  });
+  return map;
+}
+function qmRender(tab) {
+  var box = document.getElementById('quickMenuContent');
+  if (!box) return;
+  var chans = qmChannels();
+  var groups = qmGroupMap();
+  var html = '';
+  if (tab === 'PLAYLISTS') {
+    html += '<div class="qm-grid">';
+    html += '<button class="qm-chip' + (state.activePlaylist === 'all' ? ' sel' : '') + '" onclick="qmPlaylist(\'all\')">TUTTE</button>';
+    state.sources.forEach(function (src) {
+      var on = state.activePlaylist === src.id ? ' sel' : '';
+      html += '<button class="qm-chip' + on + '" onclick="qmPlaylist(\'' + escapeAttr(src.id) + '\')">' + escapeHtml((src.name || 'PLAYLIST').toUpperCase()) + '<span class="qm-sub">' + (src.channels ? src.channels.length : 0) + '</span></button>';
+    });
+    html += '</div>';
+    if (state.sources.length === 0) html += '<p class="hint">Nessuna playlist salvata. Usa + Aggiungi sorgente.</p>';
+  } else if (tab === 'GRUPPI') {
+    ['live', 'vod', 'series'].forEach(function (t) {
+      var keys = Object.keys(groups).filter(function (g) { return groups[g].type === t; }).sort();
+      if (keys.length === 0) return;
+      html += '<div class="qm-section-title">' + qmTypeLabel(t) + '</div><div class="qm-grid">';
+      keys.forEach(function (g) {
+        var on = state.navCategory === g && state.navType === t ? ' sel' : '';
+        html += '<button class="qm-chip' + on + '" onclick="qmGroup(\'' + t + '\',\'' + escapeAttr(g) + '\')">' + escapeHtml(g.toUpperCase()) + '<span class="qm-sub">' + groups[g].count + '</span></button>';
+      });
+      html += '</div>';
+    });
+    if (chans.length === 0) html += '<p class="hint">Nessun gruppo disponibile.</p>';
+  } else if (tab === 'MODE') {
+    html += '<div class="qm-grid qm-types">';
+    [['all', 'TUTTI'], ['live', 'LIVE'], ['vod', 'VOD'], ['series', 'SERIES']].forEach(function (p) {
+      var on = (p[0] === 'all' && state.navLevel === 'home') || (p[0] !== 'all' && state.navType === p[0] && state.navLevel === 'type') ? ' sel' : '';
+      html += '<button class="qm-chip qm-type' + on + '" onclick="qmType(\'' + p[0] + '\')">' + p[1] + '</button>';
+    });
+    html += '</div>';
+    var genreKeys = Object.keys(groups).filter(function (g) { return groups[g].type !== 'live'; }).sort();
+    if (genreKeys.length === 0) genreKeys = Object.keys(groups).sort();
+    html += '<div class="qm-section-title">GENERI</div><div class="qm-grid">';
+    genreKeys.slice(0, 60).forEach(function (g) {
+      var t = groups[g].type;
+      var on = state.navCategory === g ? ' sel' : '';
+      html += '<button class="qm-chip' + on + '" onclick="qmGroup(\'' + t + '\',\'' + escapeAttr(g) + '\')">' + escapeHtml(g.toUpperCase()) + '<span class="qm-sub">' + groups[g].count + '</span></button>';
+    });
+    html += '</div>';
+    if (genreKeys.length === 0) html += '<p class="hint">Carica una playlist per vedere i generi.</p>';
+  } else if (tab === 'CERCA') {
+    html += '<input id="qmSearch" class="qm-search" type="text" placeholder="Cerca canale, film, serie..." oninput="qmSearchResults(this.value)" onkeydown="if(event.key===\'Enter\')qmSearchApply()" autofocus>';
+    html += '<button class="btn btn-primary" style="margin-top:8px;" onclick="qmSearchApply()">CERCA</button>';
+    html += '<div id="qmSearchResults" class="qm-grid" style="margin-top:12px;"></div>';
+  } else {
+    html += '<div class="qm-grid">';
+    html += '<button class="qm-chip" onclick="hideModal(\'quickMenuModal\');showModal(\'settingsModal\')">IMPOSTAZIONI</button>';
+    html += '<button class="qm-chip" onclick="hideModal(\'quickMenuModal\');refreshLogosFromSources(false)">AGGIORNA LOGHI</button>';
+    html += '<button class="qm-chip" onclick="hideModal(\'quickMenuModal\');autoFillMissingPosters(false,40)">RECUPERA LOCANDINE</button>';
+    html += '<button class="qm-chip" onclick="hideModal(\'quickMenuModal\');clearPosterCache()">CANCELLA CACHE</button>';
+    html += '<button class="qm-chip" onclick="hideModal(\'quickMenuModal\');toggleViewMode()">VISTA ' + (state.viewMode === 'grid' ? 'LISTA' : 'GRIGLIA') + '</button>';
+    html += '<button class="qm-chip" onclick="hideModal(\'quickMenuModal\');showModal(\'playlistModal\')">PLAYLIST SALVATE</button>';
+    html += '</div>';
+  }
+  box.innerHTML = html;
+}
+function setQuickMenuTab(tab) {
+  document.querySelectorAll('.qm-tab').forEach(function (b) {
+    b.classList.toggle('active', b.getAttribute('data-tab') === tab);
+  });
+  qmRender(tab);
+}
+function openQuickMenu(tab) {
+  showModal('quickMenuModal');
+  var clock = document.getElementById('qmClock');
+  if (clock) clock.textContent = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  setQuickMenuTab(tab || 'MODE');
+}
+function qmType(t) {
+  hideModal('quickMenuModal');
+  if (t === 'all') navigateTo('home', null, null); else navigateTo('type', t);
+}
+function qmGroup(t, g) {
+  hideModal('quickMenuModal');
+  navigateToCategory(t, g);
+}
+function qmPlaylist(id) {
+  hideModal('quickMenuModal');
+  filterByPlaylist(id);
+}
+function qmSearchResults(value) {
+  var box = document.getElementById('qmSearchResults');
+  if (!box) return;
+  var term = (value || '').trim().toLowerCase();
+  if (term.length < 2) { box.innerHTML = ''; return; }
+  var found = qmChannels().filter(function (ch) {
+    return ((ch.name || '') + ' ' + (ch.group || '')).toLowerCase().indexOf(term) !== -1;
+  }).slice(0, 30);
+  box.innerHTML = found.map(function (ch) {
+    return '<button class="qm-chip" onclick="hideModal(\'quickMenuModal\');playChannelById(\'' + escapeAttr(ch.id) + '\')">' + escapeHtml(ch.name) + '</button>';
+  }).join('') || '<p class="hint">Nessun risultato</p>';
+}
+function qmSearchApply() {
+  var input = document.getElementById('qmSearch');
+  var value = input ? input.value : '';
+  state.searchQuery = value;
+  var main = document.getElementById('searchChannels');
+  if (main) main.value = value;
+  hideModal('quickMenuModal');
+  navigateTo('home', null, null);
+}
+
 // Modal helpers
 function showModal(id) {
   const el = document.getElementById(id);
