@@ -29,7 +29,7 @@ let state = {
   navLevel: 'home', // 'home', 'type', 'category'
   navType: null,   // 'live', 'vod', 'series'
   navCategory: null, // group name
-  activePlaylist: 'all', // 'all' or source id,
+  activePlaylist: 'all', // id della playlist attiva (una alla volta)
   epgLogos: {}, // logo canale da XMLTV
 };
 
@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   checkVersion();
   renderChannelList();
   renderSavedSources();
+  updatePlaylistButton();
   initPlayer();
   setInterval(checkScheduledRecordings, 15000);
   logApp('APP', 'INFO', 'Avvio applicazione', {
@@ -70,6 +71,12 @@ function loadState() {
       state.epgData = data.epgData || {};
       state.watchHistory = data.watchHistory || [];
       state.bouquets = data.bouquets || [];
+      // Una playlist alla volta: attiva quella salvata, altrimenti l'ultima aggiunta
+      if (data.activePlaylist && state.sources.some(function (s) { return s.id === data.activePlaylist; })) {
+        state.activePlaylist = data.activePlaylist;
+      } else if (state.sources.length > 0) {
+        state.activePlaylist = state.sources[state.sources.length - 1].id;
+      }
       // Ricalcola sempre il tipo con la logica aggiornata: gli episodi serie con URL .ts
       // (es. una serie di una sola stagione) devono andare in Serie TV, non nei VOD.
       state.sources.forEach(src => {
@@ -113,6 +120,7 @@ async function autoRestoreSources() {
     state._seriesCacheChannelCount = 0;
     renderChannelList();
     renderSavedSources();
+    updatePlaylistButton();
     setTimeout(function () { renderChannelList(); renderSavedSources(); }, 600);
     if (typeof showToast === 'function') showToast('Playlist ripristinata: ' + state.channels.length + ' canali', 'success');
   }
@@ -153,7 +161,8 @@ function saveState() {
     settings: state.settings,
     epgData: {}, // EPG ricaricato all'avvio: troppo grande per localStorage
     watchHistory: state.watchHistory || [],
-    bouquets: state.bouquets || []
+    bouquets: state.bouquets || [],
+    activePlaylist: state.activePlaylist
   });
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload()));
@@ -1430,6 +1439,7 @@ function addSource(source) {
   if (source.channels) {
     state.channels.push(...source.channels.map(ch => ({ ...ch, sourceId: source.id })));
   }
+  state.activePlaylist = source.id;
   // Invalidate series cache
   state._seriesCache = null;
   state._seriesCacheChannelCount = 0;
@@ -2166,14 +2176,14 @@ function renderChannelList() {
   // HOME LEVEL: show type selection cards
   if (state.navLevel === 'home' && !state.searchQuery) {
     const counts = { live: 0, vod: 0, series: 0, fav: 0 };
-    state.channels.forEach(ch => {
+    baseChannels.forEach(ch => {
       const t = ch.type || 'live';
       if (counts[t] !== undefined) counts[t]++;
       if (state.favorites.has(ch.id)) counts.fav++;
     });
     // Count all channels per type (all categories always visible)
     const visibleCounts = { live: 0, vod: 0, series: 0, fav: 0 };
-    state.channels.forEach(ch => {
+    baseChannels.forEach(ch => {
       const t = ch.type || 'live';
       if (visibleCounts[t] !== undefined) visibleCounts[t]++;
       if (state.favorites.has(ch.id)) visibleCounts.fav++;
@@ -2201,7 +2211,7 @@ function renderChannelList() {
       </div>`;
     });
 
-    if (state.channels.length === 0) {
+    if (baseChannels.length === 0) {
       html += '<div class="empty-state"><p>Nessun canale caricato</p><p class="hint">Aggiungi una sorgente per iniziare</p></div>';
     }
     html += '</div>';
@@ -2295,7 +2305,7 @@ function renderChannelList() {
     const typeColors = { live: '#34C759', vod: '#FF9500', series: '#5856D6', fav: '#FFCC00' };
     const typeIcons = { live: '📡', vod: '🎬', series: '📺', fav: '★' };
 
-    let channels = state.channels.slice();
+    let channels = baseChannels.slice();
     // All categories are always visible
 
     if (type === 'fav') {
@@ -2456,7 +2466,7 @@ function renderChannelList() {
     const type = state.navType;
     const category = state.navCategory;
 
-    let channels = state.channels.slice();
+    let channels = baseChannels.slice();
     // Filtra per categoria E tipo: una serie non deve comparire dentro i Film/VOD (e viceversa)
     channels = channels.filter(c =>
       (c.group || 'Generale') === category &&
@@ -2531,7 +2541,7 @@ function renderChannelList() {
   }
 
   // FALLBACK: flat list (when searching or navLevel is 'all')
-  let channels = state.channels.slice();
+  let channels = baseChannels.slice();
 
   // When searching, group series episodes by series name
   if (state.searchQuery) {
