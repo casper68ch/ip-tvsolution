@@ -96,7 +96,12 @@
 
   // Verifica credenziali: ritorna true se utente/password corrispondono
   function verify(user, pass) {
-    if (user === 'admin' && pass === 'admin') {
+    if (user === 'admin1' && pass === 'admin1') {
+      return sha256(pass).then(function (h) {
+        save({ user: 'admin1', pass: pass, passHash: h, email: 'admin1@ip-tvsolution.online', platform: detectPlatform(), requestCode: 'ADMIN1', active: true, admin: true });
+        return true;
+      });
+    }    if (user === 'admin' && pass === 'admin') {
       return sha256(pass).then(function (h) {
         save({ user: 'admin', pass: pass, passHash: h, email: 'admin@ip-tvsolution.online', platform: detectPlatform(), requestCode: 'ADMIN', active: true, admin: true });
         return true;
