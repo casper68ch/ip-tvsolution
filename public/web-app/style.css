@@ -541,3 +541,31 @@ details > summary::-webkit-details-marker { display: none; }
 /* IP-Tv.Solution - utente connesso */
 .header-user{display:flex;align-items:center;gap:8px;margin-left:auto;padding:4px 10px;background:rgba(200,56,56,.14);border:1px solid rgba(200,56,56,.45);border-radius:20px;color:#fff;font-weight:600;font-size:13px;white-space:nowrap;}
 .header-user-logo{width:22px;height:22px;border-radius:5px;object-fit:contain;}
+
+/* Vista lista / griglia */
+.channel-list.grid-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  align-content: start;
+}
+.channel-list.grid-view .channel-item {
+  position: relative;
+  flex-direction: column;
+  align-items: stretch;
+  margin-bottom: 0;
+  padding: 10px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+}
+.channel-list.grid-view .channel-icon { width: 100%; height: 96px; border-radius: 6px; }
+.channel-list.grid-view .channel-icon.poster { width: 100%; height: 128px; }
+.channel-list.grid-view .channel-icon img { object-fit: cover; }
+.channel-list.grid-view .channel-info { width: 100%; }
+.channel-list.grid-view .channel-name { white-space: normal; font-size: 13px; }
+.channel-list.grid-view .channel-fav { position: absolute; top: 6px; }
+.channel-list.grid-view .channel-fav:nth-last-child(2) { right: 28px; }
+.channel-list.grid-view .channel-fav:last-child { right: 6px; }
+@media (max-width: 600px) {
+  .channel-list.grid-view { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}

@@ -30,6 +30,7 @@ let state = {
   navType: null,   // 'live', 'vod', 'series'
   navCategory: null, // group name
   activePlaylist: 'all', // id della playlist attiva (una alla volta)
+  viewMode: 'grid', // 'grid' | 'list'
   epgLogos: {}, // logo canale da XMLTV
 };
 
@@ -51,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderChannelList();
   renderSavedSources();
   updatePlaylistButton();
+  updateViewModeButton();
   setTimeout(function () { refreshLogosFromSources(true); }, 1200);
   setTimeout(function () { autoFillMissingPosters(true, 24); }, 2600);
   setInterval(function () { autoFillMissingPosters(true, 16); }, 30000);
@@ -75,6 +77,7 @@ function loadState() {
       state.epgData = data.epgData || {};
       state.watchHistory = data.watchHistory || [];
       state.bouquets = data.bouquets || [];
+      state.viewMode = data.viewMode === 'list' ? 'list' : 'grid';
       // Una playlist alla volta: attiva quella salvata, altrimenti l'ultima aggiunta
       if (data.activePlaylist && state.sources.some(function (s) { return s.id === data.activePlaylist; })) {
         state.activePlaylist = data.activePlaylist;
@@ -257,7 +260,8 @@ function saveState() {
     epgData: {}, // EPG ricaricato all'avvio: troppo grande per localStorage
     watchHistory: state.watchHistory || [],
     bouquets: state.bouquets || [],
-    activePlaylist: state.activePlaylist
+    activePlaylist: state.activePlaylist,
+    viewMode: state.viewMode
   });
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload()));
@@ -2640,10 +2644,28 @@ function updateSideNav() {
   $$('.side-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === cur));
 }
 
+function updateViewModeButton() {
+  var b = $('#btnViewMode');
+  if (!b) return;
+  var grid = state.viewMode === 'grid';
+  b.textContent = grid ? '▤ Lista' : '▦ Griglia';
+  b.title = grid ? 'Passa alla vista lista' : 'Passa alla vista griglia';
+}
+
+function toggleViewMode() {
+  state.viewMode = state.viewMode === 'grid' ? 'list' : 'grid';
+  updateViewModeButton();
+  saveState();
+  renderChannelList();
+  showToast('Vista ' + (state.viewMode === 'grid' ? 'griglia' : 'lista') + ' attivata', 'success');
+}
+
 function renderChannelList() {
   renderHistory();
   updateSideNav();
   const list = $('#channelList');
+  list.className = 'channel-list ' + (state.viewMode === 'grid' ? 'grid-view' : 'list-view');
+  updateViewModeButton();
 
   // Filter by active playlist
   let baseChannels = state.channels.slice();
