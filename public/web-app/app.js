@@ -1447,6 +1447,7 @@ function addSource(source) {
   saveState();
   renderChannelList();
   renderSavedSources();
+  updatePlaylistButton();
 }
 
 // Player
