@@ -664,3 +664,13 @@ details > summary::-webkit-details-marker { display: none; }
 .qm-epg-detail p { font-size:13px; line-height:1.5; color:var(--text2); margin:0 0 14px; }
 .qm-detail-actions { display:flex; gap:8px; }
 @media (max-width:700px) { .qm-epg-split { grid-template-columns:1fr; } .qm-epg-detail { max-height:32vh; } }
+
+/* Nuova Playlist (advanced modal) */
+.adv-modal .modal-body { display: flex; flex-direction: column; gap: 10px; }
+.adv-body .form-group { display: flex; flex-direction: column; gap: 4px; }
+.adv-body input, .adv-body select { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line, #2a3340); background: var(--surface-2, #151b23); color: var(--text, #e8edf3); font-size: 14px; }
+.adv-body input:focus, .adv-body select:focus { outline: 2px solid #3f7fff; outline-offset: 1px; }
+.adv-checks { display: flex; flex-wrap: wrap; gap: 18px; font-size: 13px; color: var(--text2, #aab6c4); }
+.adv-checks label { display: flex; align-items: center; gap: 6px; }
+.adv-checks input { width: auto !important; }
+.adv-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }

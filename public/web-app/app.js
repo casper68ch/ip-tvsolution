@@ -599,6 +599,7 @@ function qmRender(tab) {
     html += '<div id="qmSearchResults" class="qm-grid" style="margin-top:12px;"></div>';
   } else {
     html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">';
+    html += '<button class="btn btn-primary" onclick="hideModal(\'quickMenuModal\');openAdvancedPlaylistModal()">AGGIUNGI PLAYLIST</button>';
     html += '<button class="btn btn-secondary" onclick="checkVersion(true)">AGGIORNA INFORMAZIONI</button>';
     html += '<button class="btn btn-secondary" onclick="qmSortChannels()">ORDINAMENTO</button>';
     html += '</div>';
@@ -630,6 +631,32 @@ function setQuickMenuTab(tab) {
   });
   qmRender(tab);
 }
+
+function openAdvancedPlaylistModal() {
+  showModal('advancedPlaylistModal');
+}
+function confirmAdvancedPlaylist() {
+  var name = (document.getElementById('advName') || {}).value.trim();
+  var server = (document.getElementById('advServer') || {}).value.trim().replace(/\/$/, '');
+  var user = (document.getElementById('advUser') || {}).value.trim();
+  var pass = (document.getElementById('advPass') || {}).value.trim();
+  if (!name || !server || !user || !pass) {
+    showToast('Compila tutti i campi.', 'error');
+    return;
+  }
+  var fmt = (document.getElementById('advFormat') || {}).value || 'ts';
+  var setv = function (id, value) { var el = document.getElementById(id); if (el) el.value = value; };
+  setv('xtreamName', name);
+  setv('xtreamUrl', server);
+  setv('xtreamUser', user);
+  setv('xtreamPass', pass);
+  state.xtreamFormat = fmt;
+  state.xtreamForceLink = !!(document.getElementById('advForceLink') || {}).checked;
+  state.xtreamUA = (document.getElementById('advUseUA') || {}).checked ? ((document.getElementById('advUA') || {}).value || 'A') : '';
+  hideModal('advancedPlaylistModal');
+  handleXtreamSubmit({ preventDefault: function () {}, target: { reset: function () {} } });
+}
+
 function openQuickMenu(tab) {
   showModal('quickMenuModal');
   var clock = document.getElementById('qmClock');
@@ -1611,6 +1638,7 @@ async function handleXtreamSubmit(e) {
   const url = $('#xtreamUrl').value.trim().replace(/\/$/, '');
   const user = $('#xtreamUser').value.trim();
   const pass = $('#xtreamPass').value.trim();
+  const streamExt = ((document.getElementById('advFormat') || {}).value || state.xtreamFormat || 'ts') === 'm3u8' ? 'm3u8' : 'ts';
   if (!name || !url || !user || !pass) return;
   showLoading('Connessione a Xtream Codes...');
   try {
@@ -1639,7 +1667,7 @@ async function handleXtreamSubmit(e) {
           logo: ch.stream_icon || '',
           group: catMap[ch.category_id] || 'Live',
           epgId: ch.epg_channel_id || '',
-          url: url + '/live/' + user + '/' + pass + '/' + ch.stream_id + '.ts',
+          url: url + '/live/' + user + '/' + pass + '/' + ch.stream_id + '.' + streamExt,
           type: 'live'
         });
       });
@@ -1694,11 +1722,11 @@ async function handleXtreamSubmit(e) {
     // Also fetch raw M3U for analysis
     let rawText = '';
     try {
-      const m3uUrl = url + '/get.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&type=m3u_plus&output=ts';
+      const m3uUrl = url + '/get.php?username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) + '&type=m3u_plus&output=' + streamExt;
       const m3uResp = await fetch(m3uUrl);
       if (m3uResp.ok) rawText = await m3uResp.text();
     } catch (e) { console.warn('M3U fetch for analysis failed:', e); }
-    addSource({ id: 'src_' + Date.now(), name: name, type: 'xtream', url: url, user: user, pass: pass, channels: channels, rawText: rawText.length < 400000 ? rawText : '' });
+    addSource({ id: 'src_' + Date.now(), name: name, type: 'xtream', url: url, user: user, pass: pass, channels: channels, rawText: rawText.length < 400000 ? rawText : '', forceLink: !!state.xtreamForceLink, userAgent: state.xtreamUA || '' });
     showToast(channels.length + ' elementi caricati', 'success');
     hideModal('addSourceModal');
     e.target.reset();
