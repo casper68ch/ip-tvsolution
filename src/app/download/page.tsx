@@ -94,10 +94,10 @@ export default function DownloadPage() {
           <span aria-hidden="true" className="mr-1 font-semibold text-warning">
             ⚠
           </span>
-          I file vengono scaricati da files.catbox.moe: le app sono pacchetti di 10-60 MB e non
-          rientrano nel limite di 25 MB per file dell&apos;hosting Cloudflare Pages. I link sono
-          verificati e ufficiali. <strong>Nessuna playlist, credenziale o abbonamento IPTV è
-          incluso</strong>: configuri la tua linea nelle impostazioni dell&apos;app.
+          I file vengono scaricati direttamente da download.ip-tvsolution.online, il dominio
+          ufficiale IP-TVSOLUTION. I link sono verificati e ufficiali. <strong>Nessuna playlist,
+          credenziale o abbonamento IPTV è incluso</strong>: configuri la tua linea nelle
+          impostazioni dell&apos;app.
         </div>
 
         <div className="mt-8 grid list-none gap-4 sm:grid-cols-2">
