@@ -12,3 +12,31 @@ npm-debug.log*
 yarn-error.log*
 .DS_Store
 Thumbs.db
+
+# Cache e file temporanei
+.cache/
+cache/
+.temp/
+tmp/
+*.tmp
+*.log
+.parcel-cache/
+.turbo/
+.vercel/
+.wrangler/
+
+# Immagini scaricate / locandine in cache
+poster-cache/
+downloaded-images/
+covers-cache/
+*.part
+*.crdownload
+
+# Dipendenze pesanti e runtime locali
+__pycache__/
+*.pyc
+.venv/
+venv/
+.huggingface/
+.piper-voices/
+.kokoro/
