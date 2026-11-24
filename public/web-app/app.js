@@ -5,7 +5,7 @@ const STORAGE_KEY = 'iptv_solution_data';
 const SAVE_KEY = 'iptv_solution_save_config';
 const DEFAULT_PLAYLIST_URL = ''; // Impostata dall'utente a prima configurazione
 const DEFAULT_EPG_URL = ''; // Opzionale: URL guida TV della propria linea
-const WEB_VERSION = '1.9-web-20261120';
+const WEB_VERSION = '1.9-web-20261124';
 
 // State
 let state = {
@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderChannelList();
   renderSavedSources();
   updatePlaylistButton();
+  setTimeout(function () { refreshLogosFromSources(true); }, 1200);
   initPlayer();
   setInterval(checkScheduledRecordings, 15000);
   logApp('APP', 'INFO', 'Avvio applicazione', {
@@ -427,47 +428,104 @@ function logApp(categoria, livello, messaggio, data) {
 }
 function logStream(event, data) { logApp('STREAM', 'INFO', event, data); }
 
-// ===== Versione e aggiornamento =====
+// ===== Versione e aggiornamento (manifest centrale IP-TVSOLUTION) =====
+const UPDATE_MANIFEST_URL = 'https://download.ip-tvsolution.online/IP-TVSOLUTION-Manifest.json';
+
 function setVersionBadge(testo) {
   const el = document.getElementById('versionBadge');
   if (el) el.textContent = testo;
 }
-async function checkVersion() {
+function updatePlatformKey() {
+  var p = (typeof detectPlatform === 'function') ? detectPlatform() : 'Web';
+  if (/android/i.test(p)) return 'android';
+  if (/iphone|ipad|ipod/i.test(p)) return 'iphone';
+  if (/smart tv|tizen|webos/i.test(p)) return 'smart-tv';
+  if (/windows|win32/i.test(p)) return 'windows';
+  if (/chrome/i.test(p)) return 'chrome';
+  return 'web';
+}
+function versionNumber(s) {
+  var n = String(s || '').match(/\d+/g);
+  return n ? parseInt(n.join(''), 10) : 0;
+}
+function isNewerVersion(a, b) {
+  return versionNumber(a) > versionNumber(b);
+}
+function platformLabel(k) {
+  return ({ web: 'Web / App', chrome: 'Chrome ZIP', windows: 'Windows',
+    android: 'Android', 'smart-tv': 'Smart TV (LG/Samsung)', iphone: 'iPhone PWA' })[k] || k;
+}
+function renderUpdateInfo(m, key) {
+  var p = (m.platforms || {})[key] || (m.platforms || {}).web || {};
+  var latest = p.version || m.version || WEB_VERSION;
+  var rows = Object.keys(m.platforms || {}).map(function (k) {
+    var q = m.platforms[k];
+    return '<div style="display:flex;gap:8px;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--line);">' +
+      '<span>' + escapeHtml(platformLabel(k)) + (k === key ? ' <b style="color:var(--accent);">(questa)</b>' : '') + '</span>' +
+      '<b>' + escapeHtml(q.version || '') + '</b></div>';
+  }).join('');
+  return '<p class="hint">Versione installata: <b>' + escapeHtml(WEB_VERSION) + '</b><br>' +
+    'Ultima pubblicata: <b>' + escapeHtml(latest) + '</b><br>' +
+    'Verifica: ' + escapeHtml(new Date().toLocaleString('it-IT')) + '</p>' + rows;
+}
+async function checkVersion(showPanel) {
   setVersionBadge('v' + WEB_VERSION);
-  const info = document.getElementById('serverInfo');
-  if (info) info.textContent = 'Web: ' + WEB_VERSION;
-  if (window.TV_MODE || location.protocol !== 'http:') return;
+  var key = updatePlatformKey();
+  var info = document.getElementById('serverInfo');
+  var panel = document.getElementById('updateInfo');
+  if (info) info.textContent = 'IP-TVSOLUTION ' + WEB_VERSION + ' | ' + key;
+  if (panel && showPanel) panel.innerHTML = '<p class="hint">Verifica aggiornamenti in corso...</p>';
   try {
-    const r = await fetch('/api/version', { cache: 'no-store' });
-    if (!r.ok) return;
-    const v = await r.json();
-    setVersionBadge('v' + v.version);
-    if (info) info.textContent = 'App v' + v.version + ' (build ' + v.build + ') · Web ' + WEB_VERSION + ' · ' + v.channels + ' canali';
-    logApp('APP', 'INFO', 'Versione applicazione', { versione: v.version, build: v.build, canali: v.channels });
-    if (v.updateAvailable) {
-      const banner = document.getElementById('updateBanner');
-      const txt = document.getElementById('updateBannerText');
+    var r = await fetch(UPDATE_MANIFEST_URL, { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var m = await r.json();
+    var p = (m.platforms || {})[key] || (m.platforms || {}).web || {};
+    var latest = p.version || m.version || WEB_VERSION;
+    state.updateInfo = { current: WEB_VERSION, latest: latest, platform: key, manifest: m, checked: Date.now() };
+    if (info) info.textContent = 'IP-TVSOLUTION ' + WEB_VERSION + ' | ' + key + ' | disponibile ' + latest;
+    if (panel) panel.innerHTML = renderUpdateInfo(m, key);
+    setVersionBadge('v' + WEB_VERSION + (isNewerVersion(latest, WEB_VERSION) ? ' *' : ''));
+    if (isNewerVersion(latest, WEB_VERSION)) {
+      var banner = document.getElementById('updateBanner');
+      var txt = document.getElementById('updateBannerText');
       if (banner && txt) {
-        txt.textContent = '🔄 Aggiornamento disponibile: versione ' + v.latest + ' (installata ' + v.version + ')';
+        txt.textContent = 'Aggiornamento disponibile: ' + platformLabel(key) + ' ' + latest + ' (installata ' + WEB_VERSION + ')';
         banner.style.display = 'flex';
       }
     }
-  } catch (e) { /* server non disponibile: modalità stand-alone */ }
+    logApp('APP', 'INFO', 'Info aggiornamento', { piattaforma: key, installata: WEB_VERSION, disponibile: latest });
+    return m;
+  } catch (e) {
+    if (panel) panel.innerHTML = '<p class="hint">Offline: versione installata ' + escapeHtml(WEB_VERSION) + '. Usa "Controlla aggiornamenti" per riprovare.</p>';
+    return null;
+  }
 }
 async function applyUpdate() {
-  try {
-    const r = await fetch('/api/update/apply', { cache: 'no-store' });
-    const j = await r.json();
-    if (j.ok) {
-      showToast('Aggiornamento avviato. L\'app si riavvierà tra pochi secondi.', 'warning');
-      logApp('UPDATE', 'INFO', 'Aggiornamento avviato');
-      const b = document.getElementById('updateBanner'); if (b) b.style.display = 'none';
-    } else showToast('Impossibile avviare l\'aggiornamento.', 'error');
-  } catch (e) { showToast('Errore aggiornamento: ' + e.message, 'error'); }
+  var m = (state.updateInfo && state.updateInfo.manifest) || await checkVersion(true);
+  if (!m) { showToast('Manifest aggiornamenti non raggiungibile.', 'error'); return; }
+  var key = updatePlatformKey();
+  var p = (m.platforms || {})[key] || (m.platforms || {}).web || {};
+  if (key === 'web' || key === 'chrome' || key === 'iphone') {
+    var url = p.url || (location.pathname + '?v=' + (p.build || Date.now()));
+    showToast('Aggiornamento app: ricaricamento in corso...', 'warning');
+    logApp('UPDATE', 'INFO', 'Aggiornamento app web', { versione: p.version || m.version });
+    location.href = url;
+    return;
+  }
+  var target = '';
+  if (key === 'android') target = p.apk || m.apkUrl || '';
+  else if (key === 'smart-tv') target = p.lg || p.samsung || p.download || '';
+  else target = p.download || p.portable || '';
+  if (target) {
+    showToast('Download aggiornamento avviato. Installa il pacchetto quando richiesto.', 'warning');
+    logApp('UPDATE', 'INFO', 'Download aggiornamento app', { piattaforma: key, versione: p.version || m.version });
+    window.open(target, '_blank', 'noopener');
+  } else showToast('Nessun link di aggiornamento per questa piattaforma.', 'warning');
 }
 function dismissUpdateBanner() {
-  const b = document.getElementById('updateBanner'); if (b) b.style.display = 'none';
+  var b = document.getElementById('updateBanner'); if (b) b.style.display = 'none';
 }
+
 function loadStreamLog() {
   try { state.streamLog = JSON.parse(localStorage.getItem(STREAM_LOG_KEY) || '[]'); } catch (e) { state.streamLog = []; }
 }
@@ -2148,9 +2206,9 @@ function initialsShort(name) {
   var out = parts.map(function (w) { return w.charAt(0); }).join('').substring(0, 2).toUpperCase();
   return (out || '?').replace(/[<>&"']/g, '');
 }
-async function refreshLogosFromSources() {
+async function refreshLogosFromSources(silent) {
   if (!state.sources || !state.sources.length) {
-    showToast('Nessuna playlist caricata', 'warning');
+    if (!silent) showToast('Nessuna playlist caricata', 'warning');
     return;
   }
   var btn = document.getElementById('btnRefreshLogos');
@@ -2227,7 +2285,7 @@ async function refreshLogosFromSources() {
   saveState();
   try { renderChannelList(); renderSavedSources(); updatePlaylistButton(); } catch (e) {}
   if (btn) { btn.disabled = false; btn.textContent = 'Aggiorna loghi (piu fonti)'; }
-  showToast('Loghi aggiornati: ' + found + ' trovati' + (fallback ? ', ' + fallback + ' segnaposto' : ''), 'success');
+  if (!silent) showToast('Loghi aggiornati: ' + found + ' trovati' + (fallback ? ', ' + fallback + ' segnaposto' : ''), 'success');
   logApp('LOGO', 'INFO', 'Aggiornamento loghi manuale', {
     trovati: found, segnaposto: fallback, playlist: active ? active.name : 'tutte'
   });

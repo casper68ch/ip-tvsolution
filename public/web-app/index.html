@@ -271,7 +271,15 @@
             <button id="btnRefreshLogos" class="btn btn-secondary" onclick="refreshLogosFromSources()">Aggiorna loghi (piu fonti)</button>
             <p class="hint" style="margin-top:8px;">Legge i loghi dalla playlist inserita (Xtream / M3U), dall'EPG XMLTV e crea un segnaposto per quelli mancanti. Se hai una sola playlist attiva, aggiorna solo quella.</p>
           </div>
-          <div class="settings-section">
+                <div class="settings-section">
+        <h3>Aggiornamento app</h3>
+        <div id="updateInfo" class="hint">Versione installata: </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+          <button id="btnCheckUpdate" class="btn btn-secondary" onclick="checkVersion(true)">Controlla aggiornamenti</button>
+          <button id="btnApplyUpdate" class="btn btn-primary" onclick="applyUpdate()">Aggiorna app</button>
+        </div>
+      </div>
+<div class="settings-section">
             <h3>Dati</h3>
             <button id="btnExportData" class="btn btn-secondary">Esporta dati</button>
             <button id="btnClearData" class="btn btn-danger">Cancella tutto</button>
@@ -466,6 +474,6 @@
   </div>
 
   <script src="activation.js?v=2"></script>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>
