@@ -3177,13 +3177,16 @@ function analyzePlaylist() {
 
 // Category overview: show all groups separated by Live/VOD/Series
 function showCategoryOverview() {
-  if (state.channels.length === 0) {
+  const overviewChannels = (state.activePlaylist && state.activePlaylist !== 'all')
+    ? state.channels.filter(function (c) { return c.sourceId === state.activePlaylist; })
+    : state.channels;
+  if (overviewChannels.length === 0) {
     showToast('Nessun canale caricato', 'warning');
     return;
   }
 
   const byType = { live: {}, vod: {}, series: {} };
-  state.channels.forEach(ch => {
+  overviewChannels.forEach(ch => {
     const type = ch.type || 'live';
     const group = ch.group || 'Generale';
     if (!byType[type]) byType[type] = {};
@@ -3520,9 +3523,16 @@ function showPlaylistSelector() {
 
 function filterByPlaylist(sourceId) {
   state.activePlaylist = sourceId;
+  state.searchQuery = '';
+  var searchField = document.getElementById('searchChannels');
+  if (searchField) searchField.value = '';
+  state._seriesCache = null;
+  state._seriesCacheChannelCount = 0;
   saveState();
   hideModal('playlistModal');
-  renderChannelList();
+  renderSavedSources();
+  // Torna alla home e renderizza subito i canali della playlist selezionata
+  navigateTo('home', null, null);
   updatePlaylistButton();
   const src = state.sources.find(s => s.id === sourceId);
   if (sourceId === 'all') {
