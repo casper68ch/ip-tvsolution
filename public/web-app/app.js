@@ -482,6 +482,14 @@ function setupEventListeners() {
 }
 
 // Quick menu (PLAYLISTS / GRUPPI / MODE / CERCA / MENU)
+function qmSortChannels() {
+  state.channels.sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); });
+  state.sources.forEach(function (src) { if (src.channels) src.channels.sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); }); });
+  saveState();
+  renderChannelList();
+  showToast('Ordinamento per nome applicato', 'success');
+}
+
 function qmChannels() {
   if (state.activePlaylist && state.activePlaylist !== 'all') {
     return state.channels.filter(function (c) { return c.sourceId === state.activePlaylist; });
@@ -527,34 +535,68 @@ function qmRender(tab) {
     });
     if (chans.length === 0) html += '<p class="hint">Nessun gruppo disponibile.</p>';
   } else if (tab === 'MODE') {
-    html += '<div class="qm-grid qm-types">';
-    [['all', 'TUTTI'], ['live', 'LIVE'], ['vod', 'VOD'], ['series', 'SERIES']].forEach(function (p) {
-      var on = (p[0] === 'all' && state.navLevel === 'home') || (p[0] !== 'all' && state.navType === p[0] && state.navLevel === 'type') ? ' sel' : '';
-      html += '<button class="qm-chip qm-type' + on + '" onclick="qmType(\'' + p[0] + '\')">' + p[1] + '</button>';
+    var fixed = [['fav', 'PREFERITI'], ['all', 'TUTTO'], ['generale', 'GENERALISTI'], ['informazione', 'INFORMATIVI'], ['sport', 'SPORT'], ['bambini', 'BAMBINI'], ['webcam', 'WEBCAM']];
+    html += '<div class="qm-grid qm-cats">';
+    fixed.forEach(function (p) {
+      var on = (p[0] === 'all' && state.navLevel === 'home') || (p[0] === 'fav' && state.navType === 'fav') ? ' sel' : '';
+      html += '<button class="qm-chip' + on + '" onclick="qmType(\'' + (p[0] === 'fav' ? 'fav' : p[0] === 'all' ? 'all' : 'live') + '\')">' + p[1] + '</button>';
+    });
+    Object.keys(groups).sort().slice(0, 12).forEach(function (g) {
+      html += '<button class="qm-chip" onclick="qmGroup(\'' + groups[g].type + '\',\'' + escapeAttr(g) + '\')">' + escapeHtml(g.toUpperCase()) + '</button>';
     });
     html += '</div>';
-    var genreKeys = Object.keys(groups).filter(function (g) { return groups[g].type !== 'live'; }).sort();
-    if (genreKeys.length === 0) genreKeys = Object.keys(groups).sort();
-    html += '<div class="qm-section-title">GENERI</div><div class="qm-grid">';
-    genreKeys.slice(0, 60).forEach(function (g) {
-      var t = groups[g].type;
-      var on = state.navCategory === g ? ' sel' : '';
-      html += '<button class="qm-chip' + on + '" onclick="qmGroup(\'' + t + '\',\'' + escapeAttr(g) + '\')">' + escapeHtml(g.toUpperCase()) + '<span class="qm-sub">' + groups[g].count + '</span></button>';
+    html += '<div class="qm-section-title">GUIDA TV</div><div class="qm-epg">';
+    var nowMs = Date.now();
+    chans.slice(0, 60).forEach(function (ch, i) {
+      var key = ch.epgId || ch.tvgId || ch.id || ch.name;
+      var progs = (state.epgData || {})[key] || [];
+      var cur = null;
+      for (var pi = 0; pi < progs.length; pi++) {
+        var s = parseXmltvDate(progs[pi].start), e = parseXmltvDate(progs[pi].stop);
+        if (s && e && s.getTime() <= nowMs && e.getTime() >= nowMs) { cur = progs[pi]; break; }
+      }
+      var title = cur && cur.title ? cur.title : (ch.name || '');
+      var start = cur && cur.start ? String(cur.start).slice(11, 16) : '20:00';
+      var stop = cur && cur.stop ? String(cur.stop).slice(11, 16) : '21:00';
+      var pct = 45;
+      if (cur && cur.start && cur.stop) {
+        var a = parseXmltvDate(cur.start), b = parseXmltvDate(cur.stop);
+        if (a && b && b > a) pct = Math.max(2, Math.min(100, Math.round((nowMs - a) / (b - a) * 100)));
+      }
+      html += '<div class="qm-epg-card" onclick="hideModal(\'quickMenuModal\');playChannelById(\'' + escapeAttr(ch.id) + '\')">' +
+        '<div class="qm-epg-head"><span class="qm-num">' + i + '</span><b>' + escapeHtml(ch.name) + '</b></div>' +
+        '<div class="qm-epg-prog">' + escapeHtml(title) + '</div>' +
+        '<div class="qm-epg-foot"><span>' + escapeHtml(start) + '</span><div class="qm-bar"><i style="width:' + pct + '%"></i></div><span>' + escapeHtml(stop) + '</span></div></div>';
     });
     html += '</div>';
-    if (genreKeys.length === 0) html += '<p class="hint">Carica una playlist per vedere i generi.</p>';
+    if (chans.length === 0) html += '<p class="hint">Carica una playlist per vedere la guida TV.</p>';
   } else if (tab === 'CERCA') {
     html += '<input id="qmSearch" class="qm-search" type="text" placeholder="Cerca canale, film, serie..." oninput="qmSearchResults(this.value)" onkeydown="if(event.key===\'Enter\')qmSearchApply()" autofocus>';
     html += '<button class="btn btn-primary" style="margin-top:8px;" onclick="qmSearchApply()">CERCA</button>';
     html += '<div id="qmSearchResults" class="qm-grid" style="margin-top:12px;"></div>';
   } else {
-    html += '<div class="qm-grid">';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">';
+    html += '<button class="btn btn-secondary" onclick="checkVersion(true)">AGGIORNA INFORMAZIONI</button>';
+    html += '<button class="btn btn-secondary" onclick="qmSortChannels()">ORDINAMENTO</button>';
+    html += '</div>';
+    html += '<div class="qm-info-card"><b>CANALI TV</b>' +
+      '<div><span>Stato:</span><em class="ok">Attivo</em></div>' +
+      '<div><span>Scadenza:</span><em>Nessuna</em></div>' +
+      '<div><span>Aggiunta:</span><em>' + escapeHtml(new Date().toLocaleDateString('it-IT')) + '</em></div>' +
+      '<div><span>Connessioni:</span><em>1</em></div>' +
+      '<div><span>Canali:</span><em>' + chans.length + '</em></div></div>';
+    html += '<div class="qm-portals">';
+    html += '<button class="qm-portal" onclick="hideModal(\'quickMenuModal\');showModal(\'addSourceModal\')">IPTV EXTREME PORTAL</button>';
+    html += '<button class="qm-portal" onclick="hideModal(\'quickMenuModal\');showModal(\'addSourceModal\')">FILE O LINK PLAYLIST</button>';
+    html += '<button class="qm-portal" onclick="hideModal(\'quickMenuModal\');showModal(\'addSourceModal\')">MAG PORTAL</button>';
+    html += '<button class="qm-portal" onclick="hideModal(\'quickMenuModal\');showModal(\'addSourceModal\')">XTREAM CODES PORTAL</button>';
+    html += '</div>';
+    html += '<div class="qm-grid" style="margin-top:12px;">';
     html += '<button class="qm-chip" onclick="hideModal(\'quickMenuModal\');showModal(\'settingsModal\')">IMPOSTAZIONI</button>';
     html += '<button class="qm-chip" onclick="hideModal(\'quickMenuModal\');refreshLogosFromSources(false)">AGGIORNA LOGHI</button>';
     html += '<button class="qm-chip" onclick="hideModal(\'quickMenuModal\');autoFillMissingPosters(false,40)">RECUPERA LOCANDINE</button>';
     html += '<button class="qm-chip" onclick="hideModal(\'quickMenuModal\');clearPosterCache()">CANCELLA CACHE</button>';
     html += '<button class="qm-chip" onclick="hideModal(\'quickMenuModal\');toggleViewMode()">VISTA ' + (state.viewMode === 'grid' ? 'LISTA' : 'GRIGLIA') + '</button>';
-    html += '<button class="qm-chip" onclick="hideModal(\'quickMenuModal\');showModal(\'playlistModal\')">PLAYLIST SALVATE</button>';
     html += '</div>';
   }
   box.innerHTML = html;

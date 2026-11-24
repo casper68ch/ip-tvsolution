@@ -612,3 +612,29 @@ details > summary::-webkit-details-marker { display: none; }
   border: 1px solid var(--border); background: var(--bg3); color: var(--text);
 }
 @media (max-width: 600px) { .qm-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); } }
+
+/* Quick menu v2 - barre colorate e guida EPG */
+.qm-tab[data-tab="PLAYLISTS"] { border-bottom-color: #f2f5f8; }
+.qm-tab[data-tab="GRUPPI"] { border-bottom-color: #e14a4a; }
+.qm-tab[data-tab="MODE"] { border-bottom-color: #3fb950; }
+.qm-tab[data-tab="CERCA"] { border-bottom-color: #d29922; }
+.qm-tab[data-tab="MENU"] { border-bottom-color: #58a6ff; }
+.qm-cats { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); margin-bottom: 6px; }
+.qm-epg { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+.qm-epg-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px; cursor: pointer; }
+.qm-epg-card:hover { border-color: var(--accent); }
+.qm-epg-head { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.qm-num { color: var(--text3); font-size: 11px; }
+.qm-epg-prog { font-size: 11px; color: var(--text2); margin: 6px 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qm-epg-foot { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text3); }
+.qm-bar { flex: 1; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.qm-bar i { display: block; height: 100%; background: #4ecdc4; }
+.qm-info-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px; font-size: 12px; }
+.qm-info-card b { display: block; color: var(--accent); letter-spacing: 1px; margin-bottom: 8px; }
+.qm-info-card div { display: flex; justify-content: space-between; padding: 2px 0; }
+.qm-info-card span { color: var(--text2); }
+.qm-info-card em { font-style: normal; }
+.qm-info-card em.ok { color: #e14a4a; }
+.qm-portals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.qm-portal { padding: 14px 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-weight: 700; font-size: 11px; letter-spacing: .5px; cursor: pointer; }
+.qm-portal:hover { border-color: var(--accent); }
