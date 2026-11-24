@@ -632,6 +632,305 @@ function setQuickMenuTab(tab) {
   qmRender(tab);
 }
 
+
+/* ===== Stile TV: drawer, tab, EPG card, player overlay, context menu ===== */
+function tvEpgInfo(ch) {
+  var key = ch.epgId || ch.tvgId || ch.id || ch.name;
+  var progs = (state.epgData || {})[key] || [];
+  var now = Date.now(), cur = null, next = null;
+  for (var i = 0; i < progs.length; i++) {
+    var s = parseXmltvDate(progs[i].start), e = parseXmltvDate(progs[i].stop);
+    if (!s || !e) continue;
+    if (s.getTime() <= now && e.getTime() >= now) { cur = progs[i]; next = progs[i + 1] || null; break; }
+    if (s.getTime() > now && !next) next = progs[i];
+  }
+  var title = cur && cur.title ? cur.title : (ch.name || '');
+  var start = cur && cur.start ? String(cur.start).slice(11, 16) : '';
+  var stop = cur && cur.stop ? String(cur.stop).slice(11, 16) : '';
+  var pct = 0, left = '';
+  if (cur && cur.start && cur.stop) {
+    var a = parseXmltvDate(cur.start), b = parseXmltvDate(cur.stop);
+    if (a && b && b > a) {
+      pct = Math.max(2, Math.min(100, Math.round((now - a) / (b - a) * 100)));
+      var mm = Math.max(0, Math.round((b - now) / 60000));
+      left = String(Math.floor(mm / 60)).padStart(2, '0') + ':' + String(mm % 60).padStart(2, '0');
+    }
+  }
+  return { title: title, start: start, stop: stop, pct: pct, left: left,
+           next: next && next.title ? next.title : '', desc: cur && cur.desc ? cur.desc : '' };
+}
+
+function tvChannelItemHtml(ch, tvIdx) {
+  var i = typeof tvIdx === 'number' ? tvIdx : Math.max(0, state.channels.indexOf(ch));
+  var e = tvEpgInfo(ch);
+  var active = state.currentChannel && state.currentChannel.id === ch.id;
+  var fav = state.favorites.has(ch.id);
+  var logo = ch.logo
+    ? '<img src="' + escapeAttr(ch.logo) + '" onerror="this.style.display=\'none\';this.parentElement.textContent=this.parentElement.getAttribute(\'data-initials\')||\'IPTV\';">'
+    : escapeHtml(initialsShort(ch.name));
+  var id = escapeAttr(ch.id);
+  var ctx = ' oncontextmenu="event.preventDefault();openTvContextMenu(\'' + id + '\',event)"';
+  var star = '<span class="tv-star' + (fav ? ' on' : '') + '" onclick="event.stopPropagation();toggleFav(\'' + id + '\')" title="Preferito">' + (fav ? '★' : '☆') + '</span>';
+  var more = '<span class="tv-more" onclick="event.stopPropagation();openTvContextMenu(\'' + id + '\',event)" title="Opzioni">⋮</span>';
+
+  if (state.viewMode === 'grid') {
+    return '<div class="tv-card' + (active ? ' active' : '') + '" data-id="' + escapeHtml(ch.id) + '"' + ctx + ' onclick="playChannelById(\'' + id + '\')">' +
+      '<div class="tv-card-top"><span class="tv-num">' + i + '</span>' + star + more + '</div>' +
+      '<div class="tv-logo" data-initials="' + escapeAttr(initialsShort(ch.name)) + '">' + logo + '</div>' +
+      '<b class="tv-name">' + escapeHtml(ch.name) + '</b>' +
+      '<span class="tv-prog">' + escapeHtml(e.title) + '</span>' +
+      '<span class="tv-foot"><em>' + escapeHtml(e.start) + '</em><span class="tv-bar"><i style="width:' + e.pct + '%"></i></span><em>' + escapeHtml(e.stop) + '</em></span>' +
+      '<span class="tv-next">A Seguire: ' + escapeHtml(e.next || '-') + '</span></div>';
+  }
+  return '<div class="tv-row' + (active ? ' active' : '') + '" data-id="' + escapeHtml(ch.id) + '"' + ctx + ' onclick="playChannelById(\'' + id + '\')">' +
+    '<span class="tv-num">' + i + '</span>' +
+    '<span class="tv-logo" data-initials="' + escapeAttr(initialsShort(ch.name)) + '">' + logo + '</span>' +
+    '<span class="tv-main"><b class="tv-name">' + escapeHtml(ch.name) + '</b>' +
+    '<span class="tv-prog">' + escapeHtml(e.title) + '</span>' +
+    '<span class="tv-foot"><em>' + escapeHtml(e.start) + '</em><span class="tv-bar"><i style="width:' + e.pct + '%"></i></span><em>' + escapeHtml(e.stop) + '</em>' +
+    '<em class="tv-next-foot">A Seguire: ' + escapeHtml(e.next || '-') + '</em></span></span>' +
+    '<span class="tv-left">' + escapeHtml(e.left) + '</span>' + star + more + '</div>';
+}
+
+function renderTvGroupTabs() {
+  var box = document.getElementById('tvGroupTabs');
+  if (!box) return;
+  var groups = {};
+  state.channels.forEach(function (c) {
+    var g = c.group || '';
+    if (g) groups[g] = (groups[g] || 0) + 1;
+  });
+  var keys = Object.keys(groups).sort().slice(0, 24);
+  var favOn = state.navType === 'fav' ? ' sel' : '';
+  var allOn = state.navLevel === 'home' && !state.searchQuery ? ' sel' : '';
+  var html = '<button class="tv-tab' + allOn + '" onclick="tvTab(\'all\')">TUTTI</button>' +
+             '<button class="tv-tab' + favOn + '" onclick="tvTab(\'fav\')">PREFERITI</button>';
+  keys.forEach(function (g) {
+    var on = state.navCategory === g ? ' sel' : '';
+    html += '<button class="tv-tab' + on + '" onclick="tvGroupTab(\'' + escapeAttr(g) + '\')">' + escapeHtml(g.toUpperCase()) + '</button>';
+  });
+  html += '<span class="tv-tabs-spacer"></span>' +
+    '<button class="tv-tab-icon" onclick="document.getElementById(\'searchChannels\').focus()" title="Cerca">🔍</button>' +
+    '<button class="tv-tab-icon" onclick="openQuickMenu(\'GRUPPI\')" title="Gruppi">🗂</button>' +
+    '<button class="tv-tab-icon" onclick="toggleViewMode()" title="Lista/Griglia">▦</button>' +
+    '<button class="tv-tab-icon" onclick="showToast(\'Cast non disponibile nel browser\',\'warning\')" title="Cast">📡</button>';
+  box.innerHTML = html;
+}
+function tvTab(kind) {
+  if (kind === 'fav') navigateTo('type', 'fav'); else navigateTo('home');
+}
+function tvGroupTab(group) {
+  var ch = state.channels.find(function (c) { return c.group === group; });
+  navigateToCategory(ch && ch.type ? ch.type : 'live', group);
+}
+
+function openTvDrawer() {
+  var d = document.getElementById('tvDrawer');
+  if (d) d.classList.add('open');
+  var b = document.getElementById('tvDrawerBackdrop');
+  if (b) b.classList.add('show');
+}
+function closeTvDrawer() {
+  var d = document.getElementById('tvDrawer');
+  if (d) d.classList.remove('open');
+  var b = document.getElementById('tvDrawerBackdrop');
+  if (b) b.classList.remove('show');
+}
+function tvDrawerAction(a) {
+  closeTvDrawer();
+  if (a === 'playlists') showPlaylistSelector();
+  else if (a === 'groups') openQuickMenu('GRUPPI');
+  else if (a === 'search') setTimeout(function () { var s = document.getElementById('searchChannels'); if (s) s.focus(); }, 50);
+  else if (a === 'settings') showModal('settingsModal');
+  else if (a === 'recent') showTvList('RECENT');
+  else if (a === 'new') showTvList('NEW');
+  else if (a === 'programs') openQuickMenu('MODE');
+  else if (a === 'update') { var b = document.getElementById('btnReloadAll'); if (b) b.click(); else checkVersion(true); }
+  else if (a === 'sort') qmSortChannels();
+  else if (a === 'replay' || a === 'guide') openQuickMenu('MODE');
+  else if (a === 'groupmanage') openQuickMenu('GRUPPI');
+  else if (a === 'parental') showModal('settingsModal');
+  else if (a === 'about') showToast('IP-TVSOLUTION v1.9 · Web Player · ' + (document.getElementById('serverInfo') || {}).textContent, 'success');
+  else if (a === 'exit') {
+    if (window.IPtvActivation && IPtvActivation.logout) IPtvActivation.logout();
+    else showToast('Nessuna sessione attiva da chiudere.', 'warning');
+  }
+}
+
+function showTvList(kind) {
+  var box = document.getElementById('tvListBody');
+  var title = document.getElementById('tvListTitle');
+  if (!box) return;
+  if (title) title.textContent = kind === 'RECENT' ? 'Canali recenti' : 'Ultimi aggiunti';
+  var list;
+  if (kind === 'RECENT') {
+    list = (state.watchHistory || []).map(function (h) { return state.channels.find(function (c) { return c.id === h.id; }); }).filter(Boolean);
+  } else {
+    list = state.channels.slice().reverse();
+  }
+  if (!list.length) { box.innerHTML = '<p class="hint">Nessun elemento disponibile.</p>'; showModal('tvListModal'); return; }
+  var html = '';
+  list.slice(0, 80).forEach(function (ch) {
+    html += '<button class="tv-list-item" onclick="hideModal(\'tvListModal\');playChannelById(\'' + escapeAttr(ch.id) + '\')">' +
+      (ch.logo ? '<img src="' + escapeAttr(ch.logo) + '" onerror="this.style.display=\'none\'">' : '📺') +
+      '<span>' + escapeHtml(ch.name) + '</span><small>' + escapeHtml(ch.group || '') + '</small></button>';
+  });
+  box.innerHTML = html;
+  showModal('tvListModal');
+}
+
+function openTvContextMenu(id, ev) {
+  var ch = state.channels.find(function (c) { return c.id === id; });
+  var m = document.getElementById('tvContextMenu');
+  if (!ch || !m) return;
+  state._tvCtxId = id;
+  var items = [
+    ['Riproduci', 'tvCtxPlay()'],
+    ['Riproduci con...', 'tvCtxPlayWith()'],
+    ['Replay', 'tvCtxReplay()'],
+    ['Informazioni Evento', 'tvCtxInfo()'],
+    ['Guida TV', 'tvCtxGuide()'],
+    ['Download / Registra', 'tvCtxRecord()'],
+    ['Condividi', 'tvCtxShare()'],
+    ['Cambia Icona', 'tvCtxIcon()'],
+    ['Imposta Alias', 'tvCtxAlias()']
+  ];
+  var html = '';
+  items.forEach(function (it) { html += '<button onclick="closeTvContextMenu();' + it[1] + '">' + it[0] + '</button>'; });
+  m.innerHTML = html;
+  var x = Math.min(ev.clientX || 100, window.innerWidth - 230);
+  var y = Math.min(ev.clientY || 100, window.innerHeight - 370);
+  m.style.left = Math.max(4, x) + 'px';
+  m.style.top = Math.max(4, y) + 'px';
+  m.classList.add('show');
+}
+function closeTvContextMenu() {
+  var m = document.getElementById('tvContextMenu');
+  if (m) m.classList.remove('show');
+}
+function tvCtxChannel() { return state.channels.find(function (c) { return c.id === state._tvCtxId; }); }
+function tvCtxPlay() { if (tvCtxChannel()) playChannelById(state._tvCtxId); }
+function tvCtxPlayWith() { openAdvancedPlayerModal(); }
+function tvCtxReplay() {
+  var ch = tvCtxChannel(); if (!ch) return;
+  var e = tvEpgInfo(ch);
+  showToast('Replay: ' + (e.title || ch.name) + ' · ' + (e.start || 'programma precedente'), 'success');
+  playChannelById(ch.id);
+}
+function tvCtxInfo() {
+  var ch = tvCtxChannel(); if (!ch) return;
+  var e = tvEpgInfo(ch);
+  showToast((e.title || ch.name) + ' — ' + (e.desc || 'Nessuna descrizione EPG disponibile.'), 'success');
+}
+function tvCtxGuide() { var ch = tvCtxChannel(); if (ch) { state.currentChannel = ch; } openQuickMenu('MODE'); }
+function tvCtxRecord() {
+  var ch = tvCtxChannel(); if (!ch) return;
+  playChannelById(ch.id);
+  setTimeout(function () { var b = document.getElementById('btnRecord'); if (b) b.click(); }, 1200);
+}
+function tvCtxShare() {
+  var ch = tvCtxChannel(); if (!ch) return;
+  if (navigator.clipboard) navigator.clipboard.writeText(ch.url || ch.name).then(function () { showToast('Link copiato negli appunti.', 'success'); }, function () { showToast('Copia non riuscita.', 'error'); });
+  else showToast('Condividi: ' + (ch.url || ch.name), 'success');
+}
+function tvCtxIcon() {
+  var ch = tvCtxChannel(); if (!ch) return;
+  var url = prompt('Nuovo URL icona per ' + ch.name + ':', ch.logo || '');
+  if (url !== null) { ch.logo = url.trim(); saveState(); renderChannelList(); showToast('Icona aggiornata.', 'success'); }
+}
+function tvCtxAlias() {
+  var ch = tvCtxChannel(); if (!ch) return;
+  var name = prompt('Nuovo nome per il canale:', ch.name);
+  if (name !== null && name.trim()) { ch.name = name.trim(); saveState(); renderChannelList(); showToast('Alias aggiornato.', 'success'); }
+}
+
+function openAdvancedPlayerModal() {
+  var ch = state.currentChannel || tvCtxChannel();
+  var n = document.getElementById('advPlayerName');
+  if (n && ch) n.value = ch.name || '';
+  var p = state.playerProfile || {};
+  var setv = function (id, v) { var el = document.getElementById(id); if (el && v !== undefined) el.value = v; };
+  setv('advPlayerFormat', p.format || 'default');
+  setv('advPlayerSource', p.source || 'Player Predefinito');
+  setv('advPlayerSegment', p.segment || '');
+  var c1 = document.getElementById('advPlayerProfile'); if (c1) c1.checked = !!p.useProfile;
+  var c2 = document.getElementById('advPlayerRecord'); if (c2) c2.checked = !!p.recordPos;
+  showModal('advancedPlayerModal');
+}
+function confirmAdvancedPlayerSettings() {
+  var val = function (id) { var el = document.getElementById(id); return el ? el.value : ''; };
+  var chk = function (id) { var el = document.getElementById(id); return !!(el && el.checked); };
+  state.playerProfile = {
+    name: val('advPlayerName'), format: val('advPlayerFormat'), source: val('advPlayerSource'),
+    segment: val('advPlayerSegment'), useProfile: chk('advPlayerProfile'), recordPos: chk('advPlayerRecord')
+  };
+  try { localStorage.setItem('iptvsolution_player_profile', JSON.stringify(state.playerProfile)); } catch (e) {}
+  hideModal('advancedPlayerModal');
+  showToast('Impostazioni player salvate: ' + (state.playerProfile.source || 'Player Predefinito'), 'success');
+}
+
+function updateTvPlayerOverlay(ch) {
+  if (!ch) return;
+  var e = tvEpgInfo(ch);
+  var txt = function (id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+  txt('tvProgTitle', e.title || ch.name || '');
+  txt('tvProgTime', (e.start || '--:--') + ' - ' + (e.stop || '--:--'));
+  txt('tvNext', 'A Seguire: ' + (e.next || '-'));
+  txt('tvTech', 'Video 1280 x 720 · Codec H264 MPEG-4 AVC (part 10)');
+  txt('tvChNum', 'CH ' + (Math.max(0, state.channels.indexOf(ch)) + 1));
+  var bar = document.getElementById('tvProgBar');
+  if (bar) bar.style.width = e.pct + '%';
+  startTvClock();
+}
+function startTvClock() {
+  if (state._tvClockStarted) return;
+  state._tvClockStarted = true;
+  function tick() {
+    var el = document.getElementById('tvClock');
+    if (el) el.textContent = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  }
+  tick();
+  setInterval(tick, 30000);
+}
+function tvSeek(sec) {
+  var v = document.getElementById('videoPlayer');
+  if (v && isFinite(v.currentTime)) {
+    v.currentTime = Math.max(0, Math.min(v.duration || v.currentTime + sec, v.currentTime + sec));
+    showToast((sec > 0 ? '+' : '') + sec + 's', 'success');
+  }
+}
+function tvPlayPause() {
+  var v = document.getElementById('videoPlayer');
+  if (!v) return;
+  if (v.paused) v.play().catch(function () {}); else v.pause();
+  var b = document.querySelector('.tv-transport button:nth-child(3)');
+  if (b) b.textContent = v.paused ? '▶' : '⏸';
+}
+function tvStop() {
+  var v = document.getElementById('videoPlayer');
+  if (v) { v.pause(); try { v.currentTime = 0; } catch (e) {} }
+}
+function tvSkip(dir) {
+  var list = state.channels.filter(function (c) { return !c.type || c.type === 'live'; });
+  var idx = list.findIndex(function (c) { return state.currentChannel && c.id === state.currentChannel.id; });
+  var next = list[(idx + dir + list.length) % list.length];
+  if (next) playChannelById(next.id);
+}
+function tvPlayerTool(tool) {
+  if (tool === 'pip') { var b = document.getElementById('btnPip'); if (b) b.click(); return; }
+  if (tool === 'settings') { openAdvancedPlayerModal(); return; }
+  if (tool === 'epg') { openQuickMenu('MODE'); return; }
+  if (tool === 'history') { showTvList('RECENT'); return; }
+  if (tool === 'search') { var s = document.getElementById('searchChannels'); if (s) s.focus(); return; }
+  if (tool === 'info') { state._tvCtxId = state.currentChannel && state.currentChannel.id; tvCtxInfo(); return; }
+  if (tool === 'lock') {
+    var ui = document.getElementById('tvPlayerUi');
+    if (ui) { ui.classList.toggle('locked'); showToast(ui.classList.contains('locked') ? 'Player bloccato' : 'Player sbloccato', 'success'); }
+    return;
+  }
+  showToast('Strumento ' + tool + ' non disponibile in questo browser.', 'warning');
+}
+
 function openAdvancedPlaylistModal() {
   showModal('advancedPlaylistModal');
 }
@@ -2225,6 +2524,7 @@ function startPlayback(channel) {
   const video = $('#videoPlayer');
   $('#currentChannelName').textContent = channel.name;
   $('#currentChannelInfo').textContent = (channel.group || '') + (channel.type ? ' · ' + channel.type.toUpperCase() : '') + ' · 📋 ' + getSourceLabel();
+  updateTvPlayerOverlay(channel);
 
   $$('.channel-item').forEach(el => el.classList.remove('active'));
   try {
@@ -2838,7 +3138,8 @@ async function refreshLogosFromSources(silent) {
     trovati: found, segnaposto: fallback, playlist: active ? active.name : 'tutte'
   });
 }
-function channelItemHtml(ch) {
+function channelItemHtml(ch, tvIdx) {
+  if (state.tvStyle !== false && (!ch.type || ch.type === 'live')) return tvChannelItemHtml(ch, tvIdx);
   const poster = ch.type === 'vod' || ch.type === 'series';
   const isFav = state.favorites.has(ch.id);
   const isActive = state.currentChannel && state.currentChannel.id === ch.id;
@@ -2883,6 +3184,7 @@ function renderChannelList() {
   const list = $('#channelList');
   list.className = 'channel-list ' + (state.viewMode === 'grid' ? 'grid-view' : 'list-view');
   updateViewModeButton();
+  renderTvGroupTabs();
 
   // Filter by active playlist
   let baseChannels = state.channels.slice();
@@ -3316,7 +3618,8 @@ function renderChannelList() {
     if (groupKeys.length > 1) {
       html += `<div style="padding:8px 12px;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;border-top:1px solid var(--border);margin-top:4px;">${escapeHtml(group)} (${groups[group].length})</div>`;
     }
-    groups[group].forEach(ch => { html += channelItemHtml(ch); });
+    var tvIdx = 0;
+    groups[group].forEach(ch => { html += channelItemHtml(ch, tvIdx++); });
   });
   list.innerHTML = html;
 }

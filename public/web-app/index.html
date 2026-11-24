@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP-TVSOLUTION Web Player</title>
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
   <script src="hls.min.js?v=2"></script>
   <script src="ts-player.js?v=2"></script>
   <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
@@ -13,6 +13,7 @@
   <div id="app">
     <!-- Header -->
     <header class="app-header">
+      <button class="tv-hamburger" onclick="openTvDrawer()" title="Menu">☰</button>
       <div class="logo">
         <img src="brand.png" alt="IP-TVSOLUTION" class="logo-img">
         <span class="logo-text">IP-TVSOLUTION</span>
@@ -41,10 +42,40 @@
       <button onclick="dismissUpdateBanner()" title="Chiudi">✕</button>
     </div>
 
+
+    <!-- TV Drawer -->
+    <div class="tv-drawer-backdrop" id="tvDrawerBackdrop" onclick="closeTvDrawer()"></div>
+    <aside class="tv-drawer" id="tvDrawer">
+      <div class="tv-drawer-head">
+        <img src="brand.png" alt="" class="tv-drawer-logo">
+        <div><b>IP-TVSOLUTION</b><small>Menu principale</small></div>
+        <button class="btn-close" onclick="closeTvDrawer()">×</button>
+      </div>
+      <div class="tv-drawer-body">
+        <div class="tv-drawer-title">Playlists</div>
+        <button onclick="tvDrawerAction('playlists')">📋 <span>Playlists</span></button>
+        <button onclick="tvDrawerAction('groups')">🗂 <span>Gruppi</span></button>
+        <button onclick="tvDrawerAction('search')">🔍 <span>Cerca</span></button>
+        <div class="tv-drawer-title">Menu</div>
+        <button onclick="tvDrawerAction('settings')">⚙ <span>Impostazioni</span></button>
+        <button onclick="tvDrawerAction('recent')">🕘 <span>Recent</span></button>
+        <button onclick="tvDrawerAction('update')">🔄 <span>Aggiorna</span></button>
+        <button onclick="tvDrawerAction('sort')">↕ <span>Ordinamento</span></button>
+        <button onclick="tvDrawerAction('replay')">⏪ <span>Replay</span></button>
+        <button onclick="tvDrawerAction('guide')">📺 <span>Guida TV Completa</span></button>
+        <button onclick="tvDrawerAction('new')">🆕 <span>Ultimi Aggiunti</span></button>
+        <button onclick="tvDrawerAction('programs')">🗓 <span>Programmazioni</span></button>
+        <button onclick="tvDrawerAction('groupmanage')">🗃 <span>Gestione Gruppi</span></button>
+        <button onclick="tvDrawerAction('parental')">🔒 <span>Parental Control</span></button>
+        <button onclick="tvDrawerAction('about')">ℹ <span>About</span></button>
+        <button onclick="tvDrawerAction('exit')">🚪 <span>Esci</span></button>
+      </div>
+    </aside>
     <!-- Main Layout -->
     <div class="main-layout">
       <!-- Sidebar: Channel List -->
       <aside class="sidebar" id="sidebar">
+        <div class="tv-group-tabs" id="tvGroupTabs"></div>
         <div class="sidebar-header">
           <input type="text" id="searchChannels" placeholder="🔍 Cerca canale, film, serie..." class="search-input">
           <div class="side-nav" style="display:flex;gap:4px;margin-top:8px;">
@@ -81,6 +112,45 @@
         <div class="video-container" id="videoContainer">
           <video id="videoPlayer" controls autoplay></video>
           <canvas id="tsCanvas" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;background:#000;"></canvas>
+          <div class="tv-player-ui" id="tvPlayerUi">
+            <div class="tv-player-top">
+              <button onclick="tvPlayerTool('lock')" title="Blocca">🔒</button>
+              <span class="tv-player-top-title">IP-TVSOLUTION Player</span>
+              <button onclick="tvPlayerTool('pip')" title="PiP">⧉</button>
+            </div>
+            <div class="tv-player-center">
+              <button onclick="tvPlayerTool('settings')" title="Impostazioni avanzate">⚙</button>
+              <button onclick="tvPlayerTool('audio')" title="Audio">♫</button>
+              <button onclick="tvPlayerTool('subtitles')" title="Sottotitoli">◧</button>
+              <button onclick="tvPlayerTool('pip')" title="PiP">⧉</button>
+              <button onclick="tvPlayerTool('info')" title="Informazioni">ⓘ</button>
+              <button onclick="tvPlayerTool('epg')" title="Guida TV">📺</button>
+              <button onclick="tvPlayerTool('tracks')" title="Tracce audio">🎵</button>
+              <button onclick="tvPlayerTool('history')" title="Cronologia">🕘</button>
+              <button onclick="tvPlayerTool('search')" title="Cerca">🔍</button>
+            </div>
+            <div class="tv-player-bottom">
+              <div class="tv-prog-row">
+                <b id="tvProgTitle">Seleziona un canale</b>
+                <span id="tvProgTime">--:-- - --:--</span>
+                <div class="tv-bar"><i id="tvProgBar"></i></div>
+                <span class="tv-next" id="tvNext">A Seguire: -</span>
+              </div>
+              <div class="tv-transport">
+                <button onclick="tvSkip(-1)" title="Canale precedente">⏮</button>
+                <button onclick="tvSeek(-10)" title="-10s">⏪</button>
+                <button onclick="tvPlayPause()" title="Play/Pausa">⏸</button>
+                <button onclick="tvStop()" title="Stop">⏹</button>
+                <button onclick="tvSeek(10)" title="+10s">⏩</button>
+                <button onclick="tvSkip(1)" title="Canale successivo">⏭</button>
+              </div>
+              <div class="tv-tech-row">
+                <span id="tvTech">Video 1280 x 720 · Codec H264 MPEG-4 AVC (part 10)</span>
+                <span id="tvChNum">CH —</span>
+                <span id="tvClock">--:--</span>
+              </div>
+            </div>
+          </div>
           <div class="player-overlay" id="playerOverlay">
             <div class="player-info">
               <h2 id="currentChannelName">Seleziona un canale</h2>
@@ -226,6 +296,40 @@
             <button type="button" class="btn btn-primary" onclick="confirmAdvancedPlaylist()">OK</button>
           </div>
           <div class="form-group"><label style="font-size:11px;color:var(--text3);">Nota: il browser non puo' inviare un User Agent personalizzato nelle richieste fetch; l'opzione viene salvata nelle impostazioni della sorgente.</label></div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- TV Context Menu -->
+    <div class="tv-context-menu" id="tvContextMenu"></div>
+
+    <!-- TV Simple List Modal -->
+    <div class="modal" id="tvListModal">
+      <div class="modal-content">
+        <div class="modal-header"><h2 id="tvListTitle">Lista</h2><button class="btn-close" onclick="hideModal('tvListModal')">×</button></div>
+        <div class="modal-body tv-list-body" id="tvListBody"></div>
+      </div>
+    </div>
+
+    <!-- Advanced Player Settings Modal -->
+    <div class="modal" id="advancedPlayerModal">
+      <div class="modal-content adv-modal">
+        <div class="modal-header"><h2>IMPETRAZIONE PLAYER AVANZATO</h2><button class="btn-close" onclick="hideModal('advancedPlayerModal')">×</button></div>
+        <div class="modal-body adv-body">
+          <div class="form-group"><label>Nome Canale HD</label><input type="text" id="advPlayerName" placeholder="Nome canale"></div>
+          <div class="form-group"><label>Formato video</label><select id="advPlayerFormat"><option value="default">Default</option><option value="raw">Formatta senza conversione</option></select></div>
+          <div class="form-group"><label>Tipo Sorgente</label><select id="advPlayerSource"><option>Player Predefinito</option><option>Player TS</option><option>Player HLS</option></select></div>
+          <div class="form-group"><label>Time Segmento</label><input type="text" id="advPlayerSegment" placeholder="es. 0 (secondi)"></div>
+          <p class="hint" style="font-size:11px;">Il segmento permette di ripartire da un punto preciso del flusso live.</p>
+          <div class="adv-checks">
+            <label><input type="checkbox" id="advPlayerProfile"> Usa Impostazioni Profilo</label>
+            <label><input type="checkbox" id="advPlayerRecord"> Record Position</label>
+          </div>
+          <div class="adv-actions">
+            <button type="button" class="btn btn-secondary" onclick="hideModal('advancedPlayerModal')">ANNULLA</button>
+            <button type="button" class="btn btn-primary" onclick="confirmAdvancedPlayerSettings()">OK</button>
+          </div>
         </div>
       </div>
     </div>
@@ -534,6 +638,6 @@
   </div>
 
   <script src="activation.js?v=3"></script>
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>
