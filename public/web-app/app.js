@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateSaveDestinationUI();
   ensureEpgLoaded();
   checkVersion();
+  setTimeout(function () { cloudLoad(); }, 600);
   renderChannelList();
   renderSavedSources();
   updatePlaylistButton();
@@ -155,6 +156,97 @@ async function reloadXtreamSource(src) {
   src.channels = chans;
   delete src.rawText;
 }
+
+// === IP-TVSOLUTION cloud sync (playlist legate all'account) ===
+var CLOUD_SYNC_URL = 'https://iptvsolution-sync.montebellog.workers.dev/api/playlists';
+var cloudReady = false;
+var cloudTimer = null;
+
+async function syncSha256(text) {
+  try {
+    var data = new TextEncoder().encode(text);
+    var digest = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(digest)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+  } catch (e) { return String(text); }
+}
+
+async function cloudIdentity() {
+  try {
+    var raw = localStorage.getItem('iptv_solution_activation');
+    if (!raw) return null;
+    var a = JSON.parse(raw);
+    if (!a || !a.active || !a.user) return null;
+    var token = await syncSha256(a.user + ':' + (a.passHash || a.pass || ''));
+    return { user: a.user, token: token };
+  } catch (e) { return null; }
+}
+
+function cloudHeaders(id) {
+  return {
+    'Content-Type': 'application/json',
+    'X-IPTV-User': encodeURIComponent(id.user),
+    'X-IPTV-Token': id.token
+  };
+}
+
+function cloudSaveQueued() {
+  if (!cloudReady) return;
+  clearTimeout(cloudTimer);
+  cloudTimer = setTimeout(function () { cloudSave(); }, 1200);
+}
+
+async function cloudSave() {
+  var id = await cloudIdentity();
+  if (!id) return;
+  try {
+    var payload = {
+      sources: state.sources,
+      favorites: state.favorites,
+      settings: state.settings,
+      bouquets: state.bouquets || [],
+      watchHistory: state.watchHistory || [],
+      activePlaylist: state.activePlaylist
+    };
+    var res = await fetch(CLOUD_SYNC_URL, { method: 'PUT', headers: cloudHeaders(id), body: JSON.stringify(payload) });
+    if (res.ok) logApp('SYNC', 'INFO', 'Playlist sincronizzate sul cloud', { utente: id.user });
+  } catch (e) { console.warn('Cloud sync save failed', e); }
+}
+
+async function cloudLoad() {
+  if (sessionStorage.getItem('iptv_cloud_loaded') === '1') { cloudReady = true; return; }
+  var id = await cloudIdentity();
+  if (!id) return;
+  try {
+    var res = await fetch(CLOUD_SYNC_URL, { method: 'GET', headers: cloudHeaders(id), cache: 'no-store' });
+    if (res.ok) {
+      var data = await res.json();
+      if (data && Array.isArray(data.sources) && data.sources.length > 0) {
+        var local = {
+          sources: data.sources,
+          favorites: data.favorites || [],
+          settings: data.settings || {},
+          epgData: {},
+          watchHistory: data.watchHistory || [],
+          bouquets: data.bouquets || [],
+          activePlaylist: data.activePlaylist || (data.sources[data.sources.length - 1] || {}).id
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(local));
+        sessionStorage.setItem('iptv_cloud_loaded', '1');
+        if (typeof showToast === 'function') showToast('Playlist ripristinate dal tuo account.', 'success');
+        logApp('SYNC', 'INFO', 'Playlist caricate dal cloud', { utente: id.user, sorgenti: data.sources.length });
+        cloudReady = true;
+        setTimeout(function () { location.reload(); }, 500);
+        return;
+      }
+    }
+  } catch (e) { console.warn('Cloud sync load failed', e); }
+  sessionStorage.setItem('iptv_cloud_loaded', '1');
+  cloudReady = true;
+}
+
+window.IPtvAppCloudLoad = cloudLoad;
+window.IPtvAppCloudSave = cloudSave;
+
 function saveState() {
   const payload = () => ({
     sources: state.sources,
@@ -167,6 +259,7 @@ function saveState() {
   });
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload()));
+    cloudSaveQueued();
     return true;
   } catch (e) { console.warn('Memoria quasi piena, riprovo senza testo grezzo M3U'); }
 
@@ -175,6 +268,7 @@ function saveState() {
   state.sources.forEach(s => { if (s.rawText) delete s.rawText; });
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload()));
+    cloudSaveQueued();
     return true;
   } catch (e) {
     state.sources.forEach((s, i) => { if (rawBackup[i]) s.rawText = rawBackup[i]; });
@@ -187,6 +281,7 @@ function saveState() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload()));
     showToast('Memoria browser quasi piena: dati secondari non salvati.', 'warning');
+    cloudSaveQueued();
     return true;
   } catch (e) {
     state.watchHistory = hist; state.epgData = epg; state.bouquets = bouq;

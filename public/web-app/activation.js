@@ -208,6 +208,7 @@
       if (ok) {
         hide();
         if (typeof showToast === 'function') showToast('Bentornato ' + user + '!', 'success');
+        if (typeof window.IPtvAppCloudLoad === 'function') window.IPtvAppCloudLoad();
       } else setMsg('Utente o password non corretti.', 'err');
     });
   }
