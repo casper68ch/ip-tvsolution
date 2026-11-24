@@ -2206,6 +2206,30 @@ function initialsShort(name) {
   var out = parts.map(function (w) { return w.charAt(0); }).join('').substring(0, 2).toUpperCase();
   return (out || '?').replace(/[<>&"']/g, '');
 }
+function logoNameKey(value, compact) {
+  var s = String(value || '').toLowerCase()
+    .replace(/\.[a-z0-9]{2,4}$/i, ' ')
+    .replace(/[_+]+/g, ' ')
+    .replace(/[-]+/g, ' ')
+    .replace(/[\[\(][^\]\)]*[\]\)]/g, ' ')
+    .replace(/\b(hd|fhd|uhd|sd|hdtv|4k)\b/g, ' ')
+    .replace(/\b(ch|channel|canale)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  s = s.replace(/\s+(it|ita)$/, ' ').trim();
+  if (compact) return s.replace(/[^a-z0-9]/g, '');
+  return s;
+}
+function logoKeysFor(value) {
+  var a = logoNameKey(value, true);
+  var b = logoNameKey(value, false);
+  var out = [], seen = {};
+  [a, b].forEach(function (k) { if (k && !seen[k]) { seen[k] = 1; out.push(k); } });
+  return out;
+}
+function isDirectPng(url) {
+  return /^https?:\/\/[^\s"'<>]+?\.png(\?[^\s"'<>]*)?$/i.test(String(url || ''));
+}
 async function refreshLogosFromSources(silent) {
   if (!state.sources || !state.sources.length) {
     if (!silent) showToast('Nessuna playlist caricata', 'warning');
@@ -2217,11 +2241,32 @@ async function refreshLogosFromSources(silent) {
     ? state.sources.find(function (s) { return s.id === state.activePlaylist; }) : null;
   var targets = active ? [active] : state.sources;
   var map = {};
+  async function fetchJson(url) {
+    var r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  }
   function put(k, v) {
-    if (!k || !v) return;
-    map[String(k).toLowerCase()] = v;
-    var n = normalizeEpgName(k);
-    if (n) map[n] = v;
+    if (!isDirectPng(v)) return;
+    var names = [];
+    if (k) names.push(k);
+    var file = String(v).split('?')[0].split('/').pop() || '';
+    try { file = decodeURIComponent(file); } catch (e) {}
+    if (file) names.push(file.replace(/\.png$/i, ''));
+    names.forEach(function (n) {
+      logoKeysFor(n).forEach(function (key) { if (key) map[key] = v; });
+    });
+  }
+  function lookup(ch) {
+    var keys = [ch.epgId, ch.tvgId, ch.tvgName, ch.name, ch.id,
+      String(ch.id || '').replace(/^xtream(_vod|_series)?_/, ''), ch.streamId, ch.tvgLogo].filter(Boolean);
+    for (var i = 0; i < keys.length; i++) {
+      var kk = logoKeysFor(keys[i]);
+      for (var j = 0; j < kk.length; j++) {
+        if (map[kk[j]]) return map[kk[j]];
+      }
+    }
+    return null;
   }
   // Fonte 1: EPG XMLTV (icon src, per id e display-name)
   try { await ensureEpgLoaded(); } catch (e) {}
@@ -2229,7 +2274,7 @@ async function refreshLogosFromSources(silent) {
 
   for (var si = 0; si < targets.length; si++) {
     var src = targets[si];
-    // Fonte 2: API Xtream (stream_icon / cover) della playlist inserita
+    // Fonte 2: API Xtream (stream_icon / cover) - solo PNG diretti
     if (src.type === 'xtream' && src.url && src.user && src.pass) {
       var base = String(src.url).replace(/\/+$/, '');
       var api = base + '/player_api.php?username=' + encodeURIComponent(src.user) +
@@ -2271,14 +2316,60 @@ async function refreshLogosFromSources(silent) {
     }
   }
 
+  // Fonte 4: Tundrak / IPTV-Italia (iptvitaplus.m3u con tvg-logo PNG)
+  try {
+    var res3 = await fetch('https://raw.githubusercontent.com/Tundrak/IPTV-Italia/main/iptvitaplus.m3u', { cache: 'no-store' });
+    var text3 = await res3.text();
+    text3.split(/\r?\n/).forEach(function (line) {
+      if (line.indexOf('#EXTINF') !== 0) return;
+      var l = line.match(/tvg-logo\s*=\s*"([^"]+)"/i);
+      if (!l) return;
+      var i = line.match(/tvg-id\s*=\s*"([^"]+)"/i);
+      var n = line.match(/tvg-name\s*=\s*"([^"]+)"/i);
+      var c = line.lastIndexOf(',');
+      var p = c >= 0 ? line.substring(c + 1).trim() : '';
+      put(i && i[1], l[1]);
+      put(n && n[1], l[1]);
+      put(p, l[1]);
+    });
+  } catch (e) { logApp('LOGO', 'ERROR', 'Font Tundrak IPTV-Italia non disponibile', {}); }
+
+  // Fonte 5: tv-logo/tv-logos (countries/italy/*.png) + fallback statico R2
+  var tvlogos = null;
+  try {
+    tvlogos = await fetchJson('https://api.github.com/repos/tv-logo/tv-logos/contents/countries/italy');
+  } catch (e) {
+    try {
+      var fb = await fetchJson('https://download.ip-tvsolution.online/IP-TVSOLUTION-TVLogos-Italy.json');
+      tvlogos = Object.keys(fb).map(function (name) { return { name: name, download_url: fb[name] }; });
+    } catch (e2) { logApp('LOGO', 'ERROR', 'Font tv-logo non disponibile', {}); }
+  }
+  if (Array.isArray(tvlogos)) {
+    tvlogos.forEach(function (item) {
+      if (item && /\.png$/i.test(item.name || '') && isDirectPng(item.download_url)) {
+        put(item.name, item.download_url);
+      }
+    });
+  }
+
+  // Fonte 6: Cloudje (URL PNG diretti consigliati nella guida loghi)
+  var cloudje = {
+    'BBC One': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-one-hd-uk.png',
+    'BBC Two': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/bbc-two-hd-uk.png',
+    'ITV1': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/itv-1-uk.png',
+    'Channel 4': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/channel-4-uk.png',
+    'Sky Sports Main Event': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-kingdom/sky-sports-main-event-uk.png',
+    'CNN': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/cnn-us.png',
+    'ESPN': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/espn-us.png',
+    'HBO': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/hbo-us.png',
+    'Fox News': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/fox-news-us.png',
+    'Discovery Channel': 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/discovery-channel-us.png'
+  };
+  Object.keys(cloudje).forEach(function (n) { put(n, cloudje[n]); });
+
   var found = 0, fallback = 0;
   (state.channels || []).forEach(function (ch) {
-    var keys = [ch.epgId, ch.name, ch.id,
-      String(ch.id || '').replace(/^xtream(_vod|_series)?_/, ''), ch.streamId].filter(Boolean);
-    var cand = null;
-    for (var ki = 0; ki < keys.length && !cand; ki++) {
-      cand = map[String(keys[ki]).toLowerCase()] || map[normalizeEpgName(keys[ki])] || null;
-    }
+    var cand = lookup(ch);
     if (cand) { ch.logo = cand; found++; }
     else if (!ch.logo || /^data:/i.test(ch.logo)) { ch.logo = initialsLogo(ch.name); fallback++; }
   });
@@ -2286,11 +2377,10 @@ async function refreshLogosFromSources(silent) {
   try { renderChannelList(); renderSavedSources(); updatePlaylistButton(); } catch (e) {}
   if (btn) { btn.disabled = false; btn.textContent = 'Aggiorna loghi (piu fonti)'; }
   if (!silent) showToast('Loghi aggiornati: ' + found + ' trovati' + (fallback ? ', ' + fallback + ' segnaposto' : ''), 'success');
-  logApp('LOGO', 'INFO', 'Aggiornamento loghi manuale', {
+  logApp('LOGO', 'INFO', 'Aggiornamento loghi multi-fonte', {
     trovati: found, segnaposto: fallback, playlist: active ? active.name : 'tutte'
   });
 }
-
 function channelItemHtml(ch) {
   const isFav = state.favorites.has(ch.id);
   const isActive = state.currentChannel && state.currentChannel.id === ch.id;
