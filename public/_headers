@@ -9,6 +9,7 @@
 
 # Web app IPTV: l'utente configura il proprio provider e riproduce i flussi
 /web-app/*
+  Cache-Control: no-store
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
