@@ -954,9 +954,12 @@ function catOvRender() {
     var b = document.getElementById('catOvTab_' + k);
     if (b) b.className = 'cat-ov-tab' + (k === catOvKind ? ' active' : '');
   });
+  var base = (state.channels || []).slice();
+  if (state.activePlaylist && state.activePlaylist !== 'all') {
+    base = base.filter(function (c) { return c.sourceId === state.activePlaylist; });
+  }
   if (catOvKind === 'vod') {
-    var films = (state.channels || []).filter(function (c) { return (c.type || 'live') === 'vod'; });
-    films.sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || ''), 'it'); });
+    var films = base.filter(function (c) { return (c.type || 'live') === 'vod'; });
     if (!films.length) {
       list.innerHTML = '<div class="cat-ov-empty">Carica una playlist per vedere i film.</div>';
       return;
@@ -966,15 +969,15 @@ function catOvRender() {
     }).join('');
     return;
   }
-  var groups = {};
-  (state.channels || []).forEach(function (c) {
+  var groups = {}, keys = [];
+  base.forEach(function (c) {
     var g = (c.group || '').trim();
     var t = c.type || 'live';
     if (!g) return;
     if (catOvKind !== 'all' && t !== catOvKind) return;
+    if (!groups[g]) keys.push(g);
     groups[g] = (groups[g] || 0) + 1;
   });
-  var keys = Object.keys(groups).sort(function (a, b) { return a.localeCompare(b, 'it'); });
   if (!keys.length) {
     list.innerHTML = '<div class="cat-ov-empty">Carica una playlist per vedere le categorie.</div>';
     return;
@@ -3551,12 +3554,12 @@ function renderChannelList() {
         var t = c.type || 'live';
         return t === cType;
       });
-      var cGroups = {};
+      var cGroups = {}, cKeys = [];
       cBase.forEach(function (c) {
         var g = c.group || 'Generale';
+        if (!cGroups[g]) cKeys.push(g);
         cGroups[g] = (cGroups[g] || 0) + 1;
       });
-      var cKeys = Object.keys(cGroups).sort();
       var cHtml = '<div class="tv-cat-head"><button class="tv-back-line" onclick="tvTab(\'all\')">← Home</button>' +
         '<h3>' + escapeHtml(tvCatLabel(cType)) + ' · Categorie</h3></div>';
       if (cKeys.length) {
@@ -3586,16 +3589,16 @@ function renderChannelList() {
       var q = state.searchQuery.toLowerCase();
       shown = shown.filter(c => ((c.name || '') + ' ' + (c.group || '')).toLowerCase().includes(q));
     }
-    var bGroups = {};
+    var bGroups = {}, bKeys = [];
     shown.forEach(function (c) {
       var g = c.group || 'Generale';
-      if (!bGroups[g]) bGroups[g] = [];
+      if (!bGroups[g]) { bGroups[g] = []; bKeys.push(g); }
       bGroups[g].push(c);
     });
     var bHtml = '';
     if (state.tvCategory) bHtml += '<div class="tv-back-line" onclick="tvBackFromCategory()">← Torna alle categorie ' + escapeHtml(tvCatLabel(state.tvType)) + '</div>';
     var bIdx = 0;
-    Object.keys(bGroups).sort().forEach(function (g) {
+    bKeys.forEach(function (g) {
       bHtml += '<div class="tv-group-head">' + escapeHtml(g) + ' (' + bGroups[g].length + ')</div>';
       bGroups[g].forEach(function (ch) { bHtml += channelItemHtml(ch, bIdx++); });
     });
