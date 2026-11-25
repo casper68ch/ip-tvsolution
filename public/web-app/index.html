@@ -18,7 +18,6 @@
       <button class="tv-top-btn" onclick="openCategoriesOverlay()" title="Categorie">📂 Categorie</button>
       <button id="btnViewMode" class="tv-top-btn" onclick="toggleViewMode()" title="Modalità lista/griglia">▦ Modalità</button>
       <button class="tv-top-btn" onclick="openQuickMenu('CERCA')" title="Cerca">🔍 Cerca</button>
-      <button id="btnAddSource" class="tv-top-btn" onclick="showModal('addSourceModal')">＋ Aggiungi</button>
       <span id="versionBadge" class="version-badge" style="display:none;">v?</span>
       <span class="tv-top-spacer"></span>
       <div id="headerUser" class="tv-top-user" style="display:none;">
@@ -452,7 +451,8 @@
         <div class="modal-body">
           <p class="hint" style="margin-bottom:12px;">Seleziona la playlist da visualizzare. I canali verranno filtrati per sorgente.</p>
           <div id="playlistList" class="saved-sources"></div>
-          <div style="margin-top:12px;display:flex;gap:8px;">
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-primary" style="flex:1;" onclick="hideModal('playlistModal');showModal('addSourceModal')">＋ Aggiungi playlist</button>
             <button class="btn btn-secondary" style="flex:1;" onclick="filterByPlaylist('all')">📋 Mostra tutte</button>
             <button class="btn btn-secondary" style="flex:1;" onclick="refreshLogosFromSources()">🖼 Aggiorna loghi</button>
           </div>
@@ -684,6 +684,6 @@
       </div>
     </div>
 
-  <script src="app.js?v=38"></script>
+  <script src="app.js?v=39"></script>
 </body>
 </html>

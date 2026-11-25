@@ -539,7 +539,7 @@ async function ensureEpgLoaded() {
 
 // Event listeners
 function setupEventListeners() {
-  $('#btnAddSource').addEventListener('click', () => showModal('addSourceModal'));
+  var _btnAddSource = $('#btnAddSource'); if (_btnAddSource) _btnAddSource.addEventListener('click', () => showModal('addSourceModal'));
   $('#btnCloseAddSource').addEventListener('click', () => hideModal('addSourceModal'));
   var _btnSettings = $('#btnSettings');
   if (_btnSettings) _btnSettings.addEventListener('click', () => { showModal('settingsModal'); renderSavedSources(); });
