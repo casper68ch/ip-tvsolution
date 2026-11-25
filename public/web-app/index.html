@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP-TVSOLUTION Web Player</title>
-  <link rel="stylesheet" href="style.css?v=21">
+  <link rel="stylesheet" href="style.css?v=22">
   <script src="hls.min.js?v=2"></script>
   <script src="ts-player.js?v=2"></script>
   <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
@@ -15,6 +15,7 @@
     <div class="tv-top-tools">
       <button class="tv-hamburger" onclick="openTvDrawer()" title="Menu">☰</button>
       <button id="btnPlaylistSelector" class="tv-top-btn" onclick="showPlaylistSelector()" title="Playlist attiva">📋 Playlist</button>
+      <button class="tv-top-btn" onclick="openCategoriesOverlay()" title="Categorie">📂 Categorie</button>
       <button id="btnViewMode" class="tv-top-btn" onclick="toggleViewMode()" title="Modalità lista/griglia">▦ Modalità</button>
       <button class="tv-top-btn" onclick="openQuickMenu('CERCA')" title="Cerca">🔍 Cerca</button>
       <button id="btnAddSource" class="tv-top-btn" onclick="showModal('addSourceModal')">＋ Aggiungi</button>
@@ -669,6 +670,20 @@
   </div>
 
   <script src="activation.js?v=4"></script>
-  <script src="app.js?v=35"></script>
+    <!-- Categorie: overlay TUTTI / LIVE / VOD / SERIE -->
+    <div class="cat-ov" id="categoriesOverlay">
+      <div class="cat-ov-box">
+        <div class="cat-ov-tabs">
+          <button class="cat-ov-tab" id="catOvTab_all" onclick="catOvSetTab('all')">TUTTI</button>
+          <button class="cat-ov-tab" id="catOvTab_live" onclick="catOvSetTab('live')">LIVE</button>
+          <button class="cat-ov-tab" id="catOvTab_vod" onclick="catOvSetTab('vod')">VOD</button>
+          <button class="cat-ov-tab" id="catOvTab_series" onclick="catOvSetTab('series')">SERIE</button>
+        </div>
+        <div class="cat-ov-head"><span>Categorie</span><button class="cat-ov-close" onclick="closeCategoriesOverlay()">&times;</button></div>
+        <div class="cat-ov-list" id="catOvList"></div>
+      </div>
+    </div>
+
+  <script src="app.js?v=36"></script>
 </body>
 </html>

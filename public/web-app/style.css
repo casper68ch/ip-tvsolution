@@ -1029,3 +1029,17 @@ body.tv-playing .tv-expand-btn { display: none; }
 .tv-top-tools .tv-top-btn,
 .tv-top-tools .tv-hamburger,
 .tv-top-tools .tv-top-home { flex-shrink: 0; }
+
+/* ===== Categorie: overlay TUTTI / LIVE / VOD / SERIE ===== */
+.cat-ov { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,.88); align-items: flex-start; justify-content: center; padding: 20px 12px; }
+.cat-ov.show { display: flex; }
+.cat-ov-box { width: min(680px, 96vw); max-height: 92vh; background: #0a0e14; border: 2px solid #2f6fd0; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 18px 60px rgba(0,0,0,.75); }
+.cat-ov-tabs { display: flex; gap: 3px; padding: 10px; background: #0e141c; }
+.cat-ov-tab { flex: 1; padding: 16px 8px; border: 1px solid #2f6fd0; border-radius: 4px; background: #2f6fd0; color: #fff; font-size: 20px; font-weight: 600; cursor: pointer; }
+.cat-ov-tab.active { color: #ff3b5c; border-color: #5a8fe0; }
+.cat-ov-head { display: flex; justify-content: space-between; align-items: center; padding: 6px 14px; color: #92a7bd; font-size: 13px; }
+.cat-ov-close { background: none; border: 0; color: #fff; font-size: 24px; cursor: pointer; line-height: 1; }
+.cat-ov-list { overflow-y: auto; padding: 8px 18px 24px; display: flex; flex-direction: column; gap: 2px; }
+.cat-ov-item { background: transparent; border: 0; color: #fff; font-size: 18px; font-weight: 700; text-align: center; padding: 12px 8px; border-radius: 6px; cursor: pointer; }
+.cat-ov-item:hover { background: #162032; color: #7fb2ff; }
+.cat-ov-empty { color: #92a7bd; text-align: center; padding: 30px 10px; font-size: 14px; }

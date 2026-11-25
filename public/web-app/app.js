@@ -919,6 +919,52 @@ function tvBackFromCategory() {
   var t = state.tvBack && state.tvBack.type ? state.tvBack.type : (state.tvType || 'live');
   tvShowCategories(t);
 }
+var catOvKind = 'all';
+function openCategoriesOverlay() {
+  var el = document.getElementById('categoriesOverlay');
+  if (!el) return;
+  catOvKind = 'all';
+  el.classList.add('show');
+  catOvRender();
+}
+function closeCategoriesOverlay() {
+  var el = document.getElementById('categoriesOverlay');
+  if (el) el.classList.remove('show');
+}
+function catOvSetTab(kind) {
+  catOvKind = kind;
+  catOvRender();
+}
+function catOvRender() {
+  var list = document.getElementById('catOvList');
+  if (!list) return;
+  ['all', 'live', 'vod', 'series'].forEach(function (k) {
+    var b = document.getElementById('catOvTab_' + k);
+    if (b) b.className = 'cat-ov-tab' + (k === catOvKind ? ' active' : '');
+  });
+  var groups = {};
+  (state.channels || []).forEach(function (c) {
+    var g = (c.group || '').trim();
+    var t = c.type || 'live';
+    if (!g) return;
+    if (catOvKind !== 'all' && t !== catOvKind) return;
+    groups[g] = (groups[g] || 0) + 1;
+  });
+  var keys = Object.keys(groups).sort(function (a, b) { return a.localeCompare(b, 'it'); });
+  if (!keys.length) {
+    list.innerHTML = '<div class="cat-ov-empty">Carica una playlist per vedere le categorie.</div>';
+    return;
+  }
+  list.innerHTML = keys.map(function (g) {
+    return '<button class="cat-ov-item" data-g="' + escapeHtml(g) + '" onclick="catOvEnter(this.getAttribute(\'data-g\'))">' + escapeHtml(g.toUpperCase()) + '</button>';
+  }).join('');
+}
+function catOvEnter(group) {
+  closeCategoriesOverlay();
+  tvEnterCategory(group);
+  showToast('Categoria: ' + group, 'success');
+}
+
 function tvUpdatePlayBar() {
   var bar = document.getElementById('tvPlayBar');
   var ch = state.channels.find(function (c) { return c.id === state.tvSelectedId; });
