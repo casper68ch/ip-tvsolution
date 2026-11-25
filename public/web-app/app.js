@@ -4896,10 +4896,12 @@ function updatePlaylistButton() {
   const btn = $('#btnPlaylistSelector');
   if (!btn) return;
   if (state.activePlaylist === 'all') {
-    btn.textContent = '📋 Tutte le playlist';
+    btn.textContent = '📋 Playlist';
+    btn.title = 'Tutte le playlist';
   } else {
     const src = state.sources.find(s => s.id === state.activePlaylist);
-    btn.textContent = src ? '📋 ' + src.name : '📋 Playlist';
+    btn.textContent = src ? '📋 Playlist · ' + src.name : '📋 Playlist';
+    btn.title = src ? src.name : 'Playlist';
   }
 }
 

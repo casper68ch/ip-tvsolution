@@ -14,11 +14,10 @@
     <!-- Toolbar compatta -->
     <div class="tv-top-tools">
       <button class="tv-hamburger" onclick="openTvDrawer()" title="Menu">☰</button>
-      <button class="tv-top-btn tv-top-groups" onclick="openQuickMenu('GRUPPI')" title="Liste gruppi">🗂 Gruppi</button>
       <button id="btnViewMode" class="tv-top-btn" onclick="toggleViewMode()" title="Modalità lista/griglia">▦ Modalità</button>
       <button class="tv-top-btn" onclick="openQuickMenu('CERCA')" title="Cerca">🔍 Cerca</button>
       <button class="tv-top-home" onclick="tvTab('all')">🏠 Home</button>
-      <button id="btnPlaylistSelector" class="tv-top-btn" onclick="showPlaylistSelector()">📺 Sorgenti</button>
+      <button id="btnPlaylistSelector" class="tv-top-btn" onclick="showPlaylistSelector()" title="Playlist attiva">📋 Playlist</button>
       <button id="btnAddSource" class="tv-top-btn" onclick="showModal('addSourceModal')">＋ Aggiungi</button>
       <button class="tv-top-btn" onclick="showModal('settingsModal')" title="Impostazioni">⚙</button>
       <span id="versionBadge" class="version-badge" style="display:none;">v?</span>
@@ -673,6 +672,6 @@
   </div>
 
   <script src="activation.js?v=4"></script>
-  <script src="app.js?v=33"></script>
+  <script src="app.js?v=34"></script>
 </body>
 </html>
