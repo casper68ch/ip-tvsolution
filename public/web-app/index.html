@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP-TVSOLUTION Web Player</title>
-  <link rel="stylesheet" href="style.css?v=23">
+  <link rel="stylesheet" href="style.css?v=24">
   <script src="hls.min.js?v=2"></script>
   <script src="ts-player.js?v=2"></script>
   <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
@@ -684,6 +684,27 @@
       </div>
     </div>
 
-  <script src="app.js?v=39"></script>
+    <!-- Guida TV completa -->
+    <div class="fg-ov" id="fullGuideOverlay">
+      <div class="fg-top">
+        <div class="fg-info">
+          <h2 id="fgTitle">Guida TV completa</h2>
+          <div class="fg-when" id="fgWhen"></div>
+          <div class="fg-desc" id="fgDesc"></div>
+        </div>
+        <div class="fg-clock" id="fgClock"></div>
+        <button class="fg-close" onclick="closeFullGuide()" title="Chiudi">&times;</button>
+      </div>
+      <div class="fg-sub"><span>Guida TV per la categoria selezionata</span><button onclick="openFullGuide()">&#8635; Aggiorna</button></div>
+      <div class="fg-scroll">
+        <div class="fg-body">
+          <div class="fg-head" id="fgHead"></div>
+          <div class="fg-rows" id="fgRows"></div>
+          <div class="fg-now" id="fgNowLine"></div>
+        </div>
+      </div>
+    </div>
+
+  <script src="app.js?v=40"></script>
 </body>
 </html>

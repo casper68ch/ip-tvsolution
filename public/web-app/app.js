@@ -797,6 +797,131 @@ function setQuickMenuTab(tab) {
 
 
 /* ===== Stile TV: drawer, tab, EPG card, player overlay, context menu ===== */
+/* ===== Guida TV completa in stile EPG, filtrata sulla categoria selezionata ===== */
+var fgState = { start: 0, end: 0, ppm: 4, selected: null, channels: [] };
+function fgChannels() {
+  var list = (state.channels || []).slice();
+  if (state.activePlaylist && state.activePlaylist !== "all") {
+    list = list.filter(function (c) { return c.sourceId === state.activePlaylist; });
+  }
+  var m = state.tvBrowse || "all";
+  if (m === "fav") list = list.filter(function (c) { return state.favorites.has(c.id); });
+  else if (m === "live") list = list.filter(function (c) { return !c.type || c.type === "live"; });
+  else if (m === "vod") list = list.filter(function (c) { return c.type === "vod"; });
+  else if (m === "series") list = list.filter(function (c) { return c.type === "series"; });
+  else if (m !== "all") list = list.filter(function (c) { return (c.group || "") === m; });
+  return list;
+}
+function fgPad(n) { return String(n).padStart(2, "0"); }
+function fgTime(ms) { var d = new Date(ms); return fgPad(d.getHours()) + ":" + fgPad(d.getMinutes()); }
+function fgDate(ms) {
+  var d = new Date(ms);
+  var g = ["DOM", "LUN", "MAR", "MER", "GIO", "VEN", "SAB"][d.getDay()];
+  return g + " " + fgPad(d.getDate()) + "/" + fgPad(d.getMonth() + 1);
+}
+function fgLabel() {
+  var m = state.tvBrowse || "all";
+  if (state.tvCategory && m === state.tvCategory) return String(m).toUpperCase();
+  if (m === "all" || m === "fav" || m === "live" || m === "vod" || m === "series") return tvCatLabel(m);
+  return String(m).toUpperCase();
+}
+function fgKey(ch) { return ch.epgId || ch.tvgId || ch.id || ch.name; }
+function fgPrograms(ch) {
+  var raw = (state.epgData || {})[fgKey(ch)] || [];
+  var out = [];
+  for (var i = 0; i < raw.length; i++) {
+    var p = raw[i], s = parseXmltvDate(p.start), e = parseXmltvDate(p.stop);
+    if (s && e) out.push({ s: s.getTime(), e: e.getTime(), title: p.title || "", desc: p.desc || "" });
+  }
+  out.sort(function (a, b) { return a.s - b.s; });
+  return out;
+}
+function openFullGuide() {
+  var ov = document.getElementById("fullGuideOverlay");
+  if (!ov) return;
+  ov.classList.add("show");
+  var now = Date.now();
+  fgState.channels = fgChannels();
+  fgState.start = Math.floor(now / 1800000) * 1800000 - 90 * 60000;
+  fgState.end = fgState.start + 8 * 3600000;
+  fgState.selected = null;
+  for (var i = 0; i < fgState.channels.length && !fgState.selected; i++) {
+    var ps = fgPrograms(fgState.channels[i]);
+    for (var j = 0; j < ps.length; j++) {
+      if (ps[j].s <= now && ps[j].e >= now) {
+        fgState.selected = { ch: fgState.channels[i], p: ps[j] };
+        break;
+      }
+    }
+  }
+  fgRender();
+}
+function closeFullGuide() {
+  var ov = document.getElementById("fullGuideOverlay");
+  if (ov) ov.classList.remove("show");
+}
+function fgSelect(ci, pi) {
+  var ch = fgState.channels[ci];
+  if (!ch) return;
+  var p = fgPrograms(ch)[pi];
+  if (!p) return;
+  fgState.selected = { ch: ch, p: p };
+  fgRenderDetail();
+  fgRenderRows();
+}
+function fgRenderDetail() {
+  var t = document.getElementById("fgTitle"), w = document.getElementById("fgWhen");
+  var d = document.getElementById("fgDesc"), c = document.getElementById("fgClock");
+  var sel = fgState.selected;
+  if (c) c.textContent = fgTime(Date.now());
+  if (!sel) {
+    if (t) t.textContent = "Guida TV completa";
+    if (w) w.textContent = fgLabel() + " · " + fgDate(fgState.start);
+    if (d) d.textContent = "Seleziona un programma nella griglia per vedere i dettagli.";
+    return;
+  }
+  if (t) t.textContent = sel.p.title || sel.ch.name;
+  if (w) w.textContent = fgDate(sel.p.s) + "  " + fgTime(sel.p.s) + " - " + fgTime(sel.p.e) + "  ·  " + sel.ch.name;
+  if (d) d.textContent = sel.p.desc || "Nessuna descrizione disponibile.";
+}
+function fgRender() {
+  fgRenderDetail();
+  var head = document.getElementById("fgHead"), line = document.getElementById("fgNowLine");
+  var total = (fgState.end - fgState.start) * fgState.ppm;
+  if (head) {
+    var h = '<div class="fg-label">' + escapeHtml(fgLabel()) + "</div>";
+    for (var t = fgState.start; t < fgState.end; t += 1800000) h += '<div class="fg-slot">' + fgTime(t) + "</div>";
+    head.style.width = (180 + total) + "px";
+    head.innerHTML = h;
+  }
+  if (line) line.style.left = (180 + (Date.now() - fgState.start) * fgState.ppm) + "px";
+  fgRenderRows();
+}
+function fgRenderRows() {
+  var rows = document.getElementById("fgRows");
+  if (!rows) return;
+  var total = (fgState.end - fgState.start) * fgState.ppm;
+  var now = Date.now();
+  var html = "";
+  fgState.channels.forEach(function (ch, ci) {
+    html += '<div class="fg-row"><div class="fg-ch"><span class="fg-num">' + (ci + 1) + "</span>" + escapeHtml(ch.name || "") + '</div><div class="fg-track" style="width:' + total + 'px">';
+    var ps = fgPrograms(ch), any = false;
+    ps.forEach(function (p, pi) {
+      if (p.e <= fgState.start || p.s >= fgState.end) return;
+      any = true;
+      var left = Math.max(0, (p.s - fgState.start) * fgState.ppm);
+      var right = Math.min(p.e, fgState.end);
+      var width = Math.max(60, (right - Math.max(p.s, fgState.start)) * fgState.ppm);
+      var isNow = p.s <= now && p.e >= now;
+      var sel = fgState.selected && fgState.selected.ch.id === ch.id && fgState.selected.p.s === p.s;
+      html += '<button class="fg-block' + (isNow ? " now" : "") + (sel ? " sel" : "") + '" style="left:' + left + "px;width:" + width + 'px" onclick="fgSelect(' + ci + "," + pi + ')" title="' + escapeAttr(p.title || ch.name || "") + '">' + escapeHtml(p.title || ch.name || "") + "</button>";
+    });
+    if (!any) html += '<div class="fg-block none" style="left:0;width:' + (120 * fgState.ppm) + 'px">Guida non disponibile</div>';
+    html += "</div></div>";
+  });
+  rows.innerHTML = html || '<div class="fg-empty">Nessun canale nella categoria selezionata. Carica una playlist o scegli un altro bouquet.</div>';
+}
+
 function tvEpgInfo(ch) {
   var key = ch.epgId || ch.tvgId || ch.id || ch.name;
   var progs = (state.epgData || {})[key] || [];
@@ -1065,7 +1190,8 @@ function tvDrawerAction(a) {
   else if (a === 'programs') openQuickMenu('MODE');
   else if (a === 'update') { var b = document.getElementById('btnReloadAll'); if (b) b.click(); else checkVersion(true); }
   else if (a === 'sort') qmSortChannels();
-  else if (a === 'replay' || a === 'guide') openQuickMenu('MODE');
+  else if (a === 'replay') openQuickMenu('MODE');
+  else if (a === 'guide') openFullGuide();
   else if (a === 'groupmanage') openQuickMenu('GRUPPI');
   else if (a === 'parental') showModal('settingsModal');
   else if (a === 'about') showToast('IP-TVSOLUTION v1.9 · Web Player · ' + (document.getElementById('serverInfo') || {}).textContent, 'success');
@@ -1272,7 +1398,7 @@ function tvSkip(dir) {
 function tvPlayerTool(tool) {
   if (tool === 'pip') { var b = document.getElementById('btnPip'); if (b) b.click(); return; }
   if (tool === 'settings') { openAdvancedPlayerModal(); return; }
-  if (tool === 'epg') { openQuickMenu('MODE'); return; }
+  if (tool === 'epg') { openFullGuide(); return; }
   if (tool === 'history') { showTvList('RECENT'); return; }
   if (tool === 'search') { var s = document.getElementById('searchChannels'); if (s) s.focus(); return; }
   if (tool === 'info') { state._tvCtxId = state.currentChannel && state.currentChannel.id; tvCtxInfo(); return; }

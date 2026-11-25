@@ -1076,3 +1076,39 @@ body.tv-playing .tv-expand-btn { display: none; }
   .tv-player-center button { width: 26px; height: 26px; min-width: 26px; font-size: 12px; }
   .tv-player-top-title { display: none; }
 }
+
+/* ===== Guida TV completa: griglia EPG per categoria ===== */
+.fg-ov { display: none; position: fixed; inset: 0; z-index: 700; background: #0b0f15; flex-direction: column; color: #e8edf3; }
+.fg-ov.show { display: flex; }
+.fg-top { position: relative; padding: 18px 22px 16px; background: linear-gradient(100deg, #1d2230 0%, #171c27 55%, #252336 100%); border-bottom: 1px solid #2b3340; }
+.fg-info { max-width: calc(100% - 120px); }
+.fg-info h2 { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: .2px; }
+.fg-when { margin-top: 8px; font-size: 15px; color: #3fd0e6; }
+.fg-desc { margin-top: 8px; font-size: 14px; line-height: 1.45; color: #c2cedb; max-height: 68px; overflow: hidden; }
+.fg-clock { position: absolute; right: 64px; top: 18px; font-size: 34px; font-weight: 300; color: #3fd0e6; }
+.fg-close { position: absolute; right: 18px; top: 14px; background: none; border: 0; color: #fff; font-size: 30px; cursor: pointer; line-height: 1; }
+.fg-sub { display: flex; align-items: center; justify-content: space-between; padding: 8px 22px; background: #11161e; color: #8fa1b5; font-size: 13px; border-bottom: 1px solid #2a323e; }
+.fg-sub button { background: transparent; border: 1px solid #39475a; color: #cfd9e4; border-radius: 6px; padding: 5px 12px; cursor: pointer; font-size: 12px; }
+.fg-scroll { flex: 1; overflow-x: auto; overflow-y: auto; }
+.fg-body { position: relative; min-width: max-content; }
+.fg-head { display: flex; height: 42px; background: #10151d; border-bottom: 1px solid #2a323e; }
+.fg-label, .fg-ch { width: 180px; flex: 0 0 180px; position: sticky; left: 0; z-index: 2; background: #151b24; padding: 0 12px; display: flex; align-items: center; font-weight: 600; }
+.fg-label { color: #3fd0e6; border-right: 1px solid #2a323e; }
+.fg-slot { width: 120px; flex: 0 0 120px; display: flex; align-items: center; padding-left: 10px; font-size: 14px; color: #b9c6d4; border-right: 1px solid #232b36; }
+.fg-row { display: flex; height: 46px; border-bottom: 1px solid #1b222c; }
+.fg-row:nth-child(even) .fg-track { background: #151a22; }
+.fg-ch { font-size: 15px; color: #dce5ee; border-right: 1px solid #2a323e; }
+.fg-num { display: inline-block; min-width: 26px; color: #738398; font-size: 12px; }
+.fg-track { position: relative; flex: 0 0 auto; height: 46px; background: #11161e; }
+.fg-block { position: absolute; top: 4px; height: 38px; border: 0; border-radius: 4px; background: #262d38; color: #e3eaf2; font-size: 13px; text-align: left; padding: 0 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; }
+.fg-block:hover { filter: brightness(1.18); }
+.fg-block.now { background: #1878c8; color: #fff; }
+.fg-block.sel { outline: 2px solid #fff; z-index: 1; }
+.fg-block.none { background: transparent; border: 1px dashed #394657; color: #6f8094; cursor: default; }
+.fg-now { position: absolute; top: 0; bottom: 0; width: 2px; background: #ff4b2b; z-index: 4; pointer-events: none; }
+.fg-empty { padding: 30px; color: #91a3b8; text-align: center; }
+@media (max-width: 700px) {
+  .fg-info h2 { font-size: 20px; }
+  .fg-clock { font-size: 24px; right: 50px; }
+  .fg-label, .fg-ch { width: 130px; flex-basis: 130px; }
+}
