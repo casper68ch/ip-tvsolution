@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP-TVSOLUTION Web Player</title>
-  <link rel="stylesheet" href="style.css?v=9">
+  <link rel="stylesheet" href="style.css?v=10">
   <script src="hls.min.js?v=2"></script>
   <script src="ts-player.js?v=2"></script>
   <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
@@ -56,6 +56,9 @@
         <button onclick="tvDrawerAction('film')">🎬 <span>Film</span></button>
         <button onclick="tvDrawerAction('serie')">📺 <span>Serie TV</span></button>
         <button onclick="tvDrawerAction('search')">🔍 <span>Cerca</span></button>
+        <div class="tv-drawer-title">Esplora</div>
+        <button onclick="tvDrawerAction('categorie')">📂 <span>Categorie</span></button>
+        <button onclick="tvDrawerAction('registrazioni')">🎙 <span>Registrazioni</span></button>
         <div class="tv-drawer-title">Menu</div>
         <button onclick="tvDrawerAction('settings')">⚙ <span>Impostazioni</span></button>
         <button onclick="tvDrawerAction('recent')">🕘 <span>Recent</span></button>
@@ -630,6 +633,6 @@
   </div>
 
   <script src="activation.js?v=3"></script>
-  <script src="app.js?v=18"></script>
+  <script src="app.js?v=19"></script>
 </body>
 </html>

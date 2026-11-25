@@ -742,6 +742,8 @@ function tvDrawerAction(a) {
   if (a === 'playlists') showPlaylistSelector();
   else if (a === 'groups') openQuickMenu('GRUPPI');
   else if (a === 'search') setTimeout(function () { var s = document.getElementById('searchChannels'); if (s) s.focus(); }, 50);
+  else if (a === 'categorie') showCategoryOverview();
+  else if (a === 'registrazioni') { updateSaveDestinationUI(); showModal('recordingsModal'); }
   else if (a === 'film') navigateTo('type','vod');
   else if (a === 'serie') navigateTo('type','series');
   else if (a === 'settings') showModal('settingsModal');

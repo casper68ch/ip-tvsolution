@@ -875,3 +875,23 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .modal-header { background: linear-gradient(100deg,rgba(200,56,56,.14),transparent); border-bottom: 1px solid var(--border); }
 .tv-list-item { border-radius: 10px; padding: 10px 12px; }
 .tv-list-item:hover { background: #20202b; }
+
+
+/* ===== Testata compatta e navigazione intuitiva su schermi piccoli ===== */
+.logo-text { white-space: nowrap; }
+.app-header { gap: 8px; }
+.header-actions { flex-wrap: nowrap; white-space: nowrap; }
+.header-actions .btn { white-space: nowrap; }
+@media (max-width: 1000px) {
+  .version-badge { display: none; }
+  #btnCategories, #btnRecordings { display: none; }
+  .header-actions .btn { font-size: 12px; padding: 7px 9px; }
+  .logo-text { font-size: 16px; }
+  .logo-img { width: 36px; height: 36px; }
+}
+@media (max-width: 700px) {
+  #btnViewMode { display: none; }
+  .logo-text { font-size: 14px; }
+  .app-header { padding: 8px 12px; }
+  .tv-drawer { width: min(360px, 94vw); }
+}
