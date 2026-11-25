@@ -1112,3 +1112,9 @@ body.tv-playing .tv-expand-btn { display: none; }
   .fg-clock { font-size: 24px; right: 50px; }
   .fg-label, .fg-ch { width: 130px; flex-basis: 130px; }
 }
+
+/* ===== Cast nella barra alta ===== */
+.tv-top-btn.tv-cast-btn.active { background: #1878c8; color: #fff; border-color: #1878c8; }
+.tv-top-btn.tv-cast-btn.disabled { opacity: .45; cursor: not-allowed; }
+.tv-top-btn.tv-cast-stop { background: #7a2630; color: #fff; border-color: #7a2630; }
+@media (max-width: 700px) { .tv-top-btn.tv-cast-stop { display: none !important; } }

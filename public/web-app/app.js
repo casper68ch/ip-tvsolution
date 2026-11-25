@@ -182,6 +182,106 @@ const $$ = (sel) => document.querySelectorAll(sel);
   };
 })();
 
+/* ===== Google Cast Web Sender: invia lo stream corrente alla TV ===== */
+window.IPTVCast = (function () {
+  var available = false, context = null, session = null, initialized = false;
+  function ui() {
+    var b = document.getElementById('btnCast'), s = document.getElementById('btnCastStop');
+    var connected = !!(session && session.getSessionId && session.getSessionId());
+    if (b) {
+      b.classList.toggle('disabled', !available);
+      b.classList.toggle('active', connected);
+    }
+    if (s) s.style.display = connected ? '' : 'none';
+  }
+  function contentType(url) {
+    return /\.m3u8(\?|#|$)/i.test(url || '') ? 'application/x-mpegURL' : 'video/mp2t';
+  }
+  function mediaUrl() {
+    var u = state._lastHlsUrl;
+    if (!u && state.currentChannel && state.currentChannel.url) u = state.currentChannel.url;
+    return u || null;
+  }
+  function loadCurrent(notify) {
+    if (!session) { showToast('Connetti prima un dispositivo Cast.', 'warning'); return; }
+    var url = mediaUrl();
+    if (!url) { showToast('Apri un canale prima di trasmettere.', 'warning'); return; }
+    var title = state.currentChannel ? state.currentChannel.name : 'IP-TVSOLUTION';
+    try {
+      var mediaInfo = new chrome.cast.media.MediaInfo(url, contentType(url));
+      mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
+      mediaInfo.metadata.title = title;
+      mediaInfo.streamType = chrome.cast.media.StreamType.LIVE;
+      var req = new chrome.cast.media.LoadRequest(mediaInfo);
+      req.autoplay = true;
+      req.currentTime = 0;
+      var remote = session.getMediaSession && session.getMediaSession();
+      var ok = function () { if (notify) showToast('Trasmesso su TV: ' + title, 'success'); };
+      var err = function (e) { showToast('Errore Cast: ' + ((e && e.message) || e || 'sconosciuto'), 'error'); };
+      if (remote && typeof remote.load === 'function') {
+        Promise.resolve(remote.load(req)).then(ok).catch(err);
+      } else if (typeof session.loadMedia === 'function') {
+        session.loadMedia(req, ok, err);
+      } else {
+        showToast('Receiver Cast non pronto. Riprova tra un attimo.', 'warning');
+      }
+    } catch (e) { showToast('Errore Cast: ' + (e.message || e), 'error'); }
+  }
+  function onSessionStarted(s) {
+    session = s;
+    available = true;
+    ui();
+    var name = (s && s.getCastDevice && s.getCastDevice().friendlyName) || 'TV';
+    showToast('Cast connesso: ' + name, 'success');
+    loadCurrent(false);
+  }
+  function onSessionEnded() {
+    session = null;
+    ui();
+    showToast('Cast disconnesso', 'info');
+  }
+  function init() {
+    if (initialized) return;
+    if (typeof window.cast === 'undefined' || typeof window.chrome === 'undefined') { ui(); return; }
+    initialized = true;
+    try {
+      context = cast.framework.CastContext.getInstance();
+      context.setOptions({
+        receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+        autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+      });
+      context.addEventListener(cast.framework.CastContext.EventType.SESSION_STARTED, onSessionStarted);
+      context.addEventListener(cast.framework.CastContext.EventType.SESSION_ENDED, onSessionEnded);
+      session = (context.getCurrentSession && context.getCurrentSession()) || null;
+    } catch (e) { console.warn('Cast init non riuscita:', e); }
+    ui();
+  }
+  return {
+    init: init,
+    open: function () {
+      if (!available || !initialized) { showToast('Cast non disponibile: usa Chrome/Edge su HTTPS con dispositivi sulla stessa rete.', 'warning'); return; }
+      if (session && session.getSessionId && session.getSessionId()) { loadCurrent(true); return; }
+      try {
+        context.requestSession().then(onSessionStarted).catch(function (e) {
+          if (!e || e.code !== 'CANCEL') showToast('Selezione Cast annullata o non riuscita', 'warning');
+        });
+      } catch (e) { showToast('Errore Cast: ' + (e.message || e), 'error'); }
+    },
+    disconnect: function () {
+      if (!context) return;
+      try { context.endCurrentSession(true); } catch (e) { showToast('Errore disconnessione Cast', 'error'); }
+    },
+    status: function () { return { available: available, connected: !!(session && session.getSessionId && session.getSessionId()) }; }
+  };
+})();
+window.__onGCastApiAvailable = function (isAvailable) {
+  window.__castAvailable = !!isAvailable;
+  if (isAvailable) window.IPTVCast.init();
+  var b = document.getElementById('btnCast');
+  if (b) b.classList.toggle('disabled', !isAvailable);
+};
+if (window.__castAvailable) window.IPTVCast.init();
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   loadState();

@@ -4,7 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP-TVSOLUTION Web Player</title>
-  <link rel="stylesheet" href="style.css?v=24">
+  <link rel="stylesheet" href="style.css?v=25">
+  <script>
+    window.__onGCastApiAvailable = function (isAvailable) {
+      window.__castAvailable = !!isAvailable;
+      if (isAvailable && window.IPTVCast && window.IPTVCast.init) window.IPTVCast.init();
+    };
+  </script>
+  <script type="application/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <script src="hls.min.js?v=2"></script>
   <script src="ts-player.js?v=2"></script>
   <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
@@ -18,6 +25,9 @@
       <button class="tv-top-btn" onclick="openCategoriesOverlay()" title="Categorie">📂 Categorie</button>
       <button id="btnViewMode" class="tv-top-btn" onclick="toggleViewMode()" title="Modalità lista/griglia">▦ Modalità</button>
       <button class="tv-top-btn" onclick="openQuickMenu('CERCA')" title="Cerca">🔍 Cerca</button>
+      <button id="btnCast" class="tv-top-btn tv-cast-btn disabled" onclick="IPTVCast.open()" title="Trasmetti su TV (Chromecast)">\U0001f4fa Cast</button>
+      <button id="btnCastStop" class="tv-top-btn tv-cast-stop" onclick="IPTVCast.disconnect()" title="Disconnetti Cast" style="display:none;">\U0001f4ce Stop</button>
+
       <span id="versionBadge" class="version-badge" style="display:none;">v?</span>
       <span class="tv-top-spacer"></span>
       <div id="headerUser" class="tv-top-user" style="display:none;">
@@ -705,6 +715,6 @@
       </div>
     </div>
 
-  <script src="app.js?v=41"></script>
+  <script src="app.js?v=42"></script>
 </body>
 </html>
