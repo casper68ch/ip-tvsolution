@@ -3433,8 +3433,8 @@ function updateViewModeButton() {
   var b = $('#btnViewMode');
   if (!b) return;
   var grid = state.viewMode === 'grid';
-  b.textContent = grid ? '▤ Lista' : '▦ Griglia';
-  b.title = grid ? 'Passa alla vista lista' : 'Passa alla vista griglia';
+  b.textContent = '▦ Modalità';
+  b.title = grid ? 'Modalità: griglia · clicca per lista' : 'Modalità: lista · clicca per griglia';
   var b2 = document.getElementById('btnBrowserViewMode');
   if (b2) b2.textContent = grid ? '▤ Lista' : '▦ Griglia';
 }
