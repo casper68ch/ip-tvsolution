@@ -897,3 +897,21 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 /* Pulsante indietro player */
 .tv-player-top .tv-back-btn { font-size:13px; padding:6px 10px; }
+
+
+/* ===== Browser TV: senza sidebar, bouquet in alto, selezione e Riproduci ===== */
+.main-layout.tv-browser { flex-direction: column; overflow: hidden; }
+.tv-browser-top { flex-shrink: 0; border-bottom: 1px solid var(--border); background: linear-gradient(180deg,#15151d,#111117); }
+.tv-browser-tools { display: flex; align-items: center; gap: 8px; padding: 0 14px 10px; }
+.tv-browser-tools .search-input { margin-bottom: 0; }
+#tvBrowser #channelList { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 12px 16px 96px; }
+.tv-group-head { padding: 10px 6px 6px; color: #ff8a8a; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.tv-play-bar { display: none; position: sticky; bottom: 0; left: 0; right: 0; z-index: 50; align-items: center; gap: 12px; padding: 12px 18px; background: linear-gradient(180deg,#17171f,#0d0d13); border-top: 1px solid #34343f; box-shadow: 0 -8px 24px rgba(0,0,0,.5); }
+.tv-play-bar.show { display: flex; }
+.tv-play-bar b { font-size: 14px; }
+.tv-play-bar span { color: var(--text2); font-size: 12px; flex: 1; }
+.tv-play-btn { font-size: 15px; padding: 10px 20px; }
+.channel-list .tv-row.selected, .channel-list.grid-view .tv-card.selected { border-color: var(--blue); box-shadow: inset 3px 0 0 var(--blue), 0 0 0 1px rgba(94,160,255,.35); background: linear-gradient(90deg,rgba(94,160,255,.14),transparent); }
+.player-area { display: none; }
+body.tv-playing #tvBrowser { display: none; }
+body.tv-playing .player-area { display: flex; flex: 1; }

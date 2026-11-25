@@ -26,7 +26,10 @@ let state = {
   watchHistory: [],
   bouquets: [],
   // Navigation state for hierarchical browsing
-  navLevel: 'type', // 'home', 'type', 'category'
+  navLevel: 'all',
+    tvBrowserMode: true,
+    tvBrowse: 'all',
+    tvSelectedId: null, // 'home', 'type', 'category'
   navType: 'live',   // 'live', 'vod', 'series'
   navCategory: null, // group name
   activePlaylist: 'all', // id della playlist attiva (una alla volta)
@@ -78,6 +81,7 @@ function loadState() {
       state.watchHistory = data.watchHistory || [];
       state.bouquets = data.bouquets || [];
       state.viewMode = 'list'; // apertura sempre con lista canali
+  state.tvBrowserMode = true; state.navLevel = 'all';
       // Una playlist alla volta: attiva quella salvata, altrimenti l'ultima aggiunta
       if (data.activePlaylist && state.sources.some(function (s) { return s.id === data.activePlaylist; })) {
         state.activePlaylist = data.activePlaylist;
@@ -664,7 +668,7 @@ function tvEpgInfo(ch) {
 function tvChannelItemHtml(ch, tvIdx) {
   var i = typeof tvIdx === 'number' ? tvIdx : Math.max(0, state.channels.indexOf(ch));
   var e = tvEpgInfo(ch);
-  var active = state.currentChannel && state.currentChannel.id === ch.id;
+  var active = state.tvSelectedId === ch.id;
   var fav = state.favorites.has(ch.id);
   var logo = ch.logo
     ? '<img src="' + escapeAttr(ch.logo) + '" onerror="this.style.display=\'none\';this.parentElement.textContent=this.parentElement.getAttribute(\'data-initials\')||\'IPTV\';">'
@@ -675,7 +679,7 @@ function tvChannelItemHtml(ch, tvIdx) {
   var more = '<span class="tv-more" onclick="event.stopPropagation();openTvContextMenu(\'' + id + '\',event)" title="Opzioni">⋮</span>';
 
   if (state.viewMode === 'grid') {
-    return '<div class="tv-card' + (active ? ' active' : '') + '" data-id="' + escapeHtml(ch.id) + '"' + ctx + ' onclick="playChannelById(\'' + id + '\')">' +
+    return '<div class="tv-card' + (active ? ' active' : '') + '" data-id="' + escapeHtml(ch.id) + '"' + ctx + ' onclick="tvSelectChannel(\'' + id + '\')" ondblclick="tvPlayChannel(\'' + id + '\')">' +
       '<div class="tv-card-top"><span class="tv-num">' + i + '</span>' + star + more + '</div>' +
       '<div class="tv-logo" data-initials="' + escapeAttr(initialsShort(ch.name)) + '">' + logo + '</div>' +
       '<b class="tv-name">' + escapeHtml(ch.name) + '</b>' +
@@ -683,7 +687,7 @@ function tvChannelItemHtml(ch, tvIdx) {
       '<span class="tv-foot"><em>' + escapeHtml(e.start) + '</em><span class="tv-bar"><i style="width:' + e.pct + '%"></i></span><em>' + escapeHtml(e.stop) + '</em></span>' +
       '<span class="tv-next">A Seguire: ' + escapeHtml(e.next || '-') + '</span></div>';
   }
-  return '<div class="tv-row' + (active ? ' active' : '') + '" data-id="' + escapeHtml(ch.id) + '"' + ctx + ' onclick="playChannelById(\'' + id + '\')">' +
+  return '<div class="tv-row' + (active ? ' active' : '') + '" data-id="' + escapeHtml(ch.id) + '"' + ctx + ' onclick="tvSelectChannel(\'' + id + '\')" ondblclick="tvPlayChannel(\'' + id + '\')">' +
     '<span class="tv-num">' + i + '</span>' +
     '<span class="tv-logo" data-initials="' + escapeAttr(initialsShort(ch.name)) + '">' + logo + '</span>' +
     '<span class="tv-main"><b class="tv-name">' + escapeHtml(ch.name) + '</b>' +
@@ -701,14 +705,14 @@ function renderTvGroupTabs() {
     var g = c.group || '';
     if (g) groups[g] = (groups[g] || 0) + 1;
   });
-  var keys = Object.keys(groups).sort().slice(0, 24);
-  var favOn = state.navType === 'fav' ? ' sel' : '';
-  var allOn = state.navLevel === 'home' && !state.searchQuery ? ' sel' : '';
-  var html = '<button class="tv-tab' + allOn + '" onclick="tvTab(\'all\')">TUTTI</button>' +
-             '<button class="tv-tab' + favOn + '" onclick="tvTab(\'fav\')">PREFERITI</button>';
+  var keys = Object.keys(groups).sort().slice(0, 30);
+  var b = state.tvBrowse || 'all';
+  function tab(v, label) {
+    return '<button class="tv-tab' + (b === v ? ' sel' : '') + '" onclick="tvTab(\'' + v + '\')">' + label + '</button>';
+  }
+  var html = tab('all', 'TUTTI') + tab('fav', 'PREFERITI') + tab('live', 'LIVE') + tab('vod', 'FILM') + tab('series', 'SERIE');
   keys.forEach(function (g) {
-    var on = state.navCategory === g ? ' sel' : '';
-    html += '<button class="tv-tab' + on + '" onclick="tvGroupTab(\'' + escapeAttr(g) + '\')">' + escapeHtml(g.toUpperCase()) + '</button>';
+    html += '<button class="tv-tab' + (b === g ? ' sel' : '') + '" onclick="tvGroupTab(\'' + escapeAttr(g) + '\')">' + escapeHtml(g.toUpperCase()) + '</button>';
   });
   html += '<span class="tv-tabs-spacer"></span>' +
     '<button class="tv-tab-icon" onclick="document.getElementById(\'searchChannels\').focus()" title="Cerca">🔍</button>' +
@@ -718,11 +722,36 @@ function renderTvGroupTabs() {
   box.innerHTML = html;
 }
 function tvTab(kind) {
-  if (kind === 'fav') navigateTo('type', 'fav'); else navigateTo('home');
+  state.tvBrowse = kind;
+  state.navLevel = 'all';
+  state.searchQuery = '';
+  var s = document.getElementById('searchChannels');
+  if (s) s.value = '';
+  renderChannelList();
+  saveState();
 }
-function tvGroupTab(group) {
-  var ch = state.channels.find(function (c) { return c.group === group; });
-  navigateToCategory(ch && ch.type ? ch.type : 'live', group);
+function tvGroupTab(group) { tvTab(group); }
+function tvUpdatePlayBar() {
+  var bar = document.getElementById('tvPlayBar');
+  var ch = state.channels.find(function (c) { return c.id === state.tvSelectedId; });
+  var name = document.getElementById('tvSelectedName');
+  var info = document.getElementById('tvSelectedInfo');
+  if (name) name.textContent = ch ? ch.name : 'Nessun canale selezionato';
+  if (info) info.textContent = ch ? ((ch.group || '') + (ch.type ? ' · ' + ch.type.toUpperCase() : '')) : 'Seleziona un canale dalla lista';
+  if (bar) bar.classList.toggle('show', !!ch);
+}
+function tvSelectChannel(id) {
+  state.tvSelectedId = id;
+  renderChannelList();
+  tvUpdatePlayBar();
+}
+function tvPlaySelected() {
+  if (!state.tvSelectedId) { showToast('Seleziona prima un canale.', 'warning'); return; }
+  tvPlayChannel(state.tvSelectedId);
+}
+function tvPlayChannel(id) {
+  document.body.classList.add('tv-playing');
+  playChannelById(id);
 }
 
 function openTvDrawer() {
@@ -856,13 +885,16 @@ function tvBackToList() {
   if (v) { try { v.pause(); } catch (e) {} }
   var p = document.getElementById('epgPanel');
   if (p) { p.classList.remove('open'); p.style.display = 'none'; }
-  state.navLevel = 'type';
+  document.body.classList.remove('tv-playing');
+  state.navLevel = 'all';
   state.navType = 'live';
+  state.tvBrowse = state.tvBrowse || 'all';
   state.navCategory = null;
   state.searchQuery = '';
   var s = document.getElementById('searchChannels');
   if (s) { s.value = ''; }
   renderChannelList();
+  tvUpdatePlayBar();
   saveState();
   showToast('Torna alla lista canali', 'success');
 }
@@ -3162,7 +3194,7 @@ async function refreshLogosFromSources(silent) {
   });
 }
 function channelItemHtml(ch, tvIdx) {
-  if (state.tvStyle !== false && (!ch.type || ch.type === 'live')) return tvChannelItemHtml(ch, tvIdx);
+  if (state.tvBrowserMode || (state.tvStyle !== false && (!ch.type || ch.type === 'live'))) return tvChannelItemHtml(ch, tvIdx);
   const poster = ch.type === 'vod' || ch.type === 'series';
   const isFav = state.favorites.has(ch.id);
   const isActive = state.currentChannel && state.currentChannel.id === ch.id;
@@ -3191,6 +3223,8 @@ function updateViewModeButton() {
   var grid = state.viewMode === 'grid';
   b.textContent = grid ? '▤ Lista' : '▦ Griglia';
   b.title = grid ? 'Passa alla vista lista' : 'Passa alla vista griglia';
+  var b2 = document.getElementById('btnBrowserViewMode');
+  if (b2) b2.textContent = grid ? '▤ Lista' : '▦ Griglia';
 }
 
 function toggleViewMode() {
@@ -3213,6 +3247,37 @@ function renderChannelList() {
   let baseChannels = state.channels.slice();
   if (state.activePlaylist && state.activePlaylist !== 'all') {
     baseChannels = baseChannels.filter(c => c.sourceId === state.activePlaylist);
+  }
+
+  // Browser TV: mostra direttamente lista/griglia dei canali del bouquet selezionato
+  if (state.tvBrowserMode && state.navLevel !== 'series_detail') {
+    var bMode = state.tvBrowse || 'all';
+    var shown = baseChannels.slice();
+    if (bMode === 'fav') shown = shown.filter(c => state.favorites.has(c.id));
+    else if (bMode === 'live') shown = shown.filter(c => !c.type || c.type === 'live');
+    else if (bMode === 'vod') shown = shown.filter(c => c.type === 'vod');
+    else if (bMode === 'series') shown = shown.filter(c => c.type === 'series');
+    else if (bMode !== 'all') shown = shown.filter(c => (c.group || '') === bMode);
+    if (state.searchQuery) {
+      var q = state.searchQuery.toLowerCase();
+      shown = shown.filter(c => ((c.name || '') + ' ' + (c.group || '')).toLowerCase().includes(q));
+    }
+    var bGroups = {};
+    shown.forEach(function (c) {
+      var g = c.group || 'Generale';
+      if (!bGroups[g]) bGroups[g] = [];
+      bGroups[g].push(c);
+    });
+    var bHtml = '';
+    var bIdx = 0;
+    Object.keys(bGroups).sort().forEach(function (g) {
+      bHtml += '<div class="tv-group-head">' + escapeHtml(g) + ' (' + bGroups[g].length + ')</div>';
+      bGroups[g].forEach(function (ch) { bHtml += channelItemHtml(ch, bIdx++); });
+    });
+    if (!shown.length) bHtml = '<div class="empty-state"><p>Nessun canale</p><p class="hint">Carica una playlist o scegli un altro bouquet.</p></div>';
+    list.innerHTML = bHtml;
+    tvUpdatePlayBar();
+    return;
   }
 
   // HOME LEVEL: show type selection cards
@@ -3648,6 +3713,7 @@ function renderChannelList() {
 }
 
 function playChannelById(id, directPlay) {
+  document.body.classList.add('tv-playing');
   // Handle virtual series entries from search
   if (id.startsWith('search_series_')) {
     const seriesName = id.replace('search_series_', '');
