@@ -1022,3 +1022,10 @@ body.tv-playing .tv-expand-btn { display: none; }
   .tv-top-tools .tv-top-home { display: none; }
   .tv-top-tools .tv-top-btn { font-size: 11px; padding: 6px 8px; }
 }
+
+/* ===== Controlli in barra: menu, gruppi, modalita, cerca ===== */
+.tv-top-tools { overflow-x: auto; scrollbar-width: none; }
+.tv-top-tools::-webkit-scrollbar { display: none; }
+.tv-top-tools .tv-top-btn,
+.tv-top-tools .tv-hamburger,
+.tv-top-tools .tv-top-home { flex-shrink: 0; }

@@ -864,10 +864,7 @@ function renderTvGroupTabs() {
     return '<button class="tv-tab' + (sel ? ' sel' : '') + '" onclick="tvTab(\'' + v + '\')">' + label + '</button>';
   }
   var html = tab('all', 'TUTTI') + tab('fav', 'PREFERITI') + tab('live', 'LIVE') + tab('vod', 'FILM') + tab('series', 'SERIE');
-  html += '<span class="tv-tabs-spacer"></span>' +
-    '<button class="tv-tab-icon" onclick="openQuickMenu(\'CERCA\')" title="Cerca">🔍</button>' +
-    '<button class="tv-tab-icon" onclick="toggleViewMode()" title="Lista/Griglia">▦</button>' +
-    '<button class="tv-tab-icon" onclick="showToast(\'Cast non disponibile nel browser\',\'warning\')" title="Cast">📡</button>';
+  html += '<span class="tv-tabs-spacer"></span>';
   box.innerHTML = html;
 }
 function tvCatLabel(type) {

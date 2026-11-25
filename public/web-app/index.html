@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP-TVSOLUTION Web Player</title>
-  <link rel="stylesheet" href="style.css?v=20">
+  <link rel="stylesheet" href="style.css?v=21">
   <script src="hls.min.js?v=2"></script>
   <script src="ts-player.js?v=2"></script>
   <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
@@ -14,6 +14,9 @@
     <!-- Toolbar compatta -->
     <div class="tv-top-tools">
       <button class="tv-hamburger" onclick="openTvDrawer()" title="Menu">☰</button>
+      <button class="tv-top-btn tv-top-groups" onclick="openQuickMenu('GRUPPI')" title="Liste gruppi">🗂 Gruppi</button>
+      <button id="btnViewMode" class="tv-top-btn" onclick="toggleViewMode()" title="Modalità lista/griglia">▦ Modalità</button>
+      <button class="tv-top-btn" onclick="openQuickMenu('CERCA')" title="Cerca">🔍 Cerca</button>
       <button class="tv-top-home" onclick="tvTab('all')">🏠 Home</button>
       <button id="btnPlaylistSelector" class="tv-top-btn" onclick="showPlaylistSelector()">📺 Sorgenti</button>
       <button id="btnAddSource" class="tv-top-btn" onclick="showModal('addSourceModal')">＋ Aggiungi</button>
@@ -70,10 +73,6 @@
     <div class="main-layout tv-browser" id="tvBrowser">
       <div class="tv-browser-top">
         <div class="tv-group-tabs" id="tvGroupTabs"></div>
-        <div class="tv-browser-tools">
-          <button class="btn btn-secondary tv-group-manage-btn" onclick="openQuickMenu('GRUPPI')" title="Gestione gruppi">🗂 Gestione gruppi</button>
-          <button id="btnBrowserViewMode" class="btn btn-secondary" onclick="toggleViewMode()" title="Lista/Griglia" style="font-size:13px;padding:9px 12px;">▦ Griglia</button>
-        </div>
       </div>
       <div class="tv-browser-body">
         <div class="tv-list-pane">
@@ -674,6 +673,6 @@
   </div>
 
   <script src="activation.js?v=4"></script>
-  <script src="app.js?v=31"></script>
+  <script src="app.js?v=32"></script>
 </body>
 </html>
