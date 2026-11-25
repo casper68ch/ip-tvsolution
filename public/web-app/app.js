@@ -798,7 +798,7 @@ function setQuickMenuTab(tab) {
 
 /* ===== Stile TV: drawer, tab, EPG card, player overlay, context menu ===== */
 /* ===== Guida TV completa in stile EPG, filtrata sulla categoria selezionata ===== */
-var fgState = { start: 0, end: 0, ppm: 4, selected: null, channels: [] };
+var fgState = { start: 0, end: 0, ppm: 4 / 60000, selected: null, channels: [] };
 function fgChannels() {
   var list = (state.channels || []).slice();
   if (state.activePlaylist && state.activePlaylist !== "all") {
