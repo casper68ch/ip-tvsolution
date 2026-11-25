@@ -26,11 +26,11 @@ let state = {
   watchHistory: [],
   bouquets: [],
   // Navigation state for hierarchical browsing
-  navLevel: 'home', // 'home', 'type', 'category'
-  navType: null,   // 'live', 'vod', 'series'
+  navLevel: 'type', // 'home', 'type', 'category'
+  navType: 'live',   // 'live', 'vod', 'series'
   navCategory: null, // group name
   activePlaylist: 'all', // id della playlist attiva (una alla volta)
-  viewMode: 'grid', // 'grid' | 'list'
+  viewMode: 'list', // 'grid' | 'list'
   epgLogos: {}, // logo canale da XMLTV
 };
 
@@ -77,7 +77,7 @@ function loadState() {
       state.epgData = data.epgData || {};
       state.watchHistory = data.watchHistory || [];
       state.bouquets = data.bouquets || [];
-      state.viewMode = data.viewMode === 'list' ? 'list' : 'grid';
+      state.viewMode = 'list'; // apertura sempre con lista canali
       // Una playlist alla volta: attiva quella salvata, altrimenti l'ultima aggiunta
       if (data.activePlaylist && state.sources.some(function (s) { return s.id === data.activePlaylist; })) {
         state.activePlaylist = data.activePlaylist;
@@ -847,6 +847,24 @@ function tvCtxAlias() {
   var ch = tvCtxChannel(); if (!ch) return;
   var name = prompt('Nuovo nome per il canale:', ch.name);
   if (name !== null && name.trim()) { ch.name = name.trim(); saveState(); renderChannelList(); showToast('Alias aggiornato.', 'success'); }
+}
+
+
+/* Torna alla lista canali dal player */
+function tvBackToList() {
+  var v = document.getElementById('videoPlayer');
+  if (v) { try { v.pause(); } catch (e) {} }
+  var p = document.getElementById('epgPanel');
+  if (p) { p.classList.remove('open'); p.style.display = 'none'; }
+  state.navLevel = 'type';
+  state.navType = 'live';
+  state.navCategory = null;
+  state.searchQuery = '';
+  var s = document.getElementById('searchChannels');
+  if (s) { s.value = ''; }
+  renderChannelList();
+  saveState();
+  showToast('Torna alla lista canali', 'success');
 }
 
 function openAdvancedPlayerModal() {

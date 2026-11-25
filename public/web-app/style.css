@@ -895,3 +895,5 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   .app-header { padding: 8px 12px; }
   .tv-drawer { width: min(360px, 94vw); }
 }
+/* Pulsante indietro player */
+.tv-player-top .tv-back-btn { font-size:13px; padding:6px 10px; }
