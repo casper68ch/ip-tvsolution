@@ -381,7 +381,8 @@ async function ensureEpgLoaded() {
 function setupEventListeners() {
   $('#btnAddSource').addEventListener('click', () => showModal('addSourceModal'));
   $('#btnCloseAddSource').addEventListener('click', () => hideModal('addSourceModal'));
-  $('#btnSettings').addEventListener('click', () => { showModal('settingsModal'); renderSavedSources(); });
+  var _btnSettings = $('#btnSettings');
+  if (_btnSettings) _btnSettings.addEventListener('click', () => { showModal('settingsModal'); renderSavedSources(); });
   $('#btnCloseSettings').addEventListener('click', () => hideModal('settingsModal'));
   $('#btnClosePin').addEventListener('click', hidePinModal);
   $('#pinInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitPin(); });
@@ -741,6 +742,8 @@ function tvDrawerAction(a) {
   if (a === 'playlists') showPlaylistSelector();
   else if (a === 'groups') openQuickMenu('GRUPPI');
   else if (a === 'search') setTimeout(function () { var s = document.getElementById('searchChannels'); if (s) s.focus(); }, 50);
+  else if (a === 'film') navigateTo('type','vod');
+  else if (a === 'serie') navigateTo('type','series');
   else if (a === 'settings') showModal('settingsModal');
   else if (a === 'recent') showTvList('RECENT');
   else if (a === 'new') showTvList('NEW');

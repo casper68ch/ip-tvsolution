@@ -764,3 +764,9 @@ details > summary::-webkit-details-marker { display: none; }
 .tv-list-item img { width:34px; height:26px; object-fit:contain; }
 .tv-list-item span { flex:1; font-size:13px; }
 .tv-list-item small { color:var(--text3); font-size:11px; }
+
+/* Barra player: un solo set di controlli, niente doppioni */
+.tv-player-top .player-controls { position:static; display:flex; gap:6px; }
+.tv-player-top .ctrl-btn { flex-direction:row; min-width:auto; padding:6px 9px; font-size:14px; gap:0; }
+.tv-player-top .ctrl-btn::after { display:none; }
+.tv-player-top .ctrl-btn.recording { animation:recpulse 1.2s infinite; }
