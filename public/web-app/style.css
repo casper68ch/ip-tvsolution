@@ -988,3 +988,6 @@ body.tv-playing .tv-expand-btn { display: none; }
   .tv-list-pane { width: 100%; max-width: none; min-width: 0; height: 52%; border-right: none; border-bottom: 1px solid #2a2a34; }
   .tv-preview-pane { height: 48%; }
 }
+
+/* Gestione gruppi nella barra in alto */
+.tv-browser-tools .tv-group-manage-btn { font-size: 13px !important; padding: 9px 12px !important; white-space: nowrap; }

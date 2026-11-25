@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP-TVSOLUTION Web Player</title>
-  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="style.css?v=19">
   <script src="hls.min.js?v=2"></script>
   <script src="ts-player.js?v=2"></script>
   <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
@@ -78,6 +78,7 @@
       <div class="tv-browser-top">
         <div class="tv-group-tabs" id="tvGroupTabs"></div>
         <div class="tv-browser-tools">
+          <button class="btn btn-secondary tv-group-manage-btn" onclick="openQuickMenu('GRUPPI')" title="Gestione gruppi">🗂 Gestione gruppi</button>
           <button id="btnBrowserViewMode" class="btn btn-secondary" onclick="toggleViewMode()" title="Lista/Griglia" style="font-size:13px;padding:9px 12px;">▦ Griglia</button>
         </div>
       </div>
@@ -680,6 +681,6 @@
   </div>
 
   <script src="activation.js?v=4"></script>
-  <script src="app.js?v=26"></script>
+  <script src="app.js?v=29"></script>
 </body>
 </html>
