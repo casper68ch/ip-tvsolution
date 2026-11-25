@@ -3360,6 +3360,7 @@ function renderChannelList() {
       bGroups[g].push(c);
     });
     var bHtml = '';
+    if (state.tvCategory) bHtml += '<div class="tv-back-line" onclick="tvBackFromCategory()">← Torna alle categorie ' + escapeHtml(tvCatLabel(state.tvType)) + '</div>';
     var bIdx = 0;
     Object.keys(bGroups).sort().forEach(function (g) {
       bHtml += '<div class="tv-group-head">' + escapeHtml(g) + ' (' + bGroups[g].length + ')</div>';
