@@ -222,6 +222,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // State persistence
 function loadState() {
   try {
+    state.tvBrowserMode = true; state.navLevel = 'all';
+    state.tvView = 'channels'; state.tvBrowse = 'all';
+    state.tvType = null; state.tvCategory = null; state.tvBack = null;
+    state.tvSelectedId = null; state.activePlaylist = 'all';
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const data = JSON.parse(saved);

@@ -4,34 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP-TVSOLUTION Web Player</title>
-  <link rel="stylesheet" href="style.css?v=19">
+  <link rel="stylesheet" href="style.css?v=20">
   <script src="hls.min.js?v=2"></script>
   <script src="ts-player.js?v=2"></script>
   <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
 </head>
 <body>
   <div id="app">
-    <!-- Header -->
-    <header class="app-header">
+    <!-- Toolbar compatta -->
+    <div class="tv-top-tools">
       <button class="tv-hamburger" onclick="openTvDrawer()" title="Menu">☰</button>
-      <div class="logo">
-        <img src="brand.png" alt="IP-TVSOLUTION" class="logo-img">
-        <span class="logo-text">IP-TVSOLUTION</span>
-        <span id="versionBadge" class="version-badge">v?</span>
-      </div>
-      <div class="header-actions" style="gap:6px;">
-        <button id="btnPlaylistSelector" class="btn btn-secondary" onclick="showPlaylistSelector()" style="font-size:13px;padding:8px 10px;">📋 Tutte le playlist</button>
-        <button id="btnCategories" class="btn btn-secondary" onclick="showCategoryOverview()" style="font-size:13px;padding:8px 10px;">📂 Esplora categorie</button>
-        <button id="btnRecordings" class="btn btn-secondary" onclick="updateSaveDestinationUI();showModal('recordingsModal')" style="font-size:13px;padding:8px 10px;">🎙 Registrazioni</button>
-        <button id="btnAddSource" class="btn btn-primary" onclick="showModal('addSourceModal')">+ Aggiungi sorgente</button>
-        <button id="btnViewMode" class="btn btn-secondary" onclick="toggleViewMode()" style="font-size:13px;padding:8px 10px;" title="Cambia vista">▤ Lista</button>
-      </div>
-      <div id="headerUser" class="header-user" style="display:none;">
-        <img src="brand.png" alt="" class="header-user-logo">
+      <button class="tv-top-home" onclick="tvTab('all')">🏠 Home</button>
+      <button id="btnPlaylistSelector" class="tv-top-btn" onclick="showPlaylistSelector()">📺 Sorgenti</button>
+      <button id="btnAddSource" class="tv-top-btn" onclick="showModal('addSourceModal')">＋ Aggiungi</button>
+      <button class="tv-top-btn" onclick="showModal('settingsModal')" title="Impostazioni">⚙</button>
+      <span id="versionBadge" class="version-badge" style="display:none;">v?</span>
+      <span class="tv-top-spacer"></span>
+      <div id="headerUser" class="tv-top-user" style="display:none;">
         <span id="headerUserName"></span>
-        <button class="btn btn-secondary" onclick="IPtvActivation.logout()" title="Esci" style="font-size:11px;padding:3px 9px;border-radius:12px;">Esci</button>
+        <button class="tv-top-logout" onclick="IPtvActivation.logout()">Esci</button>
       </div>
-    </header>
+    </div>
 
     <!-- Update banner -->
     <div id="updateBanner" class="update-banner" style="display:none;">
@@ -93,7 +86,7 @@
         <div class="empty-state">
           <p style="font-size:17px;font-weight:600;">Benvenuto in IP-TVSOLUTION 👋</p>
           <p class="hint" style="line-height:1.8;margin-top:10px;text-align:left;">
-            1️⃣ Clicca <b>+ Aggiungi sorgente</b> e incolla il link della tua playlist<br>
+            1️⃣ Clicca <b>＋ Aggiungi</b> e incolla il link della tua playlist<br>
             2️⃣ Scegli un bouquet in alto (TUTTI, LIVE, FILM, SERIE...)<br>
             3️⃣ Clicca un canale: vedi l'anteprima a destra, poi clicca <b>⤢ Ingrandisci</b>
           </p>
@@ -681,6 +674,6 @@
   </div>
 
   <script src="activation.js?v=4"></script>
-  <script src="app.js?v=29"></script>
+  <script src="app.js?v=30"></script>
 </body>
 </html>
