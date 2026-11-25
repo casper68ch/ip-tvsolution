@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP-TVSOLUTION Web Player</title>
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="stylesheet" href="style.css?v=16">
   <script src="hls.min.js?v=2"></script>
   <script src="ts-player.js?v=2"></script>
   <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
@@ -74,15 +74,15 @@
         <button onclick="tvDrawerAction('exit')">🚪 <span>Esci</span></button>
       </div>
     </aside>
-    <!-- Main Layout -->
     <div class="main-layout tv-browser" id="tvBrowser">
       <div class="tv-browser-top">
         <div class="tv-group-tabs" id="tvGroupTabs"></div>
         <div class="tv-browser-tools">
-          <input type="text" id="searchChannels" placeholder="🔍 Cerca canale, film, serie..." class="search-input">
           <button id="btnBrowserViewMode" class="btn btn-secondary" onclick="toggleViewMode()" title="Lista/Griglia" style="font-size:13px;padding:9px 12px;">▦ Griglia</button>
         </div>
       </div>
+      <div class="tv-browser-body">
+        <div class="tv-list-pane">
       <div class="nav-breadcrumb" id="navBreadcrumb" style="display:none;margin:8px 14px;font-size:12px;color:var(--text2);">
         <button onclick="tvTab('all')" style="background:var(--accent);color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;margin-right:6px;">🏠 Home</button>
         <span id="breadcrumbType"></span>
@@ -94,7 +94,7 @@
           <p class="hint" style="line-height:1.8;margin-top:10px;text-align:left;">
             1️⃣ Clicca <b>+ Aggiungi sorgente</b> e incolla il link della tua playlist<br>
             2️⃣ Scegli un bouquet in alto (TUTTI, LIVE, FILM, SERIE...)<br>
-            3️⃣ Seleziona un canale e premi <b>▶ Riproduci</b>
+            3️⃣ Clicca un canale: vedi l'anteprima a destra, poi clicca <b>⤢ Ingrandisci</b>
           </p>
         </div>
       </div>
@@ -103,8 +103,9 @@
         <span id="tvSelectedInfo">Seleziona un canale dalla lista</span>
         <button class="btn btn-primary tv-play-btn" onclick="tvPlaySelected()">▶ Riproduci</button>
       </div>
-    </div>
 
+        </div>
+        <div class="tv-preview-pane" id="tvPreviewPane">
       <!-- Player Area -->
       <main class="player-area" id="playerArea">
         <div class="video-container" id="videoContainer">
@@ -172,6 +173,9 @@
           </div>
         </div>
       </main>
+          <button class="tv-expand-btn" id="tvExpandBtn" onclick="tvExpandPlayer()" title="Ingrandisci player">⤢ Ingrandisci</button>
+        </div>
+      </div>
     </div>
 
     <!-- Modals -->
@@ -676,6 +680,6 @@
   </div>
 
   <script src="activation.js?v=4"></script>
-  <script src="app.js?v=25"></script>
+  <script src="app.js?v=26"></script>
 </body>
 </html>

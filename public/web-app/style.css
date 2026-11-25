@@ -954,3 +954,36 @@ body.tv-playing .player-area { display: flex; flex: 1; }
 .ps-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid #26303d; font-size:12px; color:#9aa7b6; }
 .ps-note { margin-top:12px; font-size:11px; color:#687585; text-align:center; }
 @media(max-width:520px){ .ps-card { padding:18px; } .ps-head { align-items:flex-start; } .ps-tab { font-size:12px; } }
+
+/* ===== Lista a sinistra + anteprima player a destra ===== */
+.tv-browser-body { display: flex; flex: 1; min-height: 0; }
+.tv-list-pane {
+  width: 46%; min-width: 320px; max-width: 620px;
+  display: flex; flex-direction: column; min-height: 0;
+  border-right: 1px solid #2a2a34; background: #101016; overflow: hidden;
+}
+.tv-list-pane .channel-list { flex: 1; min-height: 0; }
+.tv-preview-pane { flex: 1; min-width: 0; position: relative; background: #000; }
+.tv-preview-pane .player-area { display: flex !important; flex: 1; }
+.tv-preview-pane .tv-player-ui { opacity: 1; }
+.tv-expand-btn {
+  position: absolute; top: 12px; right: 58px; z-index: 9;
+  background: rgba(200,56,56,.92) !important; color: #fff !important;
+  border: 1px solid rgba(255,255,255,.2) !important; border-radius: 9px !important;
+  padding: 7px 12px !important; font-size: 13px !important; cursor: pointer;
+}
+.tv-expand-btn:hover { background: #e04a4a !important; }
+.tv-browser-tools { justify-content: flex-end; }
+body.tv-playing .tv-browser-top, body.tv-playing .tv-list-pane { display: none; }
+body.tv-playing .tv-browser-body { display: block; }
+body.tv-playing .tv-preview-pane { position: fixed; inset: 0; z-index: 300; }
+body.tv-playing .tv-preview-pane .tv-player-ui { opacity: 1; }
+body.tv-playing .tv-expand-btn { display: none; }
+@media (max-width: 900px) {
+  .tv-list-pane { width: 50%; min-width: 260px; }
+}
+@media (max-width: 640px) {
+  .tv-browser-body { flex-direction: column; }
+  .tv-list-pane { width: 100%; max-width: none; min-width: 0; height: 52%; border-right: none; border-bottom: 1px solid #2a2a34; }
+  .tv-preview-pane { height: 48%; }
+}

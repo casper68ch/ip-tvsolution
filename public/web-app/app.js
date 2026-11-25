@@ -571,7 +571,8 @@ function setupEventListeners() {
   $('#formStalker').addEventListener('submit', handleStalkerSubmit);
   $('#formFile').addEventListener('submit', handleFileSubmit);
 
-  $('#searchChannels').addEventListener('input', (e) => {
+  var _searchChannels = $('#searchChannels');
+  if (_searchChannels) _searchChannels.addEventListener('input', (e) => {
     state.searchQuery = e.target.value.toLowerCase();
     if (state.searchQuery && state.navLevel !== 'home') {
       // When searching, go to home level to show all matching channels
@@ -859,7 +860,7 @@ function renderTvGroupTabs() {
   }
   var html = tab('all', 'TUTTI') + tab('fav', 'PREFERITI') + tab('live', 'LIVE') + tab('vod', 'FILM') + tab('series', 'SERIE');
   html += '<span class="tv-tabs-spacer"></span>' +
-    '<button class="tv-tab-icon" onclick="document.getElementById(\'searchChannels\').focus()" title="Cerca">🔍</button>' +
+    '<button class="tv-tab-icon" onclick="openQuickMenu(\'CERCA\')" title="Cerca">🔍</button>' +
     '<button class="tv-tab-icon" onclick="openQuickMenu(\'GRUPPI\')" title="Gruppi">🗂</button>' +
     '<button class="tv-tab-icon" onclick="toggleViewMode()" title="Lista/Griglia">▦</button>' +
     '<button class="tv-tab-icon" onclick="showToast(\'Cast non disponibile nel browser\',\'warning\')" title="Cast">📡</button>';
@@ -928,16 +929,26 @@ function tvUpdatePlayBar() {
 }
 function tvSelectChannel(id) {
   state.tvSelectedId = id;
+  document.body.classList.remove('tv-playing');
+  playChannelById(id);
   renderChannelList();
   tvUpdatePlayBar();
+  showToast('Anteprima avviata · clicca ⤢ sul player per ingrandire', 'success');
 }
 function tvPlaySelected() {
   if (!state.tvSelectedId) { showToast('Seleziona prima un canale.', 'warning'); return; }
   tvPlayChannel(state.tvSelectedId);
 }
-function tvPlayChannel(id) {
+function tvExpandPlayer() {
+  if (!state.tvSelectedId) { showToast('Seleziona prima un canale.', 'warning'); return; }
   document.body.classList.add('tv-playing');
+  var u = document.getElementById('tvPlayerUi');
+  if (u) u.classList.remove('locked');
+}
+function tvPlayChannel(id) {
+  state.tvSelectedId = id;
   playChannelById(id);
+  document.body.classList.add('tv-playing');
 }
 
 function openTvDrawer() {
@@ -3943,7 +3954,7 @@ function renderChannelList() {
 }
 
 function playChannelById(id, directPlay) {
-  document.body.classList.add('tv-playing');
+  // La riproduzione parte sempre nell'anteprima; tvExpandPlayer() ingrandisce.
   // Handle virtual series entries from search
   if (id.startsWith('search_series_')) {
     const seriesName = id.replace('search_series_', '');
