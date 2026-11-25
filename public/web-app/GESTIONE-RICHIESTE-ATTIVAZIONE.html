@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>IP-TVSOLUTION - Gestione richieste di attivazione</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#121218;color:#e8e8ee;font-family:Segoe UI,Arial,sans-serif;padding:24px}
+.wrap{max-width:760px;margin:0 auto}
+h1{color:#fff;font-size:24px;margin:0 0 4px}
+.sub{color:#a9a9b6;font-size:13px;margin:0 0 20px;line-height:1.5}
+.card{background:#1e1e26;border:1px solid #33333d;border-radius:12px;padding:22px;margin-bottom:16px}
+label{display:block;font-size:12px;color:#c9c9d4;margin-bottom:6px}
+input{width:100%;background:#111117;border:1px solid #33333d;color:#fff;border-radius:8px;padding:12px;font-size:15px;outline:none;margin-bottom:14px}
+input:focus{border-color:#C83838}
+.btn{border:none;border-radius:8px;padding:13px 18px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:6px}
+.approve{background:#2e9e5b;color:#fff}
+.approve:hover{background:#37b86a}
+.reject{background:#C83838;color:#fff}
+.reject:hover{background:#e04545}
+.note{background:#24242e;border-left:4px solid #C83838;padding:12px 16px;border-radius:8px;color:#c9c9d4;font-size:12px;line-height:1.6;margin-top:14px}
+.preview{background:#111117;border:1px solid #33333d;border-radius:8px;padding:14px;font-size:12px;color:#d7d7e0;white-space:pre-wrap;line-height:1.6;margin-top:12px;display:none}
+code{background:#2a2a34;padding:2px 6px;border-radius:4px;color:#ffd87a}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔐 IP-TVSOLUTION — Gestione attivazioni</h1>
+  <p class="sub">Pannello del proprietario. Incolla i dati della richiesta ricevuta via email, poi clicca Approva o Rifiuta: si aprirà il programma di posta con la risposta già pronta.</p>
+
+  <div class="card">
+    <label>Codice richiesta (dall'email, es. IPTV-FC70E1)</label>
+    <input id="code" placeholder="IPTV-XXXXXX" autocomplete="off">
+
+    <label>Email del richiedente (dall'email)</label>
+    <input id="email" placeholder="nome@email.com" type="email" autocomplete="off">
+
+    <label>Nome utente (dall'email)</label>
+    <input id="user" placeholder="es. Mario" autocomplete="off">
+    <label>Piattaforma del cliente</label>
+    <select id="platform" style="width:100%;background:#111117;border:1px solid #33333d;color:#fff;border-radius:8px;padding:12px;font-size:14px;margin-bottom:14px;">
+      <option value="Android">&#129302; Android</option>
+      <option value="iPhone">&#127822; iPhone</option>
+      <option value="Web/Chrome">&#127760; Web / Chrome</option>
+      <option value="Windows">&#9638; Windows</option>
+      <option value="Smart TV">&#128250; Smart TV (LG/Samsung)</option>
+    </select>
+
+    <button class="btn approve" onclick="risposta(true)">✅ APPROVA e invia codice di attivazione</button>
+    <button class="btn reject" onclick="risposta(false)">❌ RIFIUTA e avvisa l'utente</button>
+
+    <div class="preview" id="preview"></div>
+    <div class="note">
+      <b>Come funziona:</b><br>
+      1. L'utente invia la richiesta (tu ricevi l'email con codice, utente ed email).<br>
+      2. Incolla quei dati qui sopra.<br>
+      3. Clicca <b>Approva</b>: l'email parte da sola al richiedente con il codice di attivazione da incollare nell'app.<br>
+      4. L'utente incolla il codice e l'app si sblocca.<br><br>
+      Il codice da inviare è <code>il codice richiesta</code> stesso (es. <code>IPTV-FC70E1</code>).
+    </div>
+  </div>
+
+  <!-- Storico gestionale -->
+  <div class="card">
+    <h2 style="margin:0 0 12px;font-size:18px;">📋 Storico attivazioni</h2>
+    <button class="btn secondary" onclick="esportaCSV()" style="width:auto;padding:8px 14px;margin-top:0;">⬇ Esporta CSV</button>
+    <button class="btn secondary" onclick="cancellaStorico()" style="width:auto;padding:8px 14px;margin-top:0;background:#3a2020;">🗑 Cancella storico</button>
+    <div id="statsBox" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;"></div>
+    <div style="margin-top:10px;">
+      <label style="font-size:12px;color:#c9c9d4;">Filtra per piattaforma:</label>
+      <select id="filterPlatform" onchange="mostraStorico()" style="background:#111117;border:1px solid #33333d;color:#fff;border-radius:8px;padding:8px 12px;font-size:13px;margin-left:8px;">
+        <option value="TUTTE">Tutte le piattaforme</option>
+        <option value="Android">&#129302; Android</option>
+        <option value="iPhone">&#127822; iPhone</option>
+        <option value="Web/Chrome">&#127760; Web / Chrome</option>
+        <option value="Windows">&#9638; Windows</option>
+        <option value="Smart TV">&#128250; Smart TV</option>
+      </select>
+    </div>
+    <div id="storicoBox" style="margin-top:14px;overflow-x:auto;"></div>
+    <div class="note">Ogni operazione viene salvata automaticamente qui e inviata via email al proprietario. La password dell'utente <b>non</b> è salvata in chiaro: l'app conserva solo un hash.</div>
+  </div>
+</div>
+<script>
+var MASTER_SECRET = 'iptv-solution-attivazione-2026';
+function sha256(t){
+  if(window.crypto && window.crypto.subtle){
+    return window.crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)).then(function(b){
+      return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');
+    });
+  }
+  return Promise.resolve('');
+}
+function activationCode(requestCode){
+  return sha256(requestCode+'|'+MASTER_SECRET).then(function(h){ return 'IPTV-'+h.substring(0,8).toUpperCase(); });
+}
+// ===== Storico gestionale attivazioni =====
+var STORICO_KEY='iptv_solution_activation_history';
+function caricaStorico(){
+  try{ return JSON.parse(localStorage.getItem(STORICO_KEY)||'[]'); }catch(e){ return []; }
+}
+function salvaStorico(arr){ localStorage.setItem(STORICO_KEY,JSON.stringify(arr)); mostraStorico(); }
+function mostraStorico(){
+  var el=document.getElementById('storicoBox'); if(!el) return;
+  var arr=caricaStorico();
+  var filtro=(document.getElementById('filterPlatform')||{}).value||'TUTTE';
+  // Statistiche per piattaforma
+  var piattaforme=['Android','iPhone','Web/Chrome','Windows','Smart TV'];
+  var sb=document.getElementById('statsBox');
+  if(sb){
+    var html='';
+    piattaforme.forEach(function(p){
+      var n=arr.filter(function(r){return (r.platform||'Web/Chrome')===p;}).length;
+      html+='<div style="background:#24242e;border:1px solid #3a3a46;border-radius:8px;padding:8px 12px;font-size:12px;color:#c9c9d4;">'+p+': <b style="color:#fff;">'+n+'</b></div>';
+    });
+    var Tot=arr.length;
+    html+='<div style="background:#1e4d33;border:1px solid #2e7d4f;border-radius:8px;padding:8px 12px;font-size:12px;color:#7ee2a8;">TOTALE: <b>'+Tot+'</b></div>';
+    sb.innerHTML=html;
+  }
+  var view=arr.filter(function(r){return filtro==='TUTTE'||(r.platform||'Web/Chrome')===filtro;});
+  if(!view.length){ el.innerHTML='<p class="act-sub" style="margin:0;">Nessuna attivazione per questa piattaforma.</p>'; return; }
+  var h='<table style="width:100%;border-collapse:collapse;font-size:12px;">'+
+    '<tr style="text-align:left;color:#a9a9b6;border-bottom:1px solid #333;"><th>Data</th><th>Utente</th><th>Email</th><th>Piattaforma</th><th>Codice</th><th>Esito</th></tr>';
+  for(var i=view.length-1;i>=0;i--){
+    var r=view[i];
+    var col=r.esito==='APPROVATA'?'#7ee2a8':'#ff8a8a';
+    h+='<tr style="border-bottom:1px solid #2a2a34;"><td style="padding:6px 4px;">'+r.data+'</td><td>'+r.user+'</td><td>'+r.email+'</td><td>'+(r.platform||'Web/Chrome')+'</td><td><code>'+r.code+'</code></td><td style="color:'+col+';font-weight:600;">'+r.esito+'</td></tr>';
+  }
+  h+='</table>';
+  el.innerHTML=h;
+}function registra(esito,code,email,user,platform){
+  var arr=caricaStorico();
+  arr.push({data:new Date().toLocaleString('it-IT'),user:user||'-',email:email,code:code,esito:esito,platform:platform||'Web/Chrome',pass:'non salvata (hash lato client)'});
+  salvaStorico(arr);
+  // Copia di registrazione via email al proprietario
+  var fd=new FormData();
+  fd.append('_subject','STORICO attivazione IP-TVSOLUTION - '+esito+' - '+code);
+  fd.append('_template','table');
+  fd.append('Esito',esito);
+  fd.append('Codice richiesta',code);
+  fd.append('Utente',user||'-');
+  fd.append('Email richiedente',email);
+  fd.append('Data',new Date().toLocaleString('it-IT'));
+  fd.append('Piattaforma',platform||'Web/Chrome');
+  fd.append('Nota','Password non salvata in chiaro: hash lato client.');
+  fetch('https://formsubmit.co/ajax/ip.tv-solution@tutamail.com',{method:'POST',body:fd,headers:{'Accept':'application/json'}}).catch(function(){});
+}
+function esportaCSV(){
+  var arr=caricaStorico();
+  if(!arr.length){ alert('Nessun dato da esportare.'); return; }
+  var csv='Data;Utente;Email;Piattaforma;Codice;Esito;Password\n';
+  arr.forEach(function(r){ csv+='"'+r.data+'";"'+r.user+'";"'+r.email+'";"'+r.code+'";"'+r.esito+'";"'+r.pass+'"\n'; });
+  var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='storico-attivazioni.csv'; a.click(); URL.revokeObjectURL(a.href);
+}
+function cancellaStorico(){
+  if(confirm('Cancellare tutto lo storico delle attivazioni?')){ localStorage.removeItem(STORICO_KEY); mostraStorico(); }
+}
+document.addEventListener('DOMContentLoaded',mostraStorico);
+
+// ===== Approvazione / negazione automatica via link nell'email =====
+(function(){
+  var q=new URLSearchParams(location.search);
+  if(!q.has('approva') && !q.has('nega')) return;
+  var approva=q.has('approva');
+  var codice=q.get('code')||'', email=q.get('email')||'', utente=q.get('user')||'', piattaforma=q.get('platform')||'Web/Chrome';
+  document.addEventListener('DOMContentLoaded',function(){
+    [['code',codice],['email',email],['user',utente],['platform',piattaforma]].forEach(function(pa){
+      var el=document.getElementById(pa[0]); if(el) el.value=pa[1];
+    });
+    var banner=document.createElement('div');
+    banner.id='autoBanner';
+    banner.style='background:'+(approva?'#1e4d33':'#5a2020')+';border:1px solid '+(approva?'#2e7d4f':'#8a3030')+';color:'+(approva?'#7ee2a8':'#ffb3b3')+';padding:14px 18px;border-radius:10px;margin-bottom:16px;font-size:14px;white-space:pre-wrap;';
+    banner.textContent=(approva?'Approvazione automatica in corso...':'Negazione automatica in corso...');
+    document.body.insertBefore(banner,document.body.firstChild);
+    activationCode(codice).then(function(act){
+      registra(approva?'APPROVATA':'RIFIUTATA',codice,email,utente,piattaforma);
+      var arr=caricaStorico();
+      if(arr.length){ arr[arr.length-1].codiceAttivazione=act; salvaStorico(arr); }
+      var subj = approva ? 'IP-TVSOLUTION - Attivazione APPROVATA ('+act+')' : 'IP-TVSOLUTION - Richiesta NON approvata';
+      var corpo = approva
+        ? 'Ciao '+(utente||'utente')+',\n\nla tua richiesta e stata APPROVATA.\n\nCodice di attivazione: '+act+'\n\nApri IP-TVSOLUTION, incolla il codice nel campo "Codice di attivazione" e clicca "Conferma e attiva".\n\nBuona visione!\nIP-TVSOLUTION'
+        : 'Ciao '+(utente||'utente')+',\n\nla tua richiesta non e stata approvata.\n\nIP-TVSOLUTION';
+      var mailto = 'mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(corpo);
+      banner.innerHTML = (approva ? 'APPROVATO - codice: <b>'+act+'</b>' : 'RIFIUTATO')
+        + '<br>Utente: '+utente+' | Email: '+email
+        + '<br>Dispositivo: '+piattaforma
+        + '<br><a href="'+mailto+'" style="display:inline-block;margin-top:10px;background:#c83838;color:#fff;padding:9px 16px;border-radius:8px;text-decoration:none;font-weight:700;">INVIA EMAIL ALL UTENTE</a>';
+    });
+  });
+})();
+
+async function risposta(approva){
+  var code=document.getElementById('code').value.trim().toUpperCase();
+  var email=document.getElementById('email').value.trim();
+  var user=document.getElementById('user').value.trim();
+  var platform=(document.getElementById('platform')||{}).value||'Web/Chrome';
+  var p=document.getElementById('preview');
+  p.style.display='block';
+  if(!code||!email){ p.textContent='⚠️ Inserisci almeno codice richiesta ed email del richiedente.'; return; }
+  var subject,body;
+  if(approva){
+    var actCode=await activationCode(code);
+    registra('APPROVATA',code,email,user,platform);
+    subject='IP-TVSOLUTION - Attivazione APPROVATA ('+actCode+')';
+    body='Ciao'+(user?' '+user:'')+',\n\n'+
+         'la tua richiesta di attivazione è stata APPROVATA.\n\n'+
+         'Codice di attivazione: '+actCode+'\n\n'+
+         'Apri IP-TVSOLUTION, incolla questo codice nel campo "Codice di attivazione" e clicca "Conferma e attiva".\n\n'+
+         'Buona visione!\nIP-TVSOLUTION';
+  } else {
+    subject='IP-TVSOLUTION - Richiesta di attivazione NON approvata';
+    body='Ciao'+(user?' '+user:'')+',\n\n'+
+         'ci dispiace, la tua richiesta di attivazione non è stata approvata.\n'+
+         'Codice richiesta: '+code+'\n\n'+
+         'Per maggiori informazioni rispondi a questa email.\n\nIP-TVSOLUTION';
+  }
+  p.textContent='Invio in corso...';
+  // Invio automatico: FormSubmit spedisce a CHI RICHIEDE (email come destinatario).
+  // _replyto e il mittente impostato al tuo indirizzo, così l'utente può risponderti.
+  var fd=new FormData();
+  fd.append('_subject',subject);
+  fd.append('_replyto','ip.tv-solution@tutamail.com');
+  fd.append('_cc',email);
+  fd.append('_template','table');
+  fd.append('Destinatario',email);
+  fd.append('Utente',user||'-');
+  fd.append('Codice richiesta',code);
+  fd.append('Esito',approva?'APPROVATA':'RIFIUTATA');
+  fd.append('Piattaforma',platform);
+  fd.append('Messaggio',body);
+  var ctl=(typeof AbortController!=='undefined')?new AbortController():null;
+  var timer=ctl?setTimeout(function(){ctl.abort();},8000):null;
+  try{
+    await fetch('https://formsubmit.co/ajax/'+encodeURIComponent(email),{
+      method:'POST',body:fd,headers:{'Accept':'application/json'},signal:ctl?ctl.signal:undefined
+    });
+    if(timer) clearTimeout(timer);
+    p.textContent='EMAIL INVIATA automaticamente a '+email+' - codice: '+(typeof actCode!=='undefined'?actCode:'')+'.\nOggetto: '+subject+'\n\n'+body;
+  }catch(e){
+    if(timer) clearTimeout(timer);
+    p.textContent='RICHIESTA INVIATA a '+email+' - codice: '+(typeof actCode!=='undefined'?actCode:'')+'. (Conferma FormSubmit una tantum se la mail non arriva.)';
+  }
+}
+</script>
+</body>
+</html>

@@ -291,6 +291,11 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   updateSaveDestinationUI();
   ensureEpgLoaded();
+  setInterval(ensureEpgLoaded, 30 * 60 * 1000);
+  setInterval(function () {
+    var ov = document.getElementById('fullGuideOverlay');
+    if (ov && ov.classList.contains('show') && typeof fgRender === 'function') fgRender();
+  }, 60 * 1000);
   checkVersion();
   setTimeout(function () { cloudLoad(); }, 600);
   renderChannelList();
@@ -624,6 +629,8 @@ async function ensureEpgLoaded() {
       });
     });
     state.epgData = epgData;
+    var guide = document.getElementById('fullGuideOverlay');
+    if (guide && guide.classList.contains('show') && typeof fgRender === 'function') fgRender();
     const total = Object.values(epgData).reduce((s, a) => s + a.length, 0);
     logApp('EPG', 'INFO', 'Guida TV caricata', { canali: Object.keys(epgData).length, programmi: total });
     const status = $('#epgStatus');

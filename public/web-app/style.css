@@ -1118,3 +1118,5 @@ body.tv-playing .tv-expand-btn { display: none; }
 .tv-top-btn.tv-cast-btn.disabled { opacity: .45; cursor: not-allowed; }
 .tv-top-btn.tv-cast-stop { background: #7a2630; color: #fff; border-color: #7a2630; }
 @media (max-width: 700px) { .tv-top-btn.tv-cast-stop { display: none !important; } }
+/* Cast: icona nella barra alta */
+.tv-cast-btn svg { vertical-align: middle; }
