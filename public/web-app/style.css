@@ -977,6 +977,7 @@ body.tv-playing .player-area { display: flex; flex: 1; }
 body.tv-playing .tv-browser-top, body.tv-playing .tv-list-pane { display: none; }
 body.tv-playing .tv-browser-body { display: block; }
 body.tv-playing .tv-preview-pane { position: fixed; inset: 0; z-index: 300; }
+body.tv-playing #tvBrowser { display: flex !important; }
 body.tv-playing .tv-preview-pane .tv-player-ui { opacity: 1; }
 body.tv-playing .tv-expand-btn { display: none; }
 @media (max-width: 900px) {
