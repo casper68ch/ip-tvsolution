@@ -770,3 +770,108 @@ details > summary::-webkit-details-marker { display: none; }
 .tv-player-top .ctrl-btn { flex-direction:row; min-width:auto; padding:6px 9px; font-size:14px; gap:0; }
 .tv-player-top .ctrl-btn::after { display:none; }
 .tv-player-top .ctrl-btn.recording { animation:recpulse 1.2s infinite; }
+
+
+/* ===== Stile moderno, semplice e intuitivo ===== */
+:root {
+  --surface: #15151d;
+  --surface-2: #1d1d27;
+  --blue: #5EA0FF;
+  --radius-lg: 14px;
+  --shadow-card: 0 6px 18px rgba(0,0,0,.35);
+}
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: #34343f; border-radius: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Header: gerarchia chiara e pulsanti comodi */
+.app-header { padding: 10px 18px; gap: 12px; background: linear-gradient(180deg,#1a1a22,#14141a); }
+.logo-img { width: 40px; height: 40px; }
+.logo-text { font-size: 18px; font-weight: 800; letter-spacing: .2px; }
+.version-badge { background: rgba(255,255,255,.06); }
+.tv-hamburger {
+  background: linear-gradient(135deg,var(--accent),#a82f2f);
+  color: #fff; border: none; border-radius: 10px;
+  padding: 9px 12px; font-size: 20px; line-height: 1;
+  box-shadow: 0 4px 12px rgba(200,56,56,.35);
+}
+.tv-hamburger:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(200,56,56,.5); }
+.btn { border-radius: 10px; font-weight: 600; transition: transform .15s, box-shadow .15s, background .15s, border-color .15s; }
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { box-shadow: 0 4px 14px rgba(200,56,56,.32); }
+.btn-secondary:hover { border-color: #444452; background: var(--surface-2); }
+
+/* Sidebar: ricerca e tab facili da leggere */
+.sidebar { background: linear-gradient(180deg,#15151d,#111117); }
+.sidebar-header { padding: 12px; }
+.search-input {
+  border-radius: 10px; padding: 11px 14px;
+  background: #101018; transition: border-color .15s, box-shadow .15s;
+}
+.search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(94,160,255,.15); }
+.tv-group-tabs { gap: 4px; padding-bottom: 6px; }
+.tv-tab { border-radius: 8px 8px 0 0; padding: 9px 12px; font-size: 12px; }
+.tv-tab:hover { background: rgba(255,255,255,.05); color: #fff; }
+.tv-tab.sel {
+  color: #fff;
+  background: linear-gradient(180deg,rgba(94,160,255,.20),rgba(94,160,255,.04));
+  border-bottom-color: var(--blue);
+}
+.tv-tab-icon { border-radius: 8px; }
+.tv-tab-icon:hover { background: rgba(255,255,255,.08); color: #fff; }
+
+/* Lista EPG: card separate, stato chiaro */
+.channel-list { padding: 10px; }
+.channel-list .tv-row {
+  border: 1px solid transparent; border-radius: 10px;
+  margin-bottom: 4px; padding: 10px 12px;
+  background: rgba(255,255,255,.02);
+  transition: background .15s, border-color .15s, transform .15s;
+}
+.channel-list .tv-row:hover { background: #20202b; border-color: #3a3a48; transform: translateX(2px); }
+.channel-list .tv-row.active {
+  background: linear-gradient(90deg,rgba(200,56,56,.24),rgba(200,56,56,.06));
+  border-color: rgba(200,56,56,.5); box-shadow: inset 3px 0 0 var(--accent);
+}
+.tv-num { border-radius: 6px; background: rgba(255,255,255,.05); padding: 3px 0; font-weight: 800; }
+.tv-logo { border-radius: 8px; background: #0e0e14; }
+.tv-name { font-size: 14px; font-weight: 700; }
+.tv-prog { font-size: 12px; color: #b9c2cf; }
+.tv-bar { height: 5px; background: #2c2c38; border-radius: 5px; }
+.tv-bar i { background: linear-gradient(90deg,#3f7fff,#5EA0FF); border-radius: 5px; }
+.tv-left { color: #7fb4ff; font-size: 13px; }
+.tv-star.on { color: #FFCC00; text-shadow: 0 0 8px rgba(255,204,0,.4); }
+.channel-list.grid-view .tv-card {
+  border-radius: 12px; padding: 12px;
+  background: linear-gradient(180deg,#1b1b25,#15151d);
+  box-shadow: var(--shadow-card);
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+}
+.channel-list.grid-view .tv-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,.5); border-color: var(--blue); }
+
+/* Drawer: caldo, ordinato, con voci grandi */
+.tv-drawer { border-radius: 0 16px 16px 0; background: linear-gradient(180deg,#17171f,#0f0f15); }
+.tv-drawer-head { background: linear-gradient(100deg,rgba(200,56,56,.26),transparent); padding: 18px 16px; }
+.tv-drawer-title { color: #ff8a8a; letter-spacing: 1.2px; }
+.tv-drawer-body button { border-radius: 10px; padding: 12px 14px; font-size: 15px; }
+.tv-drawer-body button:hover { background: linear-gradient(90deg,rgba(200,56,56,.20),transparent); color: #fff; }
+
+/* Player: controlli grandi e ben distanti */
+.tv-player-ui button { border-radius: 10px; font-size: 16px; }
+.tv-player-ui .tv-transport button { min-width: 46px; border-radius: 12px; }
+.tv-player-top .ctrl-btn { border-radius: 9px; }
+.tv-prog-row .tv-bar { height: 6px; }
+.tv-tech-row { color: rgba(255,255,255,.82); }
+
+/* Menu contestuale e modali: ombre e superfici morbide */
+.tv-context-menu { border-radius: 12px; padding: 6px; }
+.tv-context-menu button { border-radius: 8px; padding: 10px 12px; }
+.tv-context-menu button:hover { background: rgba(200,56,56,.20); color: #fff; }
+.modal-content { border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.7); }
+.modal-header { background: linear-gradient(100deg,rgba(200,56,56,.14),transparent); border-bottom: 1px solid var(--border); }
+.tv-list-item { border-radius: 10px; padding: 10px 12px; }
+.tv-list-item:hover { background: #20202b; }
