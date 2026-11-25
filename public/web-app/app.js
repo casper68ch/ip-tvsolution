@@ -852,21 +852,12 @@ function tvChannelItemHtml(ch, tvIdx) {
 function renderTvGroupTabs() {
   var box = document.getElementById('tvGroupTabs');
   if (!box) return;
-  var groups = {};
-  state.channels.forEach(function (c) {
-    var g = c.group || '';
-    if (g) groups[g] = (groups[g] || 0) + 1;
-  });
-  var keys = Object.keys(groups).sort().slice(0, 30);
   var b = state.tvBrowse || 'all';
   function tab(v, label) {
     var sel = (state.tvView === 'categories' && b === v) || (state.tvView !== 'categories' && b === v && !state.tvCategory);
     return '<button class="tv-tab' + (sel ? ' sel' : '') + '" onclick="tvTab(\'' + v + '\')">' + label + '</button>';
   }
   var html = tab('all', 'TUTTI') + tab('fav', 'PREFERITI') + tab('live', 'LIVE') + tab('vod', 'FILM') + tab('series', 'SERIE');
-  keys.forEach(function (g) {
-    html += '<button class="tv-tab' + (state.tvCategory === g ? ' sel' : '') + '" onclick="tvGroupTab(\'' + escapeAttr(g) + '\')">' + escapeHtml(g.toUpperCase()) + '</button>';
-  });
   html += '<span class="tv-tabs-spacer"></span>' +
     '<button class="tv-tab-icon" onclick="document.getElementById(\'searchChannels\').focus()" title="Cerca">🔍</button>' +
     '<button class="tv-tab-icon" onclick="openQuickMenu(\'GRUPPI\')" title="Gruppi">🗂</button>' +
