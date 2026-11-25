@@ -915,3 +915,16 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .player-area { display: none; }
 body.tv-playing #tvBrowser { display: none; }
 body.tv-playing .player-area { display: flex; flex: 1; }
+
+/* ===== Flusso categorie: card bouquet e ritorno ===== */
+.tv-cat-head { display:flex; align-items:center; gap:12px; padding:10px 14px 2px; }
+.tv-cat-head h3 { margin:0; font-size:16px; letter-spacing:.3px; color:var(--text, #e8edf3); }
+.tv-back-line { display:inline-block; background:none; border:0; color:#4da3ff; cursor:pointer; font-size:13px; padding:8px 12px; border-radius:8px; }
+.tv-back-line:hover { background:rgba(77,163,255,.12); }
+.tv-cat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; padding:12px 14px 24px; }
+.tv-cat-card { display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding:16px; border-radius:12px; border:1px solid var(--line, #2a3340); background:var(--surface, #151b23); color:var(--text, #e8edf3); cursor:pointer; text-align:left; transition:transform .15s, border-color .15s, box-shadow .15s; }
+.tv-cat-card:hover { transform:translateY(-2px); border-color:#4da3ff; box-shadow:0 6px 18px rgba(0,0,0,.35); }
+.tv-cat-icon { display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg,#C83838,#8e2727); color:#fff; font-weight:700; font-size:18px; }
+.tv-cat-name { font-size:13px; font-weight:600; line-height:1.25; }
+.tv-cat-count { font-size:11px; color:var(--text3, #7d8b9c); }
+.tv-row.selected, .tv-card.selected { border:2px solid #4da3ff; box-shadow:0 0 0 2px rgba(77,163,255,.2); }

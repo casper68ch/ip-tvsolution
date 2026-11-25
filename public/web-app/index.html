@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP-TVSOLUTION Web Player</title>
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="style.css?v=13">
   <script src="hls.min.js?v=2"></script>
   <script src="ts-player.js?v=2"></script>
   <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
@@ -87,10 +87,6 @@
         <button onclick="tvTab('all')" style="background:var(--accent);color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;margin-right:6px;">🏠 Home</button>
         <span id="breadcrumbType"></span>
         <span id="breadcrumbCategory"></span>
-      </div>
-      <div class="history-bar" id="historyBar" style="display:none;padding:8px 14px;border-bottom:1px solid var(--border);">
-        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Continua a guardare</div>
-        <div id="historyList" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;"></div>
       </div>
       <div class="channel-list" id="channelList">
         <div class="empty-state">
@@ -638,6 +634,6 @@
   </div>
 
   <script src="activation.js?v=3"></script>
-  <script src="app.js?v=21"></script>
+  <script src="app.js?v=22"></script>
 </body>
 </html>
