@@ -890,8 +890,20 @@ function tvShowCategories(type) {
   renderChannelList();
   saveState();
 }
+function tvShowVod() {
+  state.tvBrowse = 'vod';
+  state.tvType = 'vod';
+  state.tvView = 'channels';
+  state.tvCategory = null;
+  state.tvBack = { type: 'vod', view: 'channels' };
+  state.navLevel = 'all';
+  tvClearSearch();
+  renderChannelList();
+  saveState();
+}
 function tvTab(kind) {
-  if (kind === 'live' || kind === 'vod' || kind === 'series') { tvShowCategories(kind); return; }
+  if (kind === 'vod') { tvShowVod(); return; }
+  if (kind === 'live' || kind === 'series') { tvShowCategories(kind); return; }
   state.tvBrowse = kind;
   state.tvType = null;
   state.tvView = 'channels';
@@ -942,6 +954,18 @@ function catOvRender() {
     var b = document.getElementById('catOvTab_' + k);
     if (b) b.className = 'cat-ov-tab' + (k === catOvKind ? ' active' : '');
   });
+  if (catOvKind === 'vod') {
+    var films = (state.channels || []).filter(function (c) { return (c.type || 'live') === 'vod'; });
+    films.sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || ''), 'it'); });
+    if (!films.length) {
+      list.innerHTML = '<div class="cat-ov-empty">Carica una playlist per vedere i film.</div>';
+      return;
+    }
+    list.innerHTML = films.map(function (c) {
+      return '<button class="cat-ov-item" data-id="' + escapeHtml(c.id) + '" onclick="catOvOpenFilm(this.getAttribute(\'data-id\'))">' + escapeHtml(String(c.name || '').toUpperCase()) + '</button>';
+    }).join('');
+    return;
+  }
   var groups = {};
   (state.channels || []).forEach(function (c) {
     var g = (c.group || '').trim();
@@ -963,6 +987,19 @@ function catOvEnter(group) {
   closeCategoriesOverlay();
   tvEnterCategory(group);
   showToast('Categoria: ' + group, 'success');
+}
+function catOvOpenFilm(id) {
+  closeCategoriesOverlay();
+  state.tvBrowse = 'vod';
+  state.tvType = 'vod';
+  state.tvView = 'channels';
+  state.tvCategory = null;
+  state.tvBack = { type: 'vod', view: 'channels' };
+  state.navLevel = 'all';
+  renderChannelList();
+  tvSelectChannel(id);
+  var f = (state.channels || []).find(function (c) { return c.id === id; });
+  showToast('Film: ' + (f ? f.name : ''), 'success');
 }
 
 function tvUpdatePlayBar() {
