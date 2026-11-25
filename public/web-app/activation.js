@@ -196,6 +196,9 @@
           hide();
           if (typeof showToast === 'function') showToast('App attivata. Benvenuto ' + a.user + '!', 'success');
           if (typeof initApp === 'function') initApp();
+          try { sessionStorage.setItem('iptv_setup_pending', '1'); } catch (e) {}
+          if (typeof window.IPtvAppCloudLoad === 'function') window.IPtvAppCloudLoad();
+          if (typeof window.IPtvSetup === 'object') window.IPtvSetup.show();
         }, 900);
       });
     });
@@ -209,6 +212,10 @@
         hide();
         if (typeof showToast === 'function') showToast('Bentornato ' + user + '!', 'success');
         if (typeof window.IPtvAppCloudLoad === 'function') window.IPtvAppCloudLoad();
+        try { sessionStorage.setItem('iptv_setup_pending', '1'); } catch (e) {}
+        setTimeout(function () {
+          if (typeof window.IPtvSetup === 'object') window.IPtvSetup.show();
+        }, 600);
       } else setMsg('Utente o password non corretti.', 'err');
     });
   }

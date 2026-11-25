@@ -45,6 +45,143 @@ let state = {
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
+
+// ============================================================
+// IP-TVSOLUTION - Pagina configurazione playlist dopo il login
+// ============================================================
+(function () {
+  'use strict';
+  var PENDING = 'iptv_setup_pending';
+  function q(id) { return document.getElementById(id); }
+  function count() { return (typeof state !== 'undefined' && state.sources) ? state.sources.length : 0; }
+  function clearPending() { try { sessionStorage.removeItem(PENDING); } catch (e) {} }
+  function status(text, kind) {
+    var el = q('psStatus');
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = 'ps-status' + (kind ? ' ' + kind : '');
+  }
+  function setTab(kind) {
+    ['m3u', 'xtream', 'file'].forEach(function (k) {
+      var b = q('psTab_' + k), x = q('psBox_' + k);
+      if (b) b.className = 'ps-tab' + (k === kind ? ' active' : '');
+      if (x) x.style.display = (k === kind ? 'block' : 'none');
+    });
+    status('', '');
+  }
+  function refreshSkip() {
+    var b = q('psSkip'), s = q('psSavedInfo');
+    var n = count();
+    if (b) b.style.display = n > 0 ? 'inline-flex' : 'none';
+    if (s) s.textContent = n > 0 ? ('Hai già ' + n + ' playlist salvate.') : '';
+  }
+  function finish(msg) {
+    clearPending();
+    var ov = q('playlistSetupOverlay');
+    if (ov) ov.style.display = 'none';
+    try {
+      saveState();
+      renderChannelList();
+      renderSavedSources();
+      updatePlaylistButton();
+      updateViewModeButton();
+    } catch (e) {}
+    if (typeof showToast === 'function') showToast(msg || 'Playlist pronta. Benvenuto in IP-TVSOLUTION!', 'success');
+  }
+  function show() {
+    var ov = q('playlistSetupOverlay');
+    if (!ov) return;
+    clearPending();
+    refreshSkip();
+    setTab('m3u');
+    var act = q('activationOverlay');
+    if (act) act.style.display = 'none';
+    ov.style.display = 'flex';
+    setTimeout(function () { var el = q('psName'); if (el) el.focus(); }, 120);
+  }
+  function hide() {
+    var ov = q('playlistSetupOverlay');
+    if (ov) ov.style.display = 'none';
+  }
+  function fill(id, value) { var el = q(id); if (el) el.value = value || ''; }
+  function fakeEvent() { return { preventDefault: function () {}, target: { reset: function () {} } }; }
+
+  async function addM3u() {
+    var name = ((q('psName') || {}).value || '').trim();
+    var url = ((q('psUrl') || {}).value || '').trim();
+    if (!name || !url) { status('Inserisci nome e URL della playlist M3U.', 'err'); return; }
+    status('Caricamento playlist...', '');
+    var before = count();
+    fill('m3uName', name);
+    fill('m3uUrl', url);
+    try { await handleM3uSubmit(fakeEvent()); } catch (e) {}
+    if (count() > before) {
+      var src = state.sources[state.sources.length - 1];
+      var n = src.channels ? src.channels.length : 0;
+      status('Playlist caricata: ' + n + ' canali. Apertura app...', 'ok');
+      setTimeout(function () { finish('Playlist caricata: ' + n + ' canali'); }, 650);
+    } else {
+      status('Non riesco a caricare la playlist. Controlla URL e formato M3U.', 'err');
+    }
+  }
+
+  async function addXtream() {
+    var name = ((q('psXName') || {}).value || '').trim();
+    var url = ((q('psXUrl') || {}).value || '').trim().replace(/\/$/, '');
+    var user = ((q('psXUser') || {}).value || '').trim();
+    var pass = ((q('psXPass') || {}).value || '').trim();
+    if (!name || !url || !user || !pass) { status('Compila nome, server, utente e password.', 'err'); return; }
+    status('Connessione al server Xtream...', '');
+    var before = count();
+    fill('xtreamName', name);
+    fill('xtreamUrl', url);
+    fill('xtreamUser', user);
+    fill('xtreamPass', pass);
+    try { state.xtreamFormat = 'ts'; await handleXtreamSubmit(fakeEvent()); } catch (e) {}
+    if (count() > before) {
+      var src = state.sources[state.sources.length - 1];
+      var n = src.channels ? src.channels.length : 0;
+      status('Playlist caricata: ' + n + ' canali. Apertura app...', 'ok');
+      setTimeout(function () { finish('Playlist caricata: ' + n + ' canali'); }, 650);
+    } else {
+      status('Connessione non riuscita. Controlla server, utente e password.', 'err');
+    }
+  }
+
+  async function addFile() {
+    var input = q('psFile');
+    var file = input && input.files ? input.files[0] : null;
+    if (!file) { status('Seleziona un file M3U.', 'err'); return; }
+    status('Lettura file...', '');
+    var before = count();
+    try {
+      var text = await file.text();
+      var channels = parseM3u(text);
+      if (!channels.length) throw new Error('Nessun canale nel file');
+      var name = ((q('psFName') || {}).value || '').trim() || file.name;
+      addSource({ id: 'src_' + Date.now(), name: name, type: 'file', channels: channels, rawText: text.length < 400000 ? text : '' });
+    } catch (e) {}
+    if (count() > before) {
+      var src = state.sources[state.sources.length - 1];
+      var n = src.channels ? src.channels.length : 0;
+      status('Playlist caricata: ' + n + ' canali. Apertura app...', 'ok');
+      setTimeout(function () { finish('Playlist caricata: ' + n + ' canali'); }, 650);
+    } else {
+      status('File non valido o nessun canale trovato.', 'err');
+    }
+  }
+
+  window.IPtvSetup = {
+    show: show,
+    hide: hide,
+    setTab: setTab,
+    addM3u: addM3u,
+    addXtream: addXtream,
+    addFile: addFile,
+    skip: function () { finish('App pronta con la playlist salvata.'); }
+  };
+})();
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   loadState();
@@ -65,6 +202,16 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(function () { autoFillMissingPosters(true, 16); }, 30000);
   initPlayer();
   setInterval(checkScheduledRecordings, 15000);
+  setTimeout(function () {
+    try {
+      if (sessionStorage.getItem('iptv_setup_pending') === '1' &&
+          typeof window.IPtvActivation === 'object' && window.IPtvActivation.isActive() &&
+          typeof window.IPtvSetup === 'object') {
+        sessionStorage.removeItem('iptv_setup_pending');
+        window.IPtvSetup.show();
+      }
+    } catch (e) {}
+  }, 800);
   logApp('APP', 'INFO', 'Avvio applicazione', {
     canali: state.channels.length,
     sorgenti: state.sources.length,

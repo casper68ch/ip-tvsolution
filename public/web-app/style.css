@@ -928,3 +928,29 @@ body.tv-playing .player-area { display: flex; flex: 1; }
 .tv-cat-name { font-size:13px; font-weight:600; line-height:1.25; }
 .tv-cat-count { font-size:11px; color:var(--text3, #7d8b9c); }
 .tv-row.active, .tv-card.active, .tv-row.selected, .tv-card.selected { border:2px solid #4da3ff; box-shadow:0 0 0 2px rgba(77,163,255,.2); }
+
+/* ===== Setup playlist dopo il login ===== */
+.ps-overlay { position:fixed; inset:0; z-index:10000; background:rgba(7,9,14,.97); display:none; align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
+.ps-card { width:100%; max-width:520px; background:linear-gradient(180deg,#1b2029,#12161d); border:1px solid #2b3442; border-radius:18px; padding:26px; box-shadow:0 24px 70px rgba(0,0,0,.7); }
+.ps-head { display:flex; gap:14px; align-items:center; margin-bottom:18px; }
+.ps-logo { width:50px; height:50px; border-radius:12px; }
+.ps-head h2 { margin:0 0 4px; font-size:22px; color:#fff; }
+.ps-head p { margin:0; color:#9aa7b6; font-size:13px; line-height:1.45; }
+.ps-tabs { display:flex; gap:6px; background:#0e131a; padding:5px; border-radius:10px; margin-bottom:16px; }
+.ps-tab { flex:1; padding:9px 6px; border:0; border-radius:8px; background:transparent; color:#9aa7b6; font-size:13px; font-weight:600; cursor:pointer; }
+.ps-tab.active { background:#C83838; color:#fff; }
+.ps-field { display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
+.ps-field label { font-size:12px; color:#c4ced9; }
+.ps-field input { background:#0e131a; border:1px solid #2b3442; border-radius:9px; padding:11px 12px; color:#fff; font-size:14px; outline:none; }
+.ps-field input:focus { border-color:#C83838; box-shadow:0 0 0 3px rgba(200,56,56,.15); }
+.ps-field input[type=file] { padding:9px; }
+.ps-btn { width:100%; background:#C83838; color:#fff; border:0; border-radius:9px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:4px; }
+.ps-btn:hover { background:#e04545; }
+.ps-btn.ghost { background:#222b37; color:#dbe4ee; width:auto; padding:9px 14px; margin:0; }
+.ps-btn.ghost:hover { background:#303c4c; }
+.ps-status { min-height:18px; margin-top:12px; font-size:13px; color:#9aa7b6; }
+.ps-status.ok { color:#5fd08a; }
+.ps-status.err { color:#ff7676; }
+.ps-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid #26303d; font-size:12px; color:#9aa7b6; }
+.ps-note { margin-top:12px; font-size:11px; color:#687585; text-align:center; }
+@media(max-width:520px){ .ps-card { padding:18px; } .ps-head { align-items:flex-start; } .ps-tab { font-size:12px; } }

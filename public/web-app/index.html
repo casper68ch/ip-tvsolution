@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IP-TVSOLUTION Web Player</title>
-  <link rel="stylesheet" href="style.css?v=14">
+  <link rel="stylesheet" href="style.css?v=15">
   <script src="hls.min.js?v=2"></script>
   <script src="ts-player.js?v=2"></script>
   <script>if (typeof Hls === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>'); }</script>
@@ -633,7 +633,49 @@
     </div>
   </div>
 
-  <script src="activation.js?v=3"></script>
-  <script src="app.js?v=23"></script>
+
+  <!-- Setup playlist dopo il login -->
+  <div id="playlistSetupOverlay" class="ps-overlay">
+    <div class="ps-card">
+      <div class="ps-head">
+        <img src="brand.png" alt="" class="ps-logo">
+        <div>
+          <h2>Aggiungi la tua playlist</h2>
+          <p>Inserisci i dati della tua linea IPTV. La playlist viene caricata e l'app si apre con i tuoi canali.</p>
+        </div>
+      </div>
+      <div class="ps-tabs">
+        <button id="psTab_m3u" class="ps-tab active" onclick="IPtvSetup.setTab('m3u')">Link M3U</button>
+        <button id="psTab_xtream" class="ps-tab" onclick="IPtvSetup.setTab('xtream')">Xtream Codes</button>
+        <button id="psTab_file" class="ps-tab" onclick="IPtvSetup.setTab('file')">File M3U</button>
+      </div>
+      <div id="psBox_m3u" class="ps-box">
+        <div class="ps-field"><label>Nome playlist</label><input id="psName" type="text" placeholder="La mia playlist"></div>
+        <div class="ps-field"><label>URL playlist M3U</label><input id="psUrl" type="url" placeholder="http://server/playlist.m3u8"></div>
+        <button class="ps-btn" onclick="IPtvSetup.addM3u()">Carica playlist</button>
+      </div>
+      <div id="psBox_xtream" class="ps-box" style="display:none;">
+        <div class="ps-field"><label>Nome playlist</label><input id="psXName" type="text" placeholder="Il mio server"></div>
+        <div class="ps-field"><label>Server / porta</label><input id="psXUrl" type="text" placeholder="http://server:porta"></div>
+        <div class="ps-field"><label>Utente</label><input id="psXUser" type="text" autocomplete="username"></div>
+        <div class="ps-field"><label>Password</label><input id="psXPass" type="password" autocomplete="current-password"></div>
+        <button class="ps-btn" onclick="IPtvSetup.addXtream()">Carica da Xtream</button>
+      </div>
+      <div id="psBox_file" class="ps-box" style="display:none;">
+        <div class="ps-field"><label>Nome playlist</label><input id="psFName" type="text" placeholder="La mia playlist"></div>
+        <div class="ps-field"><label>File M3U</label><input id="psFile" type="file" accept=".m3u,.m3u8,.txt"></div>
+        <button class="ps-btn" onclick="IPtvSetup.addFile()">Carica dal file</button>
+      </div>
+      <div id="psStatus" class="ps-status"></div>
+      <div class="ps-foot">
+        <span id="psSavedInfo"></span>
+        <button id="psSkip" class="ps-btn ghost" style="display:none;" onclick="IPtvSetup.skip()">Continua con la playlist salvata &rarr;</button>
+      </div>
+      <div class="ps-note">Nessuna playlist o credenziale &egrave; inclusa nell'app: inserisci solo i tuoi dati.</div>
+    </div>
+  </div>
+
+  <script src="activation.js?v=4"></script>
+  <script src="app.js?v=24"></script>
 </body>
 </html>
