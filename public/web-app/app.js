@@ -1127,8 +1127,7 @@ function tvShowVod() {
   saveState();
 }
 function tvTab(kind) {
-  if (kind === 'vod') { tvShowVod(); return; }
-  if (kind === 'live' || kind === 'series') { tvShowCategories(kind); return; }
+  if (kind === 'live' || kind === 'vod' || kind === 'series') { tvShowCategories(kind); return; }
   state.tvBrowse = kind;
   state.tvType = null;
   state.tvView = 'channels';
@@ -1182,17 +1181,6 @@ function catOvRender() {
   var base = (state.channels || []).slice();
   if (state.activePlaylist && state.activePlaylist !== 'all') {
     base = base.filter(function (c) { return c.sourceId === state.activePlaylist; });
-  }
-  if (catOvKind === 'vod') {
-    var films = base.filter(function (c) { return (c.type || 'live') === 'vod'; });
-    if (!films.length) {
-      list.innerHTML = '<div class="cat-ov-empty">Carica una playlist per vedere i film.</div>';
-      return;
-    }
-    list.innerHTML = films.map(function (c) {
-      return '<button class="cat-ov-item" data-id="' + escapeHtml(c.id) + '" onclick="catOvOpenFilm(this.getAttribute(\'data-id\'))">' + escapeHtml(String(c.name || '').toUpperCase()) + '</button>';
-    }).join('');
-    return;
   }
   var groups = {}, keys = [];
   base.forEach(function (c) {
