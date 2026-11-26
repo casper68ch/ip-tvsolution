@@ -290,7 +290,11 @@ document.addEventListener('DOMContentLoaded', () => {
   loadStreamLog();
   setupEventListeners();
   updateSaveDestinationUI();
-  ensureEpgLoaded();
+  if (loadEpgCache()) {
+    var _epgStatus = $('#epgStatus');
+    if (_epgStatus) _epgStatus.textContent = 'EPG in cache · aggiornamento in corso...';
+  }
+  setTimeout(function () { ensureEpgLoaded(); }, 0);
   setInterval(ensureEpgLoaded, 10 * 60 * 1000);
   setInterval(function () {
     var ov = document.getElementById('fullGuideOverlay');
@@ -568,21 +572,77 @@ function parseXmltvDate(s) {
   return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
 }
 
+/* ===== EPG veloce: cache locale + fetch parallelo con timeout ===== */
+var EPG_CACHE_KEY = 'iptv_solution_epg_cache_v1';
+function loadEpgCache() {
+  try {
+    var raw = localStorage.getItem(EPG_CACHE_KEY);
+    if (!raw) return false;
+    var c = JSON.parse(raw);
+    if (!c || !c.data || Date.now() - (c.at || 0) > 6 * 3600 * 1000) return false;
+    state.epgData = c.data;
+    state._epgNames = c.names || {};
+    state.epgLogos = c.logos || {};
+    state._epgLoadedAt = c.at || 0;
+    return true;
+  } catch (e) { return false; }
+}
+function saveEpgCache(data, names, logos) {
+  try {
+    var payload = { at: Date.now(), data: data, names: names || {}, logos: logos || {} };
+    var s = JSON.stringify(payload);
+    if (s.length > 3000000) {
+      var slim = {};
+      Object.keys(data).slice(0, 1200).forEach(function (k) {
+        slim[k] = data[k].slice(0, 100).map(function (p) {
+          return { start: p.start, stop: p.stop, title: p.title, desc: (p.desc || '').slice(0, 200) };
+        });
+      });
+      payload.data = slim;
+      s = JSON.stringify(payload);
+    }
+    localStorage.setItem(EPG_CACHE_KEY, s);
+  } catch (e) {}
+}
+function fetchWithTimeout(url, ms) {
+  var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  var timer = ctl ? setTimeout(function () { ctl.abort(); }, ms) : null;
+  var opts = { cache: 'no-store' };
+  if (ctl) opts.signal = ctl.signal;
+  return fetch(url, opts).then(function (r) {
+    if (timer) clearTimeout(timer);
+    return r;
+  }).catch(function (e) {
+    if (timer) clearTimeout(timer);
+    throw e;
+  });
+}
+async function fetchEpgText(url) {
+  var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+  var direct = fetchWithTimeout(url, 9000).then(function (r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
+  });
+  var proxy = new Promise(function (resolve, reject) {
+    setTimeout(function () {
+      fetchWithTimeout(proxyUrl, 9000).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status + ' (proxy)');
+        return r.text();
+      }).then(resolve, reject);
+    }, 600);
+  });
+  if (typeof Promise.any === 'function') return await Promise.any([direct, proxy]);
+  return await new Promise(function (resolve, reject) {
+    direct.then(resolve, function () { proxy.then(resolve, reject); });
+  });
+}
+
 async function ensureEpgLoaded() {
   if (state._epgLoading) return;
   state._epgLoading = true;
   try {
     const url = state.settings.epgUrl || DEFAULT_EPG_URL;
-    let text = null;
-    try {
-      const resp = await fetch(url);
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      text = await resp.text();
-    } catch (e) {
-      const proxy = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
-      if (!proxy.ok) throw new Error('HTTP ' + proxy.status + ' (proxy)');
-      text = await proxy.text();
-    }
+    const text = await fetchEpgText(url);
     const doc = new DOMParser().parseFromString(text, 'text/xml');
     if (doc.querySelector('parsererror')) throw new Error('XML non valido');
     // Mappa nome canale -> id EPG (serve per i canali senza tvg-id nella playlist)
@@ -630,6 +690,7 @@ async function ensureEpgLoaded() {
     });
     state.epgData = epgData;
     state._epgLoadedAt = Date.now();
+    saveEpgCache(epgData, epgNames, epgLogos);
     var guide = document.getElementById('fullGuideOverlay');
     if (guide && guide.classList.contains('show') && typeof fgRender === 'function') fgRender();
     const total = Object.values(epgData).reduce((s, a) => s + a.length, 0);
@@ -641,7 +702,7 @@ async function ensureEpgLoaded() {
     logApp('EPG', 'ERROR', 'Caricamento guida non riuscito', { errore: e.message, url: safeLogUrl(state.settings.epgUrl) });
     console.warn('EPG auto-load non riuscito', e);
     const status = $('#epgStatus');
-    if (status) status.textContent = 'EPG non disponibile: ' + e.message;
+    if (status) status.textContent = state.epgData ? 'EPG: uso i dati salvati, aggiornamento non riuscito' : 'EPG non disponibile: ' + e.message;
   } finally { state._epgLoading = false; }
 }
 
