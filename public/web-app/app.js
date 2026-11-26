@@ -5,7 +5,7 @@ const STORAGE_KEY = 'iptv_solution_data';
 const SAVE_KEY = 'iptv_solution_save_config';
 const DEFAULT_PLAYLIST_URL = ''; // Impostata dall'utente a prima configurazione
 const DEFAULT_EPG_URL = ''; // Opzionale: URL guida TV della propria linea
-const WEB_VERSION = '1.9-web-20261124';
+const WEB_VERSION = '1.9-web-20261125';
 
 // State
 let state = {
@@ -1721,34 +1721,54 @@ function renderUpdateInfo(m, key) {
     'Ultima pubblicata: <b>' + escapeHtml(latest) + '</b><br>' +
     'Verifica: ' + escapeHtml(new Date().toLocaleString('it-IT')) + '</p>' + rows;
 }
+var UPDATE_CACHE_KEY = 'iptv_solution_update_cache_v1';
+function loadUpdateCache() {
+  try {
+    var raw = localStorage.getItem(UPDATE_CACHE_KEY);
+    if (!raw) return null;
+    var o = JSON.parse(raw);
+    if (!o || !o.m || !o.t || Date.now() - o.t > 5 * 60 * 1000) return null;
+    return o.m;
+  } catch (e) { return null; }
+}
+function saveUpdateCache(m) {
+  try { localStorage.setItem(UPDATE_CACHE_KEY, JSON.stringify({ t: Date.now(), m: m })); } catch (e) {}
+}
+function applyUpdateInfo(m, key, info, panel) {
+  var p = (m.platforms || {})[key] || (m.platforms || {}).web || {};
+  var latest = p.version || m.version || WEB_VERSION;
+  state.updateInfo = { current: WEB_VERSION, latest: latest, platform: key, manifest: m, checked: Date.now() };
+  if (info) info.textContent = 'IP-TVSOLUTION ' + WEB_VERSION + ' | ' + key + ' | disponibile ' + latest;
+  if (panel) panel.innerHTML = renderUpdateInfo(m, key);
+  setVersionBadge('v' + WEB_VERSION + (isNewerVersion(latest, WEB_VERSION) ? ' *' : ''));
+  if (isNewerVersion(latest, WEB_VERSION)) {
+    var banner = document.getElementById('updateBanner');
+    var txt = document.getElementById('updateBannerText');
+    if (banner && txt) {
+      txt.textContent = 'Aggiornamento disponibile: ' + platformLabel(key) + ' ' + latest + ' (installata ' + WEB_VERSION + ')';
+      banner.style.display = 'flex';
+    }
+  }
+  logApp('APP', 'INFO', 'Info aggiornamento', { piattaforma: key, installata: WEB_VERSION, disponibile: latest });
+}
 async function checkVersion(showPanel) {
   setVersionBadge('v' + WEB_VERSION);
   var key = updatePlatformKey();
   var info = document.getElementById('serverInfo');
   var panel = document.getElementById('updateInfo');
-  if (info) info.textContent = 'IP-TVSOLUTION ' + WEB_VERSION + ' | ' + key;
-  if (panel && showPanel) panel.innerHTML = '<p class="hint">Verifica aggiornamenti in corso...</p>';
+  var cached = loadUpdateCache();
+  if (cached) applyUpdateInfo(cached, key, info, panel);
+  else if (info) info.textContent = 'IP-TVSOLUTION ' + WEB_VERSION + ' | ' + key;
+  if (panel && showPanel && !cached) panel.innerHTML = '<p class="hint">Verifica aggiornamenti in corso...</p>';
   try {
-    var r = await fetch(UPDATE_MANIFEST_URL, { cache: 'no-store' });
+    var r = await fetchWithTimeout(UPDATE_MANIFEST_URL, 6000);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     var m = await r.json();
-    var p = (m.platforms || {})[key] || (m.platforms || {}).web || {};
-    var latest = p.version || m.version || WEB_VERSION;
-    state.updateInfo = { current: WEB_VERSION, latest: latest, platform: key, manifest: m, checked: Date.now() };
-    if (info) info.textContent = 'IP-TVSOLUTION ' + WEB_VERSION + ' | ' + key + ' | disponibile ' + latest;
-    if (panel) panel.innerHTML = renderUpdateInfo(m, key);
-    setVersionBadge('v' + WEB_VERSION + (isNewerVersion(latest, WEB_VERSION) ? ' *' : ''));
-    if (isNewerVersion(latest, WEB_VERSION)) {
-      var banner = document.getElementById('updateBanner');
-      var txt = document.getElementById('updateBannerText');
-      if (banner && txt) {
-        txt.textContent = 'Aggiornamento disponibile: ' + platformLabel(key) + ' ' + latest + ' (installata ' + WEB_VERSION + ')';
-        banner.style.display = 'flex';
-      }
-    }
-    logApp('APP', 'INFO', 'Info aggiornamento', { piattaforma: key, installata: WEB_VERSION, disponibile: latest });
+    saveUpdateCache(m);
+    applyUpdateInfo(m, key, info, panel);
     return m;
   } catch (e) {
+    if (cached) { applyUpdateInfo(cached, key, info, panel); return cached; }
     if (panel) panel.innerHTML = '<p class="hint">Offline: versione installata ' + escapeHtml(WEB_VERSION) + '. Usa "Controlla aggiornamenti" per riprovare.</p>';
     return null;
   }
