@@ -4,7 +4,7 @@
     "slug": "vlc",
     "name": "VLC media player",
     "tagline": "Il coltellino svizzero dei media, con un lettore di rete affidabile.",
-    "description": "VLC è il player open source più diffuso al mondo e da sempre include un lettore di flussi di rete capace di aprire indirizzi forniti dall'utente. L'interfaccia è essenziale ma completa: playlist, equalizzatore, sottotitoli, accelerazione hardware e supporto a decine di formati senza codec aggiuntivi. Su Windows, Linux, Android, Android TV e Apple mantiene la stessa logica di utilizzo, quindi chi impara le funzioni base su un dispositivo le ritrova ovunque. Per un uso IPTV legittimo è la scelta più prudente quando si vuole un programma maturo, senza account e senza pubblicità. L'installazione ufficiale avviene tramite installer, store mobile o pacchetto Flathub: nessun file scaricato da repository non ufficiali.",
+    "description": "VLC Ã¨ il player open source piÃ¹ diffuso al mondo e da sempre include un lettore di flussi di rete capace di aprire indirizzi forniti dall'utente. L'interfaccia Ã¨ essenziale ma completa: playlist, equalizzatore, sottotitoli, accelerazione hardware e supporto a decine di formati senza codec aggiuntivi. Su Windows, Linux, Android, Android TV e Apple mantiene la stessa logica di utilizzo, quindi chi impara le funzioni base su un dispositivo le ritrova ovunque. Per un uso IPTV legittimo Ã¨ la scelta piÃ¹ prudente quando si vuole un programma maturo, senza account e senza pubblicitÃ . L'installazione ufficiale avviene tramite installer, store mobile o pacchetto Flathub: nessun file scaricato da repository non ufficiali.",
     "officialUrl": "https://www.videolan.org/vlc/",
     "developer": "VideoLAN",
     "licenseModel": "free",
@@ -108,15 +108,15 @@
       }
     ],
     "pros": [
-      "Gratuito, open source e senza pubblicità",
+      "Gratuito, open source e senza pubblicitÃ ",
       "Legge decine di formati senza codec esterni",
       "Disponibile su quasi tutte le piattaforme con la stessa logica",
       "Nessun account obbligatorio"
     ],
     "cons": [
       "Interfaccia datata rispetto ai player televisivi moderni",
-      "La gestione di liste e flussi è poco guidata per chi è alle prime armi",
-      "Il telecomando TV non è ottimizzato quanto nelle app native"
+      "La gestione di liste e flussi Ã¨ poco guidata per chi Ã¨ alle prime armi",
+      "Il telecomando TV non Ã¨ ottimizzato quanto nelle app native"
     ],
     "logo": {
       "src": "/logos/vlc.svg",
@@ -153,7 +153,7 @@
     "slug": "kodi",
     "name": "Kodi",
     "tagline": "Media center modulare per chi vuole organizzare tutto in un'unica interfaccia.",
-    "description": "Kodi è un media center open source che trasforma un computer, una TV box o un televisore Android in un centro di intrattenimento. La sua forza è l'architettura a componenti: player interno, gestione di sorgenti, skin e componenti aggiuntivi consentono di costruire un ambiente su misura. Per l'uso IPTV legittimo esistono componenti ufficiali e repository della comunità che aggiungono il supporto ai flussi di rete, sempre configurati dall'utente con fonti di cui detiene i diritti. L'installazione è documentata sul sito ufficiale per Windows, Android, Android TV e Linux. È la scelta giusta se ti piace personalizzare, ma richiede più tempo rispetto a un player pronto all'uso.",
+    "description": "Kodi Ã¨ un media center open source che trasforma un computer, una TV box o un televisore Android in un centro di intrattenimento. La sua forza Ã¨ l'architettura a componenti: player interno, gestione di sorgenti, skin e componenti aggiuntivi consentono di costruire un ambiente su misura. Per l'uso IPTV legittimo esistono componenti ufficiali e repository della comunitÃ  che aggiungono il supporto ai flussi di rete, sempre configurati dall'utente con fonti di cui detiene i diritti. L'installazione Ã¨ documentata sul sito ufficiale per Windows, Android, Android TV e Linux. Ãˆ la scelta giusta se ti piace personalizzare, ma richiede piÃ¹ tempo rispetto a un player pronto all'uso.",
     "officialUrl": "https://kodi.tv/",
     "developer": "Team Kodi",
     "licenseModel": "free",
@@ -229,7 +229,7 @@
           "Distribuzioni con Flatpak"
         ],
         "steps": [
-          "Abilita Flathub se non è già presente sul sistema.",
+          "Abilita Flathub se non Ã¨ giÃ  presente sul sistema.",
           "Installa il pacchetto tv.kodi.Kodi con il comando flatpak indicato dalla pagina.",
           "Avvia Kodi e completa la configurazione guidata."
         ],
@@ -240,13 +240,13 @@
     "pros": [
       "Personalizzazione molto profonda tramite skin e componenti",
       "Interfaccia pensata anche per il telecomando",
-      "Gratuito e open source, senza pubblicità",
+      "Gratuito e open source, senza pubblicitÃ ",
       "Funziona su Windows, Linux, Android e Android TV"
     ],
     "cons": [
-      "Configurazione iniziale più lunga rispetto a un player pronto",
+      "Configurazione iniziale piÃ¹ lunga rispetto a un player pronto",
       "I componenti aggiuntivi non ufficiali possono essere instabili o poco sicuri",
-      "Consuma più risorse su hardware datato"
+      "Consuma piÃ¹ risorse su hardware datato"
     ],
     "logo": {
       "src": "/logos/kodi.svg",
@@ -283,9 +283,9 @@
     "slug": "mpv",
     "name": "mpv",
     "tagline": "Player minimale, velocissimo e controllabile da tastiera.",
-    "description": "mpv è un player open source derivato da MPlayer e MPlayer2, apprezzato per la qualità della decodifica video e per il controllo totale tramite tastiera e riga di comando. L'interfaccia grafica è volutamente essenziale: si apre una finestra, si carica un flusso e si gestisce tutto con scorciatoie e menu contestuale. È la scelta di chi vuole un programma leggero, senza pubblicità e senza servizi accessori, capace di riprodurre anche flussi di rete complessi grazie al motore FFmpeg. Su Windows si installa con il pacchetto ufficiale, su Linux tramite repository della distribuzione o Flatpak, su macOS tramite Homebrew. Non è pensato per il telecomando di un televisore, ma per un computer collegato allo schermo.",
+    "description": "mpv Ã¨ un player open source derivato da MPlayer e MPlayer2, apprezzato per la qualitÃ  della decodifica video e per il controllo totale tramite tastiera e riga di comando. L'interfaccia grafica Ã¨ volutamente essenziale: si apre una finestra, si carica un flusso e si gestisce tutto con scorciatoie e menu contestuale. Ãˆ la scelta di chi vuole un programma leggero, senza pubblicitÃ  e senza servizi accessori, capace di riprodurre anche flussi di rete complessi grazie al motore FFmpeg. Su Windows si installa con il pacchetto ufficiale, su Linux tramite repository della distribuzione o Flatpak, su macOS tramite Homebrew. Non Ã¨ pensato per il telecomando di un televisore, ma per un computer collegato allo schermo.",
     "officialUrl": "https://mpv.io/",
-    "developer": "Comunità mpv",
+    "developer": "ComunitÃ  mpv",
     "licenseModel": "free",
     "platforms": [
       "windows",
@@ -339,7 +339,7 @@
           "macOS Intel e Apple Silicon"
         ],
         "steps": [
-          "Installa Homebrew se non è presente sul Mac.",
+          "Installa Homebrew se non Ã¨ presente sul Mac.",
           "Esegui brew install mpv dal terminale.",
           "Apri il flusso con mpv oppure trascinalo sull'icona generata."
         ],
@@ -349,14 +349,14 @@
     ],
     "pros": [
       "Leggerissimo e con avvio immediato",
-      "Qualità di decodifica eccellente grazie a FFmpeg",
+      "QualitÃ  di decodifica eccellente grazie a FFmpeg",
       "Configurabile tramite file di testo e riga di comando",
-      "Nessuna pubblicità né raccolta dati"
+      "Nessuna pubblicitÃ  nÃ© raccolta dati"
     ],
     "cons": [
       "Interfaccia grafica ridotta all'essenziale",
       "Poco adatto al telecomando di una TV",
-      "Richiede familiarità con terminale e scorciatoie"
+      "Richiede familiaritÃ  con terminale e scorciatoie"
     ],
     "logo": {
       "src": "/logos/mpv.svg",
@@ -392,7 +392,7 @@
     "slug": "iina",
     "name": "IINA",
     "tagline": "Il player macOS nativo, elegante e con un motore mpv sotto il cofano.",
-    "description": "IINA è un player open source scritto specificamente per macOS, con interfaccia nativa in Swift e motore di riproduzione basato su mpv. Offre quello che manca ai port macOS di player generici: integrazione con il sistema, Touch Bar, Picture in Picture, modalità scura automatica e gestione delle finestre coerente con le linee guida Apple. Supporta i flussi di rete inseriti dall'utente e mantiene un'elevata compatibilità di formati. L'installazione avviene tramite il sito ufficiale o Homebrew, con pacchetto firmato e notarizzato. È la scelta naturale per chi usa un Mac e non vuole ricorrere a un player multipiattaforma dall'interfaccia poco curata.",
+    "description": "IINA Ã¨ un player open source scritto specificamente per macOS, con interfaccia nativa in Swift e motore di riproduzione basato su mpv. Offre quello che manca ai port macOS di player generici: integrazione con il sistema, Touch Bar, Picture in Picture, modalitÃ  scura automatica e gestione delle finestre coerente con le linee guida Apple. Supporta i flussi di rete inseriti dall'utente e mantiene un'elevata compatibilitÃ  di formati. L'installazione avviene tramite il sito ufficiale o Homebrew, con pacchetto firmato e notarizzato. Ãˆ la scelta naturale per chi usa un Mac e non vuole ricorrere a un player multipiattaforma dall'interfaccia poco curata.",
     "officialUrl": "https://iina.io/",
     "developer": "Collider LI e contributori",
     "licenseModel": "free",
@@ -439,7 +439,7 @@
     ],
     "pros": [
       "Interfaccia nativa macOS curata e coerente",
-      "Motore mpv con ampia compatibilità di formati",
+      "Motore mpv con ampia compatibilitÃ  di formati",
       "Picture in Picture e integrazione con Touch Bar",
       "Gratuito e open source"
     ],
@@ -454,7 +454,7 @@
     },
     "bestFor": "Utenti Mac che cercano un player nativo e ben integrato.",
     "features": [
-      "Interfaccia nativa con modalità scura automatica",
+      "Interfaccia nativa con modalitÃ  scura automatica",
       "Picture in Picture e supporto Touch Bar",
       "Riproduzione di flussi di rete personali",
       "Sottotitoli, playlist e gestione capitoli"
@@ -482,7 +482,7 @@
     "slug": "hypnotix",
     "name": "Hypnotix",
     "tagline": "Player IPTV leggero e integrato nell'ecosistema Linux Mint.",
-    "description": "Hypnotix è un player IPTV open source sviluppato dal team di Linux Mint, pensato per integrarsi con l'ambiente desktop e offrire un'esperienza semplice su Linux. L'interfaccia organizza le fonti in gruppi, mostra i loghi dei canali e consente di cercare rapidamente all'interno delle liste configurate dall'utente. Non include contenuti proprietari: le fonti vanno aggiunte personalmente, nel rispetto dei diritti di trasmissione. È disponibile come pacchetto Flatpak su Flathub e tramite i repository di Linux Mint e Ubuntu, oltre che dal codice sorgente su GitHub. La combinazione di interfaccia essenziale e leggerezza lo rende adatto anche a computer modesti o a vecchi portatili riutilizzati come postazione TV.",
+    "description": "Hypnotix Ã¨ un player IPTV open source sviluppato dal team di Linux Mint, pensato per integrarsi con l'ambiente desktop e offrire un'esperienza semplice su Linux. L'interfaccia organizza le fonti in gruppi, mostra i loghi dei canali e consente di cercare rapidamente all'interno delle liste configurate dall'utente. Non include contenuti proprietari: le fonti vanno aggiunte personalmente, nel rispetto dei diritti di trasmissione. Ãˆ disponibile come pacchetto Flatpak su Flathub e tramite i repository di Linux Mint e Ubuntu, oltre che dal codice sorgente su GitHub. La combinazione di interfaccia essenziale e leggerezza lo rende adatto anche a computer modesti o a vecchi portatili riutilizzati come postazione TV.",
     "officialUrl": "https://github.com/linuxmint/hypnotix",
     "developer": "Linux Mint",
     "licenseModel": "free",
@@ -502,7 +502,7 @@
           "Verifica che Flatpak e il repository Flathub siano attivi.",
           "Installa il pacchetto com.linuxmint.Hypnotix dalla pagina Flathub.",
           "Avvia Hypnotix e aggiungi una fonte personale dalla finestra delle preferenze.",
-          "Organizza le fonti in gruppi per ritrovarle più rapidamente."
+          "Organizza le fonti in gruppi per ritrovarle piÃ¹ rapidamente."
         ],
         "verified": true,
         "verifiedAt": "2026-11-21"
@@ -530,12 +530,12 @@
       "Leggero e adatto a hardware modesto",
       "Interfaccia semplice e in italiano",
       "Integrazione curata con Linux Mint e ambienti GTK",
-      "Open source e senza pubblicità"
+      "Open source e senza pubblicitÃ "
     ],
     "cons": [
       "Disponibile solo su Linux",
       "Funzioni avanzate limitate rispetto ai player commerciali",
-      "La gestione delle liste è manuale"
+      "La gestione delle liste Ã¨ manuale"
     ],
     "logo": {
       "src": "/logos/hypnotix.svg",
@@ -570,7 +570,7 @@
     "slug": "tivimate",
     "name": "TiviMate",
     "tagline": "Interfaccia televisiva curata, pensata per il telecomando.",
-    "description": "TiviMate è un player IPTV per Android e Android TV noto per l'interfaccia a guida remota: guida programmi, gruppi di canali, preferiti e registrazione rendono l'esperienza simile a quella di un decoder tradizionale. La versione base è gratuita, mentre le funzioni avanzate richiedono un abbonamento al piano Premium acquistabile in-app. Il player non fornisce contenuti: l'utente inserisce la propria fonte legittima e configura l'aspetto dell'interfaccia. L'installazione ufficiale avviene tramite Google Play; sui dispositivi senza store integrato si utilizza il pacchetto APK distribuito dal produttore, mai da siti di terze parti. È una delle scelte più apprezzate su Nvidia Shield e TV box Android.",
+    "description": "TiviMate Ã¨ un player IPTV per Android e Android TV noto per l'interfaccia a guida remota: guida programmi, gruppi di canali, preferiti e registrazione rendono l'esperienza simile a quella di un decoder tradizionale. La versione base Ã¨ gratuita, mentre le funzioni avanzate richiedono un abbonamento al piano Premium acquistabile in-app. Il player non fornisce contenuti: l'utente inserisce la propria fonte legittima e configura l'aspetto dell'interfaccia. L'installazione ufficiale avviene tramite Google Play; sui dispositivi senza store integrato si utilizza il pacchetto APK distribuito dal produttore, mai da siti di terze parti. Ãˆ una delle scelte piÃ¹ apprezzate su Nvidia Shield e TV box Android.",
     "officialUrl": "https://tivimate.com/",
     "developer": "AR Studio",
     "licenseModel": "freemium",
@@ -614,7 +614,7 @@
           "Inserisci la fonte legittima e organizza i gruppi di canali.",
           "Imposta la guida programmi se la tua fonte la fornisce."
         ],
-        "note": "Su Fire TV l'app non è presente nello store Amazon: usa solo l'APK ufficiale indicato dal produttore.",
+        "note": "Su Fire TV l'app non Ã¨ presente nello store Amazon: usa solo l'APK ufficiale indicato dal produttore.",
         "verified": true,
         "verifiedAt": "2026-11-21"
       }
@@ -626,7 +626,7 @@
       "Aggiornamenti frequenti"
     ],
     "cons": [
-      "Le funzioni più utili richiedono l'abbonamento Premium",
+      "Le funzioni piÃ¹ utili richiedono l'abbonamento Premium",
       "Non disponibile su iOS",
       "La configurazione iniziale richiede qualche passaggio"
     ],
@@ -664,7 +664,7 @@
     "slug": "iptv-smarters-pro",
     "name": "IPTV Smarters Pro",
     "tagline": "Player diffuso con configurazione guidata e supporto multiscreen.",
-    "description": "IPTV Smarters Pro è uno dei player più conosciuti su Android, Android TV e iOS. La configurazione avviene tramite una procedura guidata che chiede i dati della propria fonte legittima, con campi separati per server, utente e password oppure per un collegamento diretto. L'interfaccia organizza live, film e serie in sezioni distinte e include funzioni come preferiti, EPG e parental control. La versione gratuita è utilizzabile con limitazioni, mentre quella Pro elimina alcune restrizioni. Va installato esclusivamente dagli store ufficiali o dal sito del produttore: i pacchetti APK modificati diffusi online possono contenere codice indesiderato. Il player non include alcun contenuto e non fornisce abbonamenti.",
+    "description": "IPTV Smarters Pro Ã¨ uno dei player piÃ¹ conosciuti su Android, Android TV e iOS. La configurazione avviene tramite una procedura guidata che chiede i dati della propria fonte legittima, con campi separati per server, utente e password oppure per un collegamento diretto. L'interfaccia organizza live, film e serie in sezioni distinte e include funzioni come preferiti, EPG e parental control. La versione gratuita Ã¨ utilizzabile con limitazioni, mentre quella Pro elimina alcune restrizioni. Va installato esclusivamente dagli store ufficiali o dal sito del produttore: i pacchetti APK modificati diffusi online possono contenere codice indesiderato. Il player non include alcun contenuto e non fornisce abbonamenti.",
     "officialUrl": "https://www.iptvsmarters.com/",
     "developer": "IPTV Smarters",
     "licenseModel": "freemium",
@@ -727,7 +727,7 @@
           "Scarica l'installer proposto dal produttore e verifica la firma del file.",
           "Installa l'app e configura il profilo con i dati della tua fonte legittima."
         ],
-        "note": "La disponibilità della versione desktop cambia nel tempo: se non è presente, usa la versione Android o web.",
+        "note": "La disponibilitÃ  della versione desktop cambia nel tempo: se non Ã¨ presente, usa la versione Android o web.",
         "verified": false
       },
       {
@@ -745,7 +745,7 @@
           "Installa l'app e completa la configurazione guidata.",
           "Inserisci i dati della fonte legittima e salva il profilo."
         ],
-        "note": "Il listing può cambiare nome o essere rimosso: verifica sempre lo sviluppatore prima di installare.",
+        "note": "Il listing puÃ² cambiare nome o essere rimosso: verifica sempre lo sviluppatore prima di installare.",
         "verified": false
       }
     ],
@@ -757,7 +757,7 @@
     ],
     "cons": [
       "Versione gratuita con limitazioni",
-      "Interfaccia più pesante rispetto ai player minimali",
+      "Interfaccia piÃ¹ pesante rispetto ai player minimali",
       "Circolano molti APK non ufficiali: serve attenzione"
     ],
     "logo": {
@@ -794,7 +794,7 @@
     "slug": "televizo",
     "name": "Televizo",
     "tagline": "Player Android essenziale, con ottima gestione di EPG e archivi.",
-    "description": "Televizo è un player IPTV per Android e Android TV apprezzato per la reattività e per un'interfaccia pulita che non ruba spazio al video. Consente di gestire più profili, organizzare i canali in gruppi, consultare la guida programmi e riprendere la visione dall'archivio quando la fonte lo mette a disposizione. La versione gratuita è sufficiente per un uso base, mentre la licenza Pro aggiunge funzioni come la rimozione della pubblicità e il supporto a più fonti contemporanee. L'app non contiene canali né abbonamenti: l'utente inserisce esclusivamente la propria fonte legittima. L'installazione avviene da Google Play o dal pacchetto APK pubblicato dallo sviluppatore.",
+    "description": "Televizo Ã¨ un player IPTV per Android e Android TV apprezzato per la reattivitÃ  e per un'interfaccia pulita che non ruba spazio al video. Consente di gestire piÃ¹ profili, organizzare i canali in gruppi, consultare la guida programmi e riprendere la visione dall'archivio quando la fonte lo mette a disposizione. La versione gratuita Ã¨ sufficiente per un uso base, mentre la licenza Pro aggiunge funzioni come la rimozione della pubblicitÃ  e il supporto a piÃ¹ fonti contemporanee. L'app non contiene canali nÃ© abbonamenti: l'utente inserisce esclusivamente la propria fonte legittima. L'installazione avviene da Google Play o dal pacchetto APK pubblicato dallo sviluppatore.",
     "officialUrl": "https://play.google.com/store/search?q=Televizo&c=apps",
     "developer": "Televizo",
     "licenseModel": "freemium",
@@ -817,7 +817,7 @@
           "Installa l'app e aggiungi la tua fonte legittima dalla schermata iniziale.",
           "Importa la guida programmi se disponibile."
         ],
-        "note": "Il listing non è confermato in modo univoco: verifica sempre il nome dello sviluppatore prima di installare.",
+        "note": "Il listing non Ã¨ confermato in modo univoco: verifica sempre il nome dello sviluppatore prima di installare.",
         "verified": false
       },
       {
@@ -841,7 +841,7 @@
     "pros": [
       "Interfaccia pulita e veloce",
       "Buona gestione di EPG e archivio",
-      "Supporto a più profili",
+      "Supporto a piÃ¹ profili",
       "Funziona bene anche su dispositivi modesti"
     ],
     "cons": [
@@ -855,7 +855,7 @@
     },
     "bestFor": "Chi vuole un player Android leggero ma con EPG curata.",
     "features": [
-      "Gestione di più profili",
+      "Gestione di piÃ¹ profili",
       "Guida elettronica dei programmi",
       "Gruppi di canali e preferiti",
       "Ripresa della visione dall'archivio"
@@ -882,7 +882,7 @@
     "slug": "ott-navigator",
     "name": "OTT Navigator",
     "tagline": "Player flessibile con layout configurabili per TV e box Android.",
-    "description": "OTT Navigator è un player IPTV per Android e Android TV che punta sulla personalizzazione del layout: si può scegliere tra diverse griglie, dimensioni dei caratteri e disposizioni dei pannelli per adattare l'interfaccia al proprio televisore. Supporta più profili, guida programmi, ordinamento dei canali e funzioni di timeshift quando la fonte le espone. È disponibile in versione gratuita con pubblicità e in versione Premium acquistabile in-app. Il player è pensato per chi inserisce una fonte personale legittima e vuole controllarne l'aspetto senza passare a un media center completo. L'installazione consigliata è da Google Play, con verifica dello sviluppatore indicato sul sito ufficiale.",
+    "description": "OTT Navigator Ã¨ un player IPTV per Android e Android TV che punta sulla personalizzazione del layout: si puÃ² scegliere tra diverse griglie, dimensioni dei caratteri e disposizioni dei pannelli per adattare l'interfaccia al proprio televisore. Supporta piÃ¹ profili, guida programmi, ordinamento dei canali e funzioni di timeshift quando la fonte le espone. Ãˆ disponibile in versione gratuita con pubblicitÃ  e in versione Premium acquistabile in-app. Il player Ã¨ pensato per chi inserisce una fonte personale legittima e vuole controllarne l'aspetto senza passare a un media center completo. L'installazione consigliata Ã¨ da Google Play, con verifica dello sviluppatore indicato sul sito ufficiale.",
     "officialUrl": "https://play.google.com/store/apps/details?id=studio.scillarium.ottnavigator",
     "developer": "Studio Scillarium",
     "licenseModel": "freemium",
@@ -902,7 +902,7 @@
         ],
         "steps": [
           "Installa OTT Navigator da Google Play verificando lo sviluppatore.",
-          "Apri l'app e scegli il layout iniziale più adatto allo schermo.",
+          "Apri l'app e scegli il layout iniziale piÃ¹ adatto allo schermo.",
           "Aggiungi la fonte personale e importa la guida programmi.",
           "Personalizza gruppi e ordinamento dei canali.",
           "Verifica infine che il telecomando scorra l'elenco senza ritardi."
@@ -934,12 +934,12 @@
     "pros": [
       "Layout molto personalizzabili",
       "Buona resa su schermi grandi e telecomandi",
-      "Gestione di più profili e fonti",
+      "Gestione di piÃ¹ profili e fonti",
       "Versione gratuita utilizzabile"
     ],
     "cons": [
       "Interfaccia ricca che richiede tempo per essere capita",
-      "Versione gratuita con pubblicità",
+      "Versione gratuita con pubblicitÃ ",
       "Solo Android e Android TV"
     ],
     "logo": {
@@ -950,7 +950,7 @@
     "features": [
       "Layout TV configurabili",
       "Guida programmi e timeshift quando supportati",
-      "Più profili e fonti",
+      "PiÃ¹ profili e fonti",
       "Ordinamento e gruppi canali"
     ],
     "requirements": [
@@ -975,7 +975,7 @@
     "slug": "perfect-player",
     "name": "Perfect Player",
     "tagline": "Storico player Android, immediato e con EPG integrata.",
-    "description": "Perfect Player è uno dei player IPTV più longevi su Android: interfaccia a griglia, gestione di più profili, guida programmi e supporto a fonti esterne lo hanno reso un punto di riferimento per chi cerca un'app semplice. Non include contenuti: l'utente configura la propria fonte legittima e organizza i canali in gruppi. La versione gratuita mostra pubblicità, mentre la versione premium la rimuove e sblocca alcune funzioni. Il progetto è maturo ma aggiornato con meno frequenza rispetto ai concorrenti, quindi conviene verificare la compatibilità con i televisori più recenti. L'installazione avviene da Google Play o tramite APK ufficiale; evita pacchetti modificati, che sono la principale fonte di malware in questo segmento.",
+    "description": "Perfect Player Ã¨ uno dei player IPTV piÃ¹ longevi su Android: interfaccia a griglia, gestione di piÃ¹ profili, guida programmi e supporto a fonti esterne lo hanno reso un punto di riferimento per chi cerca un'app semplice. Non include contenuti: l'utente configura la propria fonte legittima e organizza i canali in gruppi. La versione gratuita mostra pubblicitÃ , mentre la versione premium la rimuove e sblocca alcune funzioni. Il progetto Ã¨ maturo ma aggiornato con meno frequenza rispetto ai concorrenti, quindi conviene verificare la compatibilitÃ  con i televisori piÃ¹ recenti. L'installazione avviene da Google Play o tramite APK ufficiale; evita pacchetti modificati, che sono la principale fonte di malware in questo segmento.",
     "officialUrl": "https://play.google.com/store/apps/details?id=com.niklabs.pp",
     "developer": "Nikolay Anisimov",
     "licenseModel": "freemium",
@@ -1024,14 +1024,14 @@
       }
     ],
     "pros": [
-      "Semplicità d'uso e configurazione rapida",
+      "SemplicitÃ  d'uso e configurazione rapida",
       "Interfaccia a griglia leggibile da lontano",
       "Supporto EPG consolidato",
       "Funziona su dispositivi datati"
     ],
     "cons": [
       "Aggiornamenti poco frequenti",
-      "Versione gratuita con pubblicità",
+      "Versione gratuita con pubblicitÃ ",
       "Grafica meno moderna rispetto ai player recenti"
     ],
     "logo": {
@@ -1042,7 +1042,7 @@
     "features": [
       "Interfaccia a griglia per il telecomando",
       "Guida elettronica dei programmi",
-      "Più profili e gruppi di canali",
+      "PiÃ¹ profili e gruppi di canali",
       "Temi chiaro e scuro"
     ],
     "requirements": [
@@ -1067,7 +1067,7 @@
     "slug": "progtv",
     "name": "ProgTV",
     "tagline": "Player e registratore con una tradizione lunga sul desktop e su Android.",
-    "description": "ProgTV nasce nell'ecosistema ProgDVB, storico software di ricezione televisiva per Windows, e porta su Android e Android TV un'impostazione da decoder: elenco canali, guida programmi, registrazione e gestione di più fonti. La versione mobile è gratuita con limitazioni, mentre le funzioni avanzate e la versione desktop richiedono una licenza. L'app non offre contenuti propri: l'utente inserisce la fonte legittima e configura la propria lista. Su Windows la versione ProgTV/ProgDVB si scarica dal sito del produttore; su Android si usa Google Play. È una scelta interessante per chi registra programmi e vuole passare dallo stesso ecosistema tra PC e TV, accettando un'interfaccia più tecnica rispetto alla media.",
+    "description": "ProgTV nasce nell'ecosistema ProgDVB, storico software di ricezione televisiva per Windows, e porta su Android e Android TV un'impostazione da decoder: elenco canali, guida programmi, registrazione e gestione di piÃ¹ fonti. La versione mobile Ã¨ gratuita con limitazioni, mentre le funzioni avanzate e la versione desktop richiedono una licenza. L'app non offre contenuti propri: l'utente inserisce la fonte legittima e configura la propria lista. Su Windows la versione ProgTV/ProgDVB si scarica dal sito del produttore; su Android si usa Google Play. Ãˆ una scelta interessante per chi registra programmi e vuole passare dallo stesso ecosistema tra PC e TV, accettando un'interfaccia piÃ¹ tecnica rispetto alla media.",
     "officialUrl": "https://www.progdvb.com/",
     "developer": "ProgDVB",
     "licenseModel": "freemium",
@@ -1130,13 +1130,13 @@
           "Configura la fonte personale nelle impostazioni del canale.",
           "Verifica i codec installati se il video non parte."
         ],
-        "note": "La versione desktop è distribuita dal produttore: controlla sempre la firma del file scaricato.",
+        "note": "La versione desktop Ã¨ distribuita dal produttore: controlla sempre la firma del file scaricato.",
         "verified": false
       }
     ],
     "pros": [
       "Funzioni di registrazione complete",
-      "Continuità tra desktop Windows e Android",
+      "ContinuitÃ  tra desktop Windows e Android",
       "Guida programmi dettagliata",
       "Adatto a utenti tecnici"
     ],
@@ -1153,7 +1153,7 @@
     "features": [
       "Registrazione dei programmi",
       "Guida elettronica dei programmi",
-      "Gestione di più fonti",
+      "Gestione di piÃ¹ fonti",
       "Versione desktop e mobile"
     ],
     "requirements": [
@@ -1179,7 +1179,7 @@
     "slug": "myiptv-player",
     "name": "MyIPTV Player",
     "tagline": "Player per Windows con integrazione nel Microsoft Store.",
-    "description": "MyIPTV Player è un'app per Windows distribuita tramite Microsoft Store, pensata per riprodurre flussi di rete inseriti manualmente dall'utente. L'interfaccia segue le convenzioni di Windows 10 e 11: navigazione a schede, supporto al touch e ai tasti multimediali, gestione di una lista di canali con loghi e ricerca. Non include contenuti né abbonamenti e non richiede account: la configurazione consiste nell'aggiungere la propria fonte legittima. Essendo un'app dello Store, si aggiorna tramite Windows Update e non richiede permessi di amministratore. È una soluzione pratica per un HTPC o un portatile collegato al televisore, soprattutto per chi preferisce non installare software desktop tradizionale. L'interfaccia può essere controllata anche con mouse e tastiera, mentre il supporto ai tasti multimediali semplifica la riproduzione da un telecomando HTPC.",
+    "description": "MyIPTV Player Ã¨ un'app per Windows distribuita tramite Microsoft Store, pensata per riprodurre flussi di rete inseriti manualmente dall'utente. L'interfaccia segue le convenzioni di Windows 10 e 11: navigazione a schede, supporto al touch e ai tasti multimediali, gestione di una lista di canali con loghi e ricerca. Non include contenuti nÃ© abbonamenti e non richiede account: la configurazione consiste nell'aggiungere la propria fonte legittima. Essendo un'app dello Store, si aggiorna tramite Windows Update e non richiede permessi di amministratore. Ãˆ una soluzione pratica per un HTPC o un portatile collegato al televisore, soprattutto per chi preferisce non installare software desktop tradizionale. L'interfaccia puÃ² essere controllata anche con mouse e tastiera, mentre il supporto ai tasti multimediali semplifica la riproduzione da un telecomando HTPC.",
     "officialUrl": "https://apps.microsoft.com/search?query=MyIPTV%20Player",
     "developer": "Upvise",
     "licenseModel": "free",
@@ -1202,7 +1202,7 @@
           "Installa l'app e avviala dal menu Start.",
           "Aggiungi la fonte personale dalla schermata di configurazione."
         ],
-        "note": "Il listing può cambiare: verifica sempre lo sviluppatore indicato nella scheda dello Store.",
+        "note": "Il listing puÃ² cambiare: verifica sempre lo sviluppatore indicato nella scheda dello Store.",
         "verified": false
       }
     ],
@@ -1253,8 +1253,8 @@
     "id": "gse-smart-iptv",
     "slug": "gse-smart-iptv",
     "name": "GSE Smart IPTV",
-    "tagline": "Player multiformato con gestione di più profili su mobile e Apple TV.",
-    "description": "GSE Smart IPTV è un player per Android, Android TV, iOS e Apple TV che combina la riproduzione di flussi di rete con una libreria locale di file multimediali. L'interfaccia organizza le fonti in profili separati e consente di passare rapidamente da un elenco all'altro, con supporto a guida programmi e ricerca. La versione gratuita include pubblicità e alcune limitazioni, mentre l'acquisto in-app le rimuove. Il player non fornisce contenuti e non vende abbonamenti: tutto ciò che appare nell'app proviene dalle fonti configurate dall'utente. L'installazione avviene dagli store ufficiali o dal sito del produttore; i pacchetti APK di terze parti vanno evitati perché spesso modificati.",
+    "tagline": "Player multiformato con gestione di piÃ¹ profili su mobile e Apple TV.",
+    "description": "GSE Smart IPTV Ã¨ un player per Android, Android TV, iOS e Apple TV che combina la riproduzione di flussi di rete con una libreria locale di file multimediali. L'interfaccia organizza le fonti in profili separati e consente di passare rapidamente da un elenco all'altro, con supporto a guida programmi e ricerca. La versione gratuita include pubblicitÃ  e alcune limitazioni, mentre l'acquisto in-app le rimuove. Il player non fornisce contenuti e non vende abbonamenti: tutto ciÃ² che appare nell'app proviene dalle fonti configurate dall'utente. L'installazione avviene dagli store ufficiali o dal sito del produttore; i pacchetti APK di terze parti vanno evitati perchÃ© spesso modificati.",
     "officialUrl": "https://www.gsesmartiptv.com/",
     "developer": "GSE Tech",
     "licenseModel": "freemium",
@@ -1278,7 +1278,7 @@
           "Aggiungi la fonte personale e salva il profilo.",
           "Importa la guida programmi se disponibile."
         ],
-        "note": "Il nome del listing può variare: confronta icona e sviluppatore con il sito ufficiale.",
+        "note": "Il nome del listing puÃ² variare: confronta icona e sviluppatore con il sito ufficiale.",
         "verified": false
       },
       {
@@ -1317,12 +1317,12 @@
     ],
     "pros": [
       "Disponibile su Android e Apple, inclusa Apple TV",
-      "Gestione di più profili",
+      "Gestione di piÃ¹ profili",
       "Lettore locale oltre ai flussi di rete",
       "Interfaccia tradotta in italiano"
     ],
     "cons": [
-      "Versione gratuita con pubblicità",
+      "Versione gratuita con pubblicitÃ ",
       "Qualche incongruenza tra le versioni Android e iOS",
       "Listing da verificare con attenzione"
     ],
@@ -1332,7 +1332,7 @@
     },
     "bestFor": "Famiglie con dispositivi Android e Apple che vogliono un solo player.",
     "features": [
-      "Più profili separati",
+      "PiÃ¹ profili separati",
       "Guida programmi e ricerca",
       "Riproduzione di file locali",
       "Supporto Apple TV"
@@ -1359,7 +1359,7 @@
     "slug": "ss-iptv",
     "name": "SS IPTV",
     "tagline": "Player pensato per i televisori LG e Samsung, senza box aggiuntivi.",
-    "description": "SS IPTV è un player che nasce per i televisori smart LG webOS e Samsung Tizen, dove si installa direttamente dallo store del produttore senza bisogno di box esterni. L'applicazione gestisce una lista di canali configurabile dall'utente, con supporto a guida programmi, loghi e ricerca. La configurazione avviene tramite un codice dispositivo associato a un account sul sito ufficiale, dove si impostano le fonti personali legittime. È una soluzione apprezzata perché evita cavi e telecomandi aggiuntivi, ma dipende dalle politiche degli store televisivi, che possono rimuovere o limitare le app nel tempo. Prima di acquistare un televisore conviene quindi verificare la disponibilità effettiva dell'app sul modello scelto.",
+    "description": "SS IPTV Ã¨ un player che nasce per i televisori smart LG webOS e Samsung Tizen, dove si installa direttamente dallo store del produttore senza bisogno di box esterni. L'applicazione gestisce una lista di canali configurabile dall'utente, con supporto a guida programmi, loghi e ricerca. La configurazione avviene tramite un codice dispositivo associato a un account sul sito ufficiale, dove si impostano le fonti personali legittime. Ãˆ una soluzione apprezzata perchÃ© evita cavi e telecomandi aggiuntivi, ma dipende dalle politiche degli store televisivi, che possono rimuovere o limitare le app nel tempo. Prima di acquistare un televisore conviene quindi verificare la disponibilitÃ  effettiva dell'app sul modello scelto.",
     "officialUrl": "https://ss-iptv.com/",
     "developer": "SS IPTV",
     "licenseModel": "free",
@@ -1383,7 +1383,7 @@
           "Registra il codice sul sito ufficiale e configura la fonte personale.",
           "Riavvia l'app per caricare la lista."
         ],
-        "note": "La disponibilità nello store LG varia per paese e modello: verifica prima di procedere.",
+        "note": "La disponibilitÃ  nello store LG varia per paese e modello: verifica prima di procedere.",
         "verified": false
       },
       {
@@ -1400,7 +1400,7 @@
           "Associa il codice sul sito ufficiale e imposta la fonte personale.",
           "Riavvia l'app e verifica la lista canali."
         ],
-        "note": "Sui modelli più recenti l'app potrebbe non essere presente: controlla nel Samsung Apps del tuo TV.",
+        "note": "Sui modelli piÃ¹ recenti l'app potrebbe non essere presente: controlla nel Samsung Apps del tuo TV.",
         "verified": false
       },
       {
@@ -1426,7 +1426,7 @@
       "Gratuita"
     ],
     "cons": [
-      "Disponibilità variabile negli store TV",
+      "DisponibilitÃ  variabile negli store TV",
       "Interfaccia essenziale",
       "Dipende dalle politiche di LG e Samsung"
     ],
@@ -1464,7 +1464,7 @@
     "slug": "ottplayer",
     "name": "OttPlayer",
     "tagline": "Un solo account per ritrovare i tuoi flussi su TV, mobile e browser.",
-    "description": "OttPlayer è un player multipiattaforma che punta sulla sincronizzazione: si configura una volta la fonte personale e la si ritrova su Android, iOS, web, LG webOS e Samsung Tizen. L'interfaccia è semplice e organizza i canali in gruppi, con guida programmi e ricerca. La versione gratuita è utilizzabile per un numero limitato di dispositivi, mentre i piani superiori aggiungono slot e funzioni. Il servizio non fornisce contenuti né abbonamenti: l'utente collega esclusivamente fonti di cui possiede i diritti. L'installazione avviene dagli store ufficiali o direttamente dal browser, senza software aggiuntivo. È una buona scelta per famiglie con dispositivi misti che vogliono un'unica configurazione.",
+    "description": "OttPlayer Ã¨ un player multipiattaforma che punta sulla sincronizzazione: si configura una volta la fonte personale e la si ritrova su Android, iOS, web, LG webOS e Samsung Tizen. L'interfaccia Ã¨ semplice e organizza i canali in gruppi, con guida programmi e ricerca. La versione gratuita Ã¨ utilizzabile per un numero limitato di dispositivi, mentre i piani superiori aggiungono slot e funzioni. Il servizio non fornisce contenuti nÃ© abbonamenti: l'utente collega esclusivamente fonti di cui possiede i diritti. L'installazione avviene dagli store ufficiali o direttamente dal browser, senza software aggiuntivo. Ãˆ una buona scelta per famiglie con dispositivi misti che vogliono un'unica configurazione.",
     "officialUrl": "https://ottplayer.tv/",
     "developer": "OttPlayer",
     "licenseModel": "freemium",
@@ -1558,7 +1558,7 @@
           "Installa l'app e accedi con il tuo account.",
           "Apri la lista sincronizzata e verifica la riproduzione."
         ],
-        "note": "La disponibilità varia per modello e anno: controlla nello store del televisore.",
+        "note": "La disponibilitÃ  varia per modello e anno: controlla nello store del televisore.",
         "verified": false
       }
     ],
@@ -1570,14 +1570,14 @@
     ],
     "cons": [
       "Piano gratuito con numero limitato di dispositivi",
-      "Disponibilità negli store TV non garantita",
+      "DisponibilitÃ  negli store TV non garantita",
       "Alcune funzioni richiedono un piano a pagamento"
     ],
     "logo": {
       "src": "/logos/ottplayer.svg",
       "alt": "Logo di OttPlayer"
     },
-    "bestFor": "Famiglie con più dispositivi che vogliono un'unica configurazione.",
+    "bestFor": "Famiglie con piÃ¹ dispositivi che vogliono un'unica configurazione.",
     "features": [
       "Sincronizzazione della lista tra dispositivi",
       "App per web, Android, iOS, LG e Samsung",
@@ -1606,7 +1606,7 @@
     "slug": "smart-iptv",
     "name": "Smart IPTV",
     "tagline": "Storica app per Samsung e LG, con attivazione tramite MAC address.",
-    "description": "Smart IPTV è una delle applicazioni più conosciute per i televisori Samsung Tizen e LG webOS. Si installa dallo store del televisore e si attiva associando l'indirizzo MAC del TV a un account sul sito ufficiale, dove si configura la fonte personale. Dopo un periodo di prova gratuito l'app richiede un pagamento una tantum per singolo dispositivo. L'interfaccia è essenziale: elenco canali, gruppi, loghi e guida programmi. Non include contenuti e non vende abbonamenti: ogni utente collega esclusivamente fonti legittime. Essendo legata agli store televisivi, la disponibilità può cambiare con gli aggiornamenti firmware; conviene verificare la presenza dell'app sul proprio modello prima di qualsiasi acquisto.",
+    "description": "Smart IPTV Ã¨ una delle applicazioni piÃ¹ conosciute per i televisori Samsung Tizen e LG webOS. Si installa dallo store del televisore e si attiva associando l'indirizzo MAC del TV a un account sul sito ufficiale, dove si configura la fonte personale. Dopo un periodo di prova gratuito l'app richiede un pagamento una tantum per singolo dispositivo. L'interfaccia Ã¨ essenziale: elenco canali, gruppi, loghi e guida programmi. Non include contenuti e non vende abbonamenti: ogni utente collega esclusivamente fonti legittime. Essendo legata agli store televisivi, la disponibilitÃ  puÃ² cambiare con gli aggiornamenti firmware; conviene verificare la presenza dell'app sul proprio modello prima di qualsiasi acquisto.",
     "officialUrl": "https://siptv.app/",
     "developer": "Smart IPTV",
     "licenseModel": "paid",
@@ -1629,7 +1629,7 @@
           "Registra il MAC sul sito ufficiale e carica la fonte personale.",
           "Riavvia l'app per completare l'attivazione."
         ],
-        "note": "L'app è a pagamento dopo il periodo di prova: il costo è per singolo televisore.",
+        "note": "L'app Ã¨ a pagamento dopo il periodo di prova: il costo Ã¨ per singolo televisore.",
         "verified": false
       },
       {
@@ -1658,7 +1658,7 @@
     ],
     "cons": [
       "A pagamento una tantum per dispositivo",
-      "Disponibilità legata agli store TV",
+      "DisponibilitÃ  legata agli store TV",
       "Funzioni limitate rispetto ai player moderni"
     ],
     "logo": {
@@ -1694,7 +1694,7 @@
     "slug": "iptv-solution-windows",
     "name": "IP-TVSOLUTION per Windows",
     "tagline": "Il player desktop del progetto: setup, gestore universale e aggiornamenti automatici.",
-    "description": "IP-TVSOLUTION per Windows è il player desktop del progetto, pensato per chi vuole un'installazione completa e gestibile da un unico pannello. La confezione comprende setup con icona puzzle rossa, gestore universale con sei opzioni, server Java locale e utility per l'aggiornamento automatico di playlist, EPG e loghi dei canali. La registrazione utente usa nome, password ed email: la richiesta viene inviata al proprietario e il codice di attivazione arriva via email, senza mostrare il codice richiesta. Non sono inclusi playlist, canali o credenziali: configuri la tua linea legittima. Il pacchetto non è firmato digitalmente, quindi Windows può mostrare un avviso SmartScreen al primo avvio; un certificato EV o OV, a pagamento, eliminerebbe l'avviso.",
+    "description": "IP-TVSOLUTION per Windows Ã¨ il player desktop del progetto, pensato per chi vuole un'installazione completa e gestibile da un unico pannello. La confezione comprende setup con icona puzzle rossa, gestore universale con sei opzioni, server Java locale e utility per l'aggiornamento automatico di playlist, EPG e loghi dei canali. La registrazione utente usa nome, password ed email: la richiesta viene inviata al proprietario e il codice di attivazione arriva via email, senza mostrare il codice richiesta. Non sono inclusi playlist, canali o credenziali: configuri la tua linea legittima. Il pacchetto non Ã¨ firmato digitalmente, quindi Windows puÃ² mostrare un avviso SmartScreen al primo avvio; un certificato EV o OV, a pagamento, eliminerebbe l'avviso.",
     "officialUrl": "https://ip-tvsolution.online",
     "developer": "IP-TVSOLUTION",
     "licenseModel": "free",
@@ -1710,7 +1710,7 @@
         "platform": "windows",
         "method": "exe",
         "label": "Setup Windows v1.9",
-        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Windows-Setup-v1.9.zip?v=52",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Windows-Setup-v1.9.zip?v=53",
         "devices": [
           "Windows 10",
           "Windows 11"
@@ -1721,7 +1721,7 @@
           "Apri l'app, completa la registrazione con nome utente, password ed email e attendi il codice di attivazione.",
           "Inserisci il codice ricevuto via email e configura la tua playlist personale nelle impostazioni."
         ],
-        "note": "Il pacchetto non contiene playlist né credenziali. Windows può richiedere la conferma SmartScreen perché l'eseguibile non è firmato.",
+        "note": "Il pacchetto non contiene playlist nÃ© credenziali. Windows puÃ² richiedere la conferma SmartScreen perchÃ© l'eseguibile non Ã¨ firmato.",
         "verified": true,
         "verifiedAt": "2026-11-21"
       },
@@ -1729,14 +1729,14 @@
         "platform": "windows",
         "method": "exe",
         "label": "Versione portatile",
-        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Windows-Portatile-v1.9.zip?v=52",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Windows-Portatile-v1.9.zip?v=53",
         "devices": [
           "Windows 10",
           "Windows 11"
         ],
         "steps": [
           "Scarica lo ZIP portatile e decomprimilo su un disco o una chiavetta senza installazione.",
-          "Avvia l'eseguibile dal gestore universale e scegli la modalità portatile.",
+          "Avvia l'eseguibile dal gestore universale e scegli la modalitÃ  portatile.",
           "Registrati con nome utente, password ed email, poi inserisci il codice ricevuto via email."
         ],
         "note": "Ideale per provare il player senza modificare il registro di Windows.",
@@ -1771,7 +1771,7 @@
       "Connessione internet per attivazione e aggiornamenti"
     ],
     "seo": {
-      "title": "IP-TVSOLUTION per Windows — player desktop v1.9",
+      "title": "IP-TVSOLUTION per Windows â€” player desktop v1.9",
       "description": "Scarica il player IP-TVSOLUTION per Windows: setup o versione portatile, gestore universale, attivazione via email e aggiornamenti automatici. Solo player, nessun contenuto.",
       "keywords": [
         "IP-TVSOLUTION Windows",
@@ -1786,7 +1786,7 @@
     "slug": "iptv-solution-web",
     "name": "IP-TVSOLUTION Web / Chrome",
     "tagline": "Il player stand-alone del progetto, apribile nel browser senza installare un server.",
-    "description": "IP-TVSOLUTION Web / Chrome è l'edizione stand-alone del progetto: apri index.html nel browser e hai subito l'interfaccia del player, senza server locale né dipendenze. Include la schermata di registrazione utente con nome, password ed email, il rilevamento automatico della piattaforma e lo storico delle richieste con esportazione CSV. L'attivazione funziona come nelle altre edizioni: il proprietario approva la richiesta dal pannello gestionale e invia il codice via email. Il tema usa il puzzle rosso del marchio e resta leggibile su desktop e tablet. Non vengono forniti playlist, abbonamenti o credenziali: ogni utente configura la propria fonte autorizzata. La configurazione iniziale è guidata e non richiede competenze tecniche: scegli la sorgente, incolla l'URL della tua playlist personale e verifica subito che canali ed EPG vengano caricati correttamente. L'interfaccia adatta automaticamente layout e touch target a smartphone, tablet e desktop, mentre il caricamento differito delle immagini riduce il consumo di banda e memoria.",
+    "description": "IP-TVSOLUTION Web / Chrome Ã¨ l'edizione stand-alone del progetto: apri index.html nel browser e hai subito l'interfaccia del player, senza server locale nÃ© dipendenze. Include la schermata di registrazione utente con nome, password ed email, il rilevamento automatico della piattaforma e lo storico delle richieste con esportazione CSV. L'attivazione funziona come nelle altre edizioni: il proprietario approva la richiesta dal pannello gestionale e invia il codice via email. Il tema usa il puzzle rosso del marchio e resta leggibile su desktop e tablet. Non vengono forniti playlist, abbonamenti o credenziali: ogni utente configura la propria fonte autorizzata. La configurazione iniziale Ã¨ guidata e non richiede competenze tecniche: scegli la sorgente, incolla l'URL della tua playlist personale e verifica subito che canali ed EPG vengano caricati correttamente. L'interfaccia adatta automaticamente layout e touch target a smartphone, tablet e desktop, mentre il caricamento differito delle immagini riduce il consumo di banda e memoria.",
     "officialUrl": "https://ip-tvsolution.online",
     "developer": "IP-TVSOLUTION",
     "licenseModel": "free",
@@ -1802,7 +1802,7 @@
         "platform": "web",
         "method": "web",
         "label": "Scarica Web / Chrome v1.9",
-        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Chrome-v1.9.zip?v=52",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Chrome-v1.9.zip?v=53",
         "devices": [
           "Chrome",
           "Edge",
@@ -1815,7 +1815,7 @@
           "Completa la registrazione con nome utente, password ed email.",
           "Attendi il codice di attivazione via email e incollalo nell'app per sbloccare il player."
         ],
-        "note": "Nessuna playlist è inclusa: inserisci solo fonti di cui possiedi i diritti.",
+        "note": "Nessuna playlist Ã¨ inclusa: inserisci solo fonti di cui possiedi i diritti.",
         "verified": true,
         "verifiedAt": "2026-11-21"
       }
@@ -1846,7 +1846,7 @@
       "Connessione internet per attivazione"
     ],
     "seo": {
-      "title": "IP-TVSOLUTION Web / Chrome — player stand-alone v1.9",
+      "title": "IP-TVSOLUTION Web / Chrome â€” player stand-alone v1.9",
       "description": "Player IPTV web IP-TVSOLUTION: apri index.html senza server, registrati con email e ricevi il codice di attivazione. Nessuna playlist o credenziale inclusa.",
       "keywords": [
         "IP-TVSOLUTION web",
@@ -1861,7 +1861,7 @@
     "slug": "iptv-solution-smart-tv",
     "name": "IP-TVSOLUTION Smart TV",
     "tagline": "Le edizioni LG webOS e Samsung Tizen del progetto, con telecomando e schermata semplice.",
-    "description": "IP-TVSOLUTION Smart TV raccoglie le due edizioni televisione del progetto: pacchetto .ipk per LG webOS e pacchetto .wgt per Samsung Tizen. L'interfaccia è pensata per telecomando, con focus evidente e schermata semplice, mentre la registrazione utente con nome, password ed email è la stessa delle altre piattaforme. Lo script INSTALLA-SULLA-TV-BAT rileva automaticamente la TV nella rete locale, rispettivamente sulle porte 9922 per LG e 8001 per Samsung. La Developer Mode va attivata una sola volta: su LG ha una validità limitata, su Samsung richiede il codice 12345. Non sono incluse playlist né credenziali: il propietario configura la propria linea legittima.",
+    "description": "IP-TVSOLUTION Smart TV raccoglie le due edizioni televisione del progetto: pacchetto .ipk per LG webOS e pacchetto .wgt per Samsung Tizen. L'interfaccia Ã¨ pensata per telecomando, con focus evidente e schermata semplice, mentre la registrazione utente con nome, password ed email Ã¨ la stessa delle altre piattaforme. Lo script INSTALLA-SULLA-TV-BAT rileva automaticamente la TV nella rete locale, rispettivamente sulle porte 9922 per LG e 8001 per Samsung. La Developer Mode va attivata una sola volta: su LG ha una validitÃ  limitata, su Samsung richiede il codice 12345. Non sono incluse playlist nÃ© credenziali: il propietario configura la propria linea legittima.",
     "officialUrl": "https://ip-tvsolution.online",
     "developer": "IP-TVSOLUTION",
     "licenseModel": "free",
@@ -1878,7 +1878,7 @@
         "platform": "lg-webos",
         "method": "web",
         "label": "Pacchetto LG webOS (.ipk)",
-        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-LG-webOS-v1.9.zip?v=52",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-LG-webOS-v1.9.zip?v=53",
         "devices": [
           "LG webOS",
           "Smart TV LG"
@@ -1889,7 +1889,7 @@
           "Attiva la Developer Mode sul TV se richiesto e completa l'installazione del file .ipk.",
           "Apri l'app, registrati con nome, password ed email e inserisci il codice ricevuto via email."
         ],
-        "note": "La Developer Mode LG ha validità limitata: potrebbe essere necessario rinnovarla.",
+        "note": "La Developer Mode LG ha validitÃ  limitata: potrebbe essere necessario rinnovarla.",
         "verified": true,
         "verifiedAt": "2026-11-21"
       },
@@ -1897,7 +1897,7 @@
         "platform": "samsung-tizen",
         "method": "web",
         "label": "Pacchetto Samsung Tizen (.wgt)",
-        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Samsung-Tizen-v1.9.zip?v=52",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Samsung-Tizen-v1.9.zip?v=53",
         "devices": [
           "Samsung Tizen",
           "Smart TV Samsung"
@@ -1908,7 +1908,7 @@
           "Inserisci il codice 12345 nella Developer Mode della TV e installa il file .wgt.",
           "Completa la registrazione utente e inserisci il codice di attivazione ricevuto via email."
         ],
-        "note": "Developer Mode richiesta una sola volta; il codice Samsung è 12345.",
+        "note": "Developer Mode richiesta una sola volta; il codice Samsung Ã¨ 12345.",
         "verified": true,
         "verifiedAt": "2026-11-21"
       }
@@ -1920,7 +1920,7 @@
     ],
     "cons": [
       "Developer Mode richiesta una volta",
-      "La validità della Developer Mode LG è limitata",
+      "La validitÃ  della Developer Mode LG Ã¨ limitata",
       "Nessuna playlist inclusa"
     ],
     "logo": {
@@ -1940,7 +1940,7 @@
       "Developer Mode attiva"
     ],
     "seo": {
-      "title": "IP-TVSOLUTION Smart TV — LG webOS e Samsung Tizen v1.9",
+      "title": "IP-TVSOLUTION Smart TV â€” LG webOS e Samsung Tizen v1.9",
       "description": "Installa IP-TVSOLUTION su Smart TV LG webOS e Samsung Tizen: pacchetti .ipk e .wgt, rilevamento automatico in rete, registrazione e attivazione via email. Solo player.",
       "keywords": [
         "IP-TVSOLUTION Smart TV",
@@ -1955,7 +1955,7 @@
     "slug": "iptv-solution-android",
     "name": "IP-TVSOLUTION Android",
     "tagline": "L'app Android v1.9 con logo puzzle, italiano, account e aggiornamento automatico.",
-    "description": "IP-TVSOLUTION Android è l'app nativa del progetto per smartphone, tablet, box TV ed emulatori. La build v1.9 usa il nome corretto IP-TVSOLUTION, il logo puzzle rosso e include l'italiano selezionabile dalle impostazioni lingua. Al primo avvio appare la registrazione utente con nome, password ed email: la richiesta parte verso il proprietario e il codice di attivazione arriva via email. L'aggiornamento automatico controlla un manifest cloud e scarica l'APK diretto quando è disponibile una versione nuova. Sono incluse ABI arm64, armeabi, x86 e x86_64, così l'app funziona anche su LDPlayer e altri emulatori a basso consumo. Non sono incluse playlist né credenziali: configuri la tua fonte autorizzata.",
+    "description": "IP-TVSOLUTION Android Ã¨ l'app nativa del progetto per smartphone, tablet, box TV ed emulatori. La build v1.9 usa il nome corretto IP-TVSOLUTION, il logo puzzle rosso e include l'italiano selezionabile dalle impostazioni lingua. Al primo avvio appare la registrazione utente con nome, password ed email: la richiesta parte verso il proprietario e il codice di attivazione arriva via email. L'aggiornamento automatico controlla un manifest cloud e scarica l'APK diretto quando Ã¨ disponibile una versione nuova. Sono incluse ABI arm64, armeabi, x86 e x86_64, cosÃ¬ l'app funziona anche su LDPlayer e altri emulatori a basso consumo. Non sono incluse playlist nÃ© credenziali: configuri la tua fonte autorizzata.",
     "officialUrl": "https://ip-tvsolution.online",
     "developer": "IP-TVSOLUTION",
     "licenseModel": "free",
@@ -1971,7 +1971,7 @@
         "platform": "android",
         "method": "apk",
         "label": "APK Android v1.9",
-        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Android-v1.9.apk?v=52",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Android-v1.9.apk?v=53",
         "devices": [
           "Smartphone",
           "Tablet",
@@ -1992,7 +1992,7 @@
         "platform": "android",
         "method": "apk",
         "label": "Pacchetto completo",
-        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Android-v1.9.zip?v=52",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-Android-v1.9.zip?v=53",
         "devices": [
           "Smartphone",
           "Tablet",
@@ -2003,7 +2003,7 @@
           "Installa l'APK universale su dispositivi ARM oppure la variante x86_64 su emulatori.",
           "Registrati con nome, password ed email e inserisci il codice inviato via email."
         ],
-        "note": "La variante universale contiene le librerie ARM complete; x86_64 è pensata per emulatori.",
+        "note": "La variante universale contiene le librerie ARM complete; x86_64 Ã¨ pensata per emulatori.",
         "verified": true,
         "verifiedAt": "2026-11-21"
       }
@@ -2015,7 +2015,7 @@
     ],
     "cons": [
       "Origini sconosciute da abilitare per l'APK",
-      "LDPlayer può riscrivere la config RAM",
+      "LDPlayer puÃ² riscrivere la config RAM",
       "Nessuna playlist inclusa"
     ],
     "logo": {
@@ -2034,7 +2034,7 @@
       "Connessione internet per attivazione e aggiornamenti"
     ],
     "seo": {
-      "title": "IP-TVSOLUTION Android — APK v1.9 con account e auto-update",
+      "title": "IP-TVSOLUTION Android â€” APK v1.9 con account e auto-update",
       "description": "Scarica l'APK Android IP-TVSOLUTION v1.9: logo puzzle rosso, italiano, registrazione utente, codice di attivazione via email e aggiornamento automatico. Solo player, nessuna playlist.",
       "keywords": [
         "IP-TVSOLUTION Android",
@@ -2049,7 +2049,7 @@
     "slug": "iptv-solution-iphone",
     "name": "IP-TVSOLUTION iPhone PWA",
     "tagline": "La PWA installabile da Safari del progetto, con icona puzzle e funzionamento offline.",
-    "description": "IP-TVSOLUTION iPhone PWA è l'edizione per iOS del progetto: non è un .ipa dello store, ma una progressive web app installabile direttamente da Safari e poi avviabile come un'app dalla Home Screen. Include icone 180, 192 e 512 pixel, manifest e service worker per l'uso offline dell'interfaccia. Il tema usa il puzzle rosso del marchio e resta leggibile su iPhone e iPad. La registrazione utente con nome, password ed email invia la richiesta al proprietario, che approva dal pannello e invia il codice di attivazione via email. Una vera app .ipa nativa richiederebbe macOS, Xcode e un account Apple Developer a pagamento; questa PWA è la soluzione gratuita e immediata. Non sono incluse playlist né credenziali. Puoi condividere l'icona con gli amici e aggiornare l'interfaccia senza passare dallo store, perché la PWA legge direttamente il manifest pubblicato.",
+    "description": "IP-TVSOLUTION iPhone PWA Ã¨ l'edizione per iOS del progetto: non Ã¨ un .ipa dello store, ma una progressive web app installabile direttamente da Safari e poi avviabile come un'app dalla Home Screen. Include icone 180, 192 e 512 pixel, manifest e service worker per l'uso offline dell'interfaccia. Il tema usa il puzzle rosso del marchio e resta leggibile su iPhone e iPad. La registrazione utente con nome, password ed email invia la richiesta al proprietario, che approva dal pannello e invia il codice di attivazione via email. Una vera app .ipa nativa richiederebbe macOS, Xcode e un account Apple Developer a pagamento; questa PWA Ã¨ la soluzione gratuita e immediata. Non sono incluse playlist nÃ© credenziali. Puoi condividere l'icona con gli amici e aggiornare l'interfaccia senza passare dallo store, perchÃ© la PWA legge direttamente il manifest pubblicato.",
     "officialUrl": "https://ip-tvsolution.online",
     "developer": "IP-TVSOLUTION",
     "licenseModel": "free",
@@ -2065,7 +2065,7 @@
         "platform": "apple",
         "method": "web",
         "label": "iPhone PWA v1.9",
-        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-iPhone-PWA-v1.9.zip?v=52",
+        "url": "https://download.ip-tvsolution.online/IP-TVSOLUTION-iPhone-PWA-v1.9.zip?v=53",
         "devices": [
           "iPhone",
           "iPad"
@@ -2076,7 +2076,7 @@
           "Apri l'icona puzzle dalla Home Screen e completa la registrazione con nome, password ed email.",
           "Inserisci il codice di attivazione ricevuto via email per sbloccare il player."
         ],
-        "note": "È una PWA installabile da Safari: un .ipa nativo richiede macOS, Xcode e Apple Developer a pagamento.",
+        "note": "Ãˆ una PWA installabile da Safari: un .ipa nativo richiede macOS, Xcode e Apple Developer a pagamento.",
         "verified": true,
         "verifiedAt": "2026-11-21"
       }
@@ -2087,7 +2087,7 @@
       "Stessa attivazione via email delle altre piattaforme"
     ],
     "cons": [
-      "Non è un'app .ipa nativa",
+      "Non Ã¨ un'app .ipa nativa",
       "Service worker e installazione richiedono Safari",
       "Nessuna playlist inclusa"
     ],
@@ -2107,7 +2107,7 @@
       "Connessione internet per attivazione"
     ],
     "seo": {
-      "title": "IP-TVSOLUTION iPhone PWA — player installabile da Safari v1.9",
+      "title": "IP-TVSOLUTION iPhone PWA â€” player installabile da Safari v1.9",
       "description": "Installa IP-TVSOLUTION su iPhone e iPad come PWA da Safari: icona puzzle, offline, registrazione utente e codice di attivazione via email. Nessuna playlist inclusa.",
       "keywords": [
         "IP-TVSOLUTION iPhone",

@@ -703,7 +703,7 @@ async function ensureEpgLoaded() {
     if (status) status.textContent = 'EPG aggiornata alle ' + new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) + ' · ' + Object.keys(epgData).length + ' canali, ' + total + ' programmi';
     if (state.currentChannel) loadEpg(state.currentChannel);
   } catch (e) {
-    logApp('EPG', 'ERROR', 'Caricamento guida non riuscito', { errore: e.message, url: safeLogUrl(url) });
+    logApp('EPG', 'ERROR', 'Caricamento guida non riuscito', { errore: e.message, url: safeLogUrl(state.settings.epgUrl || DEFAULT_EPG_URL) });
     console.warn('EPG auto-load non riuscito', e);
     const status = $('#epgStatus');
     if (status) status.textContent = state.epgData ? 'EPG: uso i dati salvati, aggiornamento non riuscito' : 'EPG non disponibile: ' + e.message;
