@@ -307,8 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updatePlaylistButton();
   updateViewModeButton();
   setTimeout(function () { refreshLogosFromSources(true); }, 1200);
-  setTimeout(function () { autoFillMissingPosters(true, 24); }, 2600);
-  setInterval(function () { autoFillMissingPosters(true, 16); }, 30000);
+  setTimeout(function () { autoFillMissingPosters(true, 12); }, 2600);
   initPlayer();
   setInterval(checkScheduledRecordings, 15000);
   setTimeout(function () {
@@ -617,18 +616,22 @@ function fetchWithTimeout(url, ms) {
     throw e;
   });
 }
+function isEpgXmlText(text) {
+  var s = String(text || '').slice(0, 4000);
+  return /<\?xml|<tv[\s>]|<epg[\s>]/i.test(s);
+}
 async function fetchEpgText(url) {
   var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
   var direct = fetchWithTimeout(url, 9000).then(function (r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.text();
-  });
+  }).then(function (t) { if (!isEpgXmlText(t)) throw new Error('Risposta non XMLTV'); return t; });
   var proxy = new Promise(function (resolve, reject) {
     setTimeout(function () {
       fetchWithTimeout(proxyUrl, 9000).then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status + ' (proxy)');
         return r.text();
-      }).then(resolve, reject);
+      }).then(function (t) { if (!isEpgXmlText(t)) throw new Error('Risposta non XMLTV (proxy)'); return t; }).then(resolve, reject);
     }, 600);
   });
   if (typeof Promise.any === 'function') return await Promise.any([direct, proxy]);
@@ -699,7 +702,7 @@ async function ensureEpgLoaded() {
     if (status) status.textContent = 'EPG aggiornata alle ' + new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) + ' · ' + Object.keys(epgData).length + ' canali, ' + total + ' programmi';
     if (state.currentChannel) loadEpg(state.currentChannel);
   } catch (e) {
-    logApp('EPG', 'ERROR', 'Caricamento guida non riuscito', { errore: e.message, url: safeLogUrl(state.settings.epgUrl) });
+    logApp('EPG', 'ERROR', 'Caricamento guida non riuscito', { errore: e.message, url: safeLogUrl(url) });
     console.warn('EPG auto-load non riuscito', e);
     const status = $('#epgStatus');
     if (status) status.textContent = state.epgData ? 'EPG: uso i dati salvati, aggiornamento non riuscito' : 'EPG non disponibile: ' + e.message;
@@ -2782,7 +2785,7 @@ function addSource(source) {
   renderChannelList();
   renderSavedSources();
   updatePlaylistButton();
-  autoFillMissingPosters(true, 4);
+  autoFillMissingPosters(true, 8);
 }
 
 // Player
@@ -3074,6 +3077,9 @@ var HLS_ROBUST_CONFIG = {
   backBufferLength: 120,
   maxBufferLength: 60,
   maxMaxBufferLength: 120,
+  liveSyncDurationCount: 2,
+  liveMaxLatencyDurationCount: 4,
+  maxLiveSyncPlaybackRate: 1.2,
   manifestLoadingMaxRetry: 6,
   manifestLoadingRetryDelay: 1000,
   manifestLoadingMaxRetryTimeout: 15000,
@@ -3669,6 +3675,9 @@ async function fetchPosterFromExternal(name, type) {
 }
 async function autoFillMissingPosters(silent, limit) {
   var max = limit || 12;
+  var _posterNow = Date.now();
+  if (silent && state._posterAutoAt && _posterNow - state._posterAutoAt < 12 * 3600 * 1000) return 0;
+  state._posterAutoAt = _posterNow;
   var missing = (state.channels || []).filter(function (ch) {
     return (ch.type === 'vod' || ch.type === 'series') && (!ch.logo || /^data:/i.test(ch.logo) || !isDirectImage(ch.logo));
   });
@@ -3715,7 +3724,7 @@ function clearPosterCache() {
   try { renderChannelList(); renderSavedSources(); updatePlaylistButton(); } catch (e) {}
   showToast('Cache locandine cancellata', 'success');
   setTimeout(function () { refreshLogosFromSources(true); }, 200);
-  setTimeout(function () { autoFillMissingPosters(true, 20); }, 900);
+  setTimeout(function () { autoFillMissingPosters(false, 20); }, 900);
 }
 window.IPtvClearPosterCache = clearPosterCache;
 window.IPtvAutoFillPosters = autoFillMissingPosters;
