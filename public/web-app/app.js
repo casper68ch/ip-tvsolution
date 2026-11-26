@@ -2753,7 +2753,7 @@ function initPlayer() {
       showToast('Formato non compatibile: tentativo con formato alternativo...', 'warning');
       if (state.hls) { state.hls.destroy(); state.hls = null; }
       if (/\.m3u8/i.test(alt) && typeof Hls !== 'undefined' && Hls.isSupported()) {
-        state.hls = new Hls({ enableWorker: true });
+        state.hls = new Hls(HLS_ROBUST_CONFIG);
         state.hls.loadSource(alt);
         state.hls.attachMedia(video);
         state.hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
@@ -2811,7 +2811,7 @@ function playSeriesEpisode(episodeId, ext, seriesName, title) {
         video.src = playUrl;
         video.play().catch(err => console.error('Native play failed:', err));
       } else if (Hls.isSupported()) {
-        state.hls = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 90 });
+        state.hls = new Hls(HLS_ROBUST_CONFIG);
         state.hls.loadSource(playUrl);
         state.hls.attachMedia(video);
         state.hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(err => console.warn('Play failed:', err)); });
@@ -2878,7 +2878,7 @@ function playSeriesEpisode(episodeId, ext, seriesName, title) {
       return;
     }
     if (Hls.isSupported()) {
-      state.hls = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 90 });
+      state.hls = new Hls(HLS_ROBUST_CONFIG);
       state.hls.loadSource(playUrl);
       state.hls.attachMedia(video);
       state.hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(err => console.warn('Play failed:', err)); });
@@ -2985,6 +2985,22 @@ function startTsFallback(url) {
 }
 
 // Riproduzione HLS con recupero automatico dell'audio non compatibile
+var HLS_ROBUST_CONFIG = {
+  enableWorker: true,
+  lowLatencyMode: false,
+  backBufferLength: 120,
+  maxBufferLength: 60,
+  maxMaxBufferLength: 120,
+  manifestLoadingMaxRetry: 6,
+  manifestLoadingRetryDelay: 1000,
+  manifestLoadingMaxRetryTimeout: 15000,
+  levelLoadingMaxRetry: 6,
+  levelLoadingRetryDelay: 1000,
+  levelLoadingMaxRetryTimeout: 15000,
+  fragLoadingMaxRetry: 8,
+  fragLoadingRetryDelay: 800,
+  fragLoadingMaxRetryTimeout: 20000
+};
 function attachHls(url, noAudio) {
   const video = $('#videoPlayer');
   if (state.hls) { try { state.hls.destroy(); } catch (e) {} state.hls = null; }
@@ -3001,10 +3017,71 @@ function attachHls(url, noAudio) {
   state._decodeRetrySrc = null;
   let restarts = 0;
 
+  // Rete WiFi instabile: watchdog anti-blocco e ripristino automatico
+  if (state._hlsRobust) {
+    clearInterval(state._hlsRobust.timer);
+    ['timeupdate', 'playing', 'seeked', 'canplay'].forEach(function (ev) {
+      try { video.removeEventListener(ev, state._hlsRobust.progress); } catch (e) {}
+    });
+  }
+  var robust = { timer: null, progress: null, last: Date.now(), notified: false };
+  robust.progress = function () {
+    robust.last = Date.now();
+    if (robust.notified) {
+      robust.notified = false;
+      logStream('HLS_RECOVERED', {});
+    }
+  };
+  ['timeupdate', 'playing', 'seeked', 'canplay'].forEach(function (ev) {
+    video.addEventListener(ev, robust.progress);
+  });
+  robust.timer = setInterval(function () {
+    if (!state.hls || document.hidden || video.paused || video.ended) { robust.last = Date.now(); return; }
+    var stuck = Date.now() - robust.last;
+    if (stuck > 8000 && !robust.notified) {
+      robust.notified = true;
+      logStream('HLS_STALL', { ms: stuck });
+      showToast('Rete lenta, recupero automatico del canale...', 'warning');
+      try { state.hls.startLoad(); } catch (e) {}
+      if (video.paused) video.play().catch(function () {});
+    }
+    if (stuck > 18000) {
+      robust.last = Date.now();
+      robust.notified = false;
+      if (restarts < 20) {
+        restarts++;
+        logStream('HLS_WATCHDOG_RESTART', { numero: restarts });
+        setTimeout(function () { if (state._lastHlsUrl === url) start(); }, 500);
+      }
+    }
+  }, 2000);
+  state._hlsRobust = robust;
+
+  if (!state._netListeners) {
+    state._netListeners = true;
+    window.addEventListener('online', function () {
+      logStream('NET_ONLINE', {});
+      showToast('Connessione ripristinata, riprendo il canale.', 'success');
+      try { if (state.hls) state.hls.startLoad(); } catch (e) {}
+      var v = $('#videoPlayer');
+      if (v && v.paused && state.currentChannel) v.play().catch(function () {});
+    });
+    window.addEventListener('offline', function () {
+      logStream('NET_OFFLINE', {});
+      showToast('Connessione persa. Riprovo automaticamente...', 'error');
+    });
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && state.hls && state.currentChannel) {
+        var v = $('#videoPlayer');
+        if (v && v.paused) v.play().catch(function () {});
+      }
+    });
+  }
+
   function start() {
     if (state.hls) { try { state.hls.destroy(); } catch (e) {} state.hls = null; }
     state._mediaRecovered = false;
-    const h = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90 });
+    const h = new Hls(HLS_ROBUST_CONFIG);
     state.hls = h;
     logStream('HLS_START', { url: url, senzaAudio: noAudio, riavvio: restarts });
     h.loadSource(url);
@@ -3064,6 +3141,10 @@ function attachHls(url, noAudio) {
       showToast('Stream non disponibile · ' + contextLabel(), 'error');
       try { h.destroy(); } catch (e) {}
       state.hls = null;
+      if (state._hlsRobust) {
+        clearInterval(state._hlsRobust.timer);
+        state._hlsRobust = null;
+      }
     });
   }
   start();
@@ -4587,7 +4668,7 @@ async function startEpisodePlayback(episodeId, ext, seriesName, title) {
       video.src = playUrl;
       video.play().catch(err => console.error('Native play failed:', err));
     } else if (Hls.isSupported()) {
-      state.hls = new Hls({ enableWorker: true, lowLatencyMode: true, backBufferLength: 90 });
+      state.hls = new Hls(HLS_ROBUST_CONFIG);
       state.hls.loadSource(playUrl);
       state.hls.attachMedia(video);
       state.hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(err => console.warn('Play failed:', err)); });
