@@ -310,6 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(function () { autoFillMissingPosters(true, 12); }, 2600);
   initPlayer();
   setInterval(checkScheduledRecordings, 15000);
+  checkScheduledRecordings();
   setTimeout(function () {
     try {
       if (sessionStorage.getItem('iptv_setup_pending') === '1' &&
@@ -2418,23 +2419,54 @@ function startScheduledRecording(s) {
 function checkScheduledRecordings() {
   const now = Date.now();
   state.scheduledRecordings.forEach(s => {
-    if (s.status === 'scheduled' && now >= s.startTs) {
+    if (s.status !== 'scheduled') return;
+    const endTs = s.startTs + (s.durationMs || 3600000);
+    if (now > endTs) {
+      s.status = 'done';
+      saveScheduledState();
+      renderScheduled();
+      showToast('Registrazione non avviata: evento gia terminato · ' + (s.title || ''), 'warning');
+      return;
+    }
+    if (now >= s.startTs) {
       if (!(state.recording && state.recording.active && state.recording.sourceInfo && state.recording.sourceInfo.kind === 'scheduled' && state.recording.sourceInfo.scheduledId === s.id)) {
         startScheduledRecording(s);
       }
     }
   });
 }
+function updateScheduleChannels() {
+  const dl = document.getElementById('schedChannels');
+  if (!dl) return;
+  const names = [];
+  const seen = {};
+  (state.channels || []).forEach(function (c) {
+    const n = c.name || '';
+    const k = n.toLowerCase();
+    if (n && !seen[k]) { seen[k] = 1; names.push(n); }
+  });
+  names.sort(function (a, b) { return a.localeCompare(b, 'it'); });
+  dl.innerHTML = names.map(function (n) { return '<option value="' + escapeAttr(n) + '"></option>'; }).join('');
+}
 function saveScheduleFromForm() {
-  const title = ($('#schedTitle').value || '').trim() || 'Registrazione';
+  const name = ($('#schedTitle').value || '').trim();
   const streamUrl = ($('#schedUrl').value || '').trim();
   const startEl = document.getElementById('schedStart');
   const dur = parseInt(($('#schedDuration').value || '60'), 10) || 60;
-  if (!streamUrl) { showToast('Inserisci l\'URL dello stream.', 'error'); return; }
+  if (!name) { showToast('Inserisci il nome del canale.', 'error'); return; }
   if (!startEl || !startEl.value) { showToast('Scegli data e ora.', 'error'); return; }
   const startTs = new Date(startEl.value).getTime();
   if (isNaN(startTs)) { showToast('Data non valida.', 'error'); return; }
-  scheduleRecording(title, streamUrl, startTs, dur * 60 * 1000);
+  let url = streamUrl;
+  if (!url) {
+    const low = name.toLowerCase();
+    let ch = (state.channels || []).find(function (c) { return (c.name || '').toLowerCase() === low; });
+    if (!ch) ch = (state.channels || []).find(function (c) { return (c.name || '').toLowerCase().indexOf(low) >= 0; });
+    if (ch) url = ch.url || '';
+    else { showToast('Canale non trovato nella playlist. Inserisci anche l URL.', 'error'); return; }
+  }
+  if (!url) { showToast('URL del canale non disponibile. Inserisci l URL manualmente.', 'error'); return; }
+  scheduleRecording(name, url, startTs, dur * 60 * 1000);
   const schedTitle = document.getElementById('schedTitle');
   const schedUrl = document.getElementById('schedUrl');
   const schedDur = document.getElementById('schedDuration');
@@ -3986,6 +4018,7 @@ function toggleViewMode() {
 
 function renderChannelList() {
   updateSideNav();
+  updateScheduleChannels();
   const list = $('#channelList');
   list.className = 'channel-list ' + (state.viewMode === 'grid' ? 'grid-view' : 'list-view');
   updateViewModeButton();

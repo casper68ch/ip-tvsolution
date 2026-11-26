@@ -528,11 +528,12 @@
             <summary style="cursor:pointer;font-weight:600;color:var(--accent);margin-bottom:8px;">⏰ Programma una registrazione (clicca per aprire)</summary>
             <div style="margin-top:12px;">
               <div class="form-group">
-                <label>Titolo</label>
-                <input type="text" id="schedTitle" placeholder="Nome registrazione">
+                <label>Nome canale</label>
+                <input type="text" id="schedTitle" list="schedChannels" placeholder="Es. Sky Sport Uno HD (scegli dalla playlist)">
+      <datalist id="schedChannels"></datalist>
               </div>
               <div class="form-group">
-                <label>URL stream (lascia vuoto per usare quello in riproduzione)</label>
+                <label>URL stream (opzionale: lascia vuoto per usare il canale qui sopra)</label>
                 <input type="url" id="schedUrl" placeholder="https://.../video.ts">
               </div>
               <div class="form-group">
@@ -715,6 +716,6 @@
       </div>
     </div>
 
-  <script src="app.js?v=51"></script>
+  <script src="app.js?v=52"></script>
 </body>
 </html>
