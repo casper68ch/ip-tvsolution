@@ -2008,6 +2008,7 @@ function startRecording() {
 function stopRecording() {
   if (!state.recording || !state.recording.active) return;
   state.recording.active = false;
+  if (state.schedHls) { try { state.schedHls.destroy(); } catch (e) {} state.schedHls = null; }
   const rec = state.recording.rec;
   const btn = $('#btnRecord');
   if (btn) { btn.classList.remove('recording'); btn.textContent = '⏺'; btn.title = 'Registra'; }
@@ -2332,33 +2333,87 @@ function renderScheduled() {
     </div>
   `).join('');
 }
+function getScheduledVideo() {
+  var v = document.getElementById('schedVideo');
+  if (!v) {
+    v = document.createElement('video');
+    v.id = 'schedVideo';
+    v.muted = true;
+    v.playsInline = true;
+    v.setAttribute('playsinline', '');
+    v.style.display = 'none';
+    document.body.appendChild(v);
+  }
+  return v;
+}
+function cleanupScheduledVideo() {
+  var v = document.getElementById('schedVideo');
+  if (state.schedHls) { try { state.schedHls.destroy(); } catch (e) {} state.schedHls = null; }
+  if (v) { try { v.pause(); } catch (e) {} v.removeAttribute('src'); try { v.load(); } catch (e) {} }
+}
 function startScheduledRecording(s) {
   if (state.recording && state.recording.active) return;
-  const video = $('#videoPlayer');
+  var video = getScheduledVideo();
+  var url = String(s.streamUrl || '').trim();
   state.recording = { active: true, startTs: Date.now(), chunks: [], rec: null, sourceInfo: { kind: 'scheduled', scheduledId: s.id, title: s.title } };
-  const btn = $('#btnRecord');
+  var btn = $('#btnRecord');
   if (btn) { btn.classList.add('recording'); btn.textContent = '■'; btn.title = 'Stop registrazione'; }
-  const resetRecBtn = () => { const b = $('#btnRecord'); if (b) { b.classList.remove('recording'); b.textContent = '⏺'; b.title = 'Registra'; } };
-  video.src = s.streamUrl;
-  video.load();
-  const start = () => {
-    let stream = null;
-    try { stream = video.captureStream ? video.captureStream(30) : null; } catch (e) { stream = null; }
-    if (!stream) { resetRecBtn(); state.recording.active = false; return; }
-    const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(m => typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m)) || '';
-    let rec;
-    try { rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined); } catch (e) { resetRecBtn(); state.recording.active = false; return; }
-    const chunks = [];
-    state.recording.rec = rec;
-    rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
-    rec.onstop = () => { finalizeRecording({ kind: 'scheduled', scheduledId: s.id, title: s.title }); };
-    try { rec.start(1000); } catch (e) { resetRecBtn(); state.recording.active = false; return; }
+  var resetRecBtn = function () { var b = $('#btnRecord'); if (b) { b.classList.remove('recording'); b.textContent = '⏺'; b.title = 'Registra'; } };
+  var fail = function (msg) {
+    resetRecBtn();
+    state.recording.active = false;
+    cleanupScheduledVideo();
+    showToast('Impossibile avviare la registrazione: ' + msg + ' · ' + (s.title || 'Programmazione'), 'error');
   };
-  const onCanPlay = () => { video.removeEventListener('canplay', onCanPlay); video.removeEventListener('error', onErr); start(); };
-  const onErr = () => { video.removeEventListener('canplay', onCanPlay); video.removeEventListener('error', onErr); resetRecBtn(); state.recording.active = false; showToast('Impossibile avviare la registrazione: riproduzione non disponibile.', 'error'); };
+  if (!url) { fail('URL stream mancante'); return; }
+  var start = function () {
+    var stream = null;
+    try { stream = video.captureStream ? video.captureStream(30) : null; } catch (e) { stream = null; }
+    if (!stream) { fail(' acquisizione video non supportata'); return; }
+    var mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find(function (m) { return typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m); }) || '';
+    var rec;
+    try { rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined); } catch (e) { fail(' MediaRecorder non disponibile'); return; }
+    var chunks = [];
+    state.recording.rec = rec;
+    rec.ondataavailable = function (e) { if (e.data && e.data.size > 0) chunks.push(e.data); };
+    rec.onstop = function () { finalizeRecording({ kind: 'scheduled', scheduledId: s.id, title: s.title }); };
+    try { rec.start(1000); } catch (e) { fail(' avvio MediaRecorder: ' + e.message); return; }
+    logApp('REC', 'INFO', 'Registrazione programmata avviata', { titolo: s.title, url: safeLogUrl(url) });
+  };
+  var onCanPlay = function () {
+    video.removeEventListener('canplay', onCanPlay);
+    video.removeEventListener('error', onErr);
+    start();
+  };
+  var onErr = function () {
+    video.removeEventListener('canplay', onCanPlay);
+    video.removeEventListener('error', onErr);
+    fail('riproduzione non disponibile (formato stream non supportato)');
+  };
   video.addEventListener('canplay', onCanPlay);
   video.addEventListener('error', onErr);
-  video.play().catch(err => { video.removeEventListener('canplay', onCanPlay); video.removeEventListener('error', onErr); resetRecBtn(); state.recording.active = false; showToast('Impossibile avviare la registrazione: ' + err.message, 'error'); });
+  var isHls = /\.m3u8(\?|$)/i.test(url);
+  if (isHls && typeof Hls !== 'undefined' && Hls.isSupported()) {
+    if (state.schedHls) { try { state.schedHls.destroy(); } catch (e) {} }
+    var h = new Hls(HLS_ROBUST_CONFIG);
+    state.schedHls = h;
+    h.on(Hls.Events.ERROR, function (e, data) {
+      if (!data.fatal) return;
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR) h.startLoad();
+      else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) h.recoverMediaError();
+      else fail(' errore HLS: ' + (data.details || 'sconosciuto'));
+    });
+    h.loadSource(url);
+    h.attachMedia(video);
+  } else {
+    video.src = url;
+    video.load();
+  }
+  video.play().catch(function (err) {
+    video.removeEventListener('canplay', onCanPlay);
+    video.removeEventListener('error', onErr);
+    fail(err && err.message ? err.message : 'riproduzione non disponibile');
+  });
 }
 function checkScheduledRecordings() {
   const now = Date.now();
