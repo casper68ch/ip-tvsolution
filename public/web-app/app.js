@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   updateSaveDestinationUI();
   ensureEpgLoaded();
-  setInterval(ensureEpgLoaded, 30 * 60 * 1000);
+  setInterval(ensureEpgLoaded, 10 * 60 * 1000);
   setInterval(function () {
     var ov = document.getElementById('fullGuideOverlay');
     if (ov && ov.classList.contains('show') && typeof fgRender === 'function') fgRender();
@@ -629,12 +629,13 @@ async function ensureEpgLoaded() {
       });
     });
     state.epgData = epgData;
+    state._epgLoadedAt = Date.now();
     var guide = document.getElementById('fullGuideOverlay');
     if (guide && guide.classList.contains('show') && typeof fgRender === 'function') fgRender();
     const total = Object.values(epgData).reduce((s, a) => s + a.length, 0);
     logApp('EPG', 'INFO', 'Guida TV caricata', { canali: Object.keys(epgData).length, programmi: total });
     const status = $('#epgStatus');
-    if (status) status.textContent = 'EPG caricato: ' + Object.keys(epgData).length + ' canali, ' + total + ' programmi';
+    if (status) status.textContent = 'EPG aggiornata alle ' + new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) + ' · ' + Object.keys(epgData).length + ' canali, ' + total + ' programmi';
     if (state.currentChannel) loadEpg(state.currentChannel);
   } catch (e) {
     logApp('EPG', 'ERROR', 'Caricamento guida non riuscito', { errore: e.message, url: safeLogUrl(state.settings.epgUrl) });
@@ -947,6 +948,7 @@ function openFullGuide() {
   var ov = document.getElementById("fullGuideOverlay");
   if (!ov) return;
   ov.classList.add("show");
+  if (Date.now() - (state._epgLoadedAt || 0) > 10 * 60 * 1000) ensureEpgLoaded();
   var now = Date.now();
   fgState.channels = fgChannels();
   fgState.start = Math.floor(now / 1800000) * 1800000 - 90 * 60000;
@@ -3061,6 +3063,7 @@ function attachHls(url, noAudio) {
     state._netListeners = true;
     window.addEventListener('online', function () {
       logStream('NET_ONLINE', {});
+      if (Date.now() - (state._epgLoadedAt || 0) > 10 * 60 * 1000) ensureEpgLoaded();
       showToast('Connessione ripristinata, riprendo il canale.', 'success');
       try { if (state.hls) state.hls.startLoad(); } catch (e) {}
       var v = $('#videoPlayer');
@@ -3071,6 +3074,7 @@ function attachHls(url, noAudio) {
       showToast('Connessione persa. Riprovo automaticamente...', 'error');
     });
     document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && Date.now() - (state._epgLoadedAt || 0) > 10 * 60 * 1000) ensureEpgLoaded();
       if (!document.hidden && state.hls && state.currentChannel) {
         var v = $('#videoPlayer');
         if (v && v.paused) v.play().catch(function () {});
